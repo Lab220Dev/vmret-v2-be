@@ -81,6 +81,62 @@ async function adicionarFuncionarios(request, response) {
         return;
     }
 }
+async function listarCentroCusto(request, response) {
+    try {
+
+        let query = 'SELECT DISTINCT id_centro_custo FROM funcionarios WHERE 1 = 1';
+
+        if (request.body.id_cliente) {
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do cliente não enviado");
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+async function listarSetorDiretoria(request, response) {
+    try {
+        let query = 'SELECT DISTINCT id_setor FROM funcionarios WHERE 1 = 1';
+
+
+        if (request.body.id_cliente) {
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do cliente não enviado");
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+async function listarHierarquia(request, response) {
+    try {
+        let query = 'SELECT DISTINCT id_funcao FROM funcionarios WHERE 1 = 1';
+
+
+        if (request.body.id_cliente) {
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do cliente não enviado");
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+
 module.exports = {
-    listarFuncionarios, adicionarFuncionarios
+    listarFuncionarios,
+    adicionarFuncionarios,
+    listarCentroCusto,
+    listarSetorDiretoria,
+    listarHierarquia
 };
