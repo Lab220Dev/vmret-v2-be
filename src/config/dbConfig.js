@@ -14,7 +14,7 @@ const config = {
 module.exports = async function () {
     try {
         await sql.connect(config);
-        console.log("Conexão com o banco bem sucessida!");
+        console.log("Conexão com o banco bem sucedida!");
     } catch (err) {
         console.error("Erro ao conectar com o Banco de Dados:", err.message);
     }
