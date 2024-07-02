@@ -22,11 +22,11 @@ dbConfig().catch(err => {
     process.exit(1); // Encerra o processo se houver erro na conexão
 });
 
-// Servir arquivos estáticos do diretório 'dist'
+
 const distPath = path.resolve(__dirname, 'dist');
 app.use(express.static(distPath));
 
-// Rota para servir o arquivo HTML principal (index.html) do Vue
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
 });
