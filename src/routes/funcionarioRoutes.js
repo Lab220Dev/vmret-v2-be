@@ -7,5 +7,6 @@ router.post('/adicionar', funcionarioCountroller.adicionarFuncionarios);
 router.post('/listarcentrocusto', funcionarioCountroller.listarCentroCusto);
 router.post('/listarhierarquia', funcionarioCountroller.listarHierarquia);
 router.post('/listarsetor', funcionarioCountroller.listarSetorDiretoria);
+router.post('/listarplanta', funcionarioCountroller.listarPlanta);
 
 module.exports = router;

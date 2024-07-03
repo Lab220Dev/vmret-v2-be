@@ -132,11 +132,29 @@ async function listarHierarquia(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+async function listarPlanta(request, response) {
+    try {
+        let query = 'SELECT DISTINCT id_planta FROM funcionarios WHERE 1 = 1';
+
+
+        if (request.body.id_cliente) {
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do cliente não enviado");
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 
 module.exports = {
     listarFuncionarios,
     adicionarFuncionarios,
     listarCentroCusto,
     listarSetorDiretoria,
-    listarHierarquia
+    listarHierarquia,
+    listarPlanta
 };
