@@ -16,6 +16,7 @@ async function listarFuncionarios(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
 async function adicionarFuncionarios(request, response) {
     try {
         const { id_cliente, id_setor, id_funcao,
@@ -23,7 +24,7 @@ async function adicionarFuncionarios(request, response) {
             RG, CPF, CTPS, id_planta, foto,
             data_admissao, hora_inicial, hora_final,
             segunda, terca, quarta, quinta, sexta,
-            sabado, domingo, deleted, ordem,
+            sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
             email, face } = request.body;
         const query = `INSERT INTO funcionarios
@@ -61,7 +62,7 @@ async function adicionarFuncionarios(request, response) {
         request.input('sexta', sql.Bit, sexta);
         request.input('sabado', sql.Bit, sabado);
         request.input('domingo', sql.Bit, domingo);
-        request.input('deleted', sql.Bit, deleted);
+        request.input('deleted', sql.Bit, false);
         request.input('ordem', sql.Int, ordem);
         request.input('id_centro_custo', sql.Int, id_centro_custo);
         request.input('status', sql.NVarChar, status);
@@ -69,6 +70,7 @@ async function adicionarFuncionarios(request, response) {
         request.input('biometria2', sql.NVarChar, biometria2);
         request.input('email', sql.VarChar, email);
         request.input('face', sql.VarChar, face);
+
         const result = await request.query(query);
         if (result) {
             response.status(201).send('Funcionário criado com sucesso!');
