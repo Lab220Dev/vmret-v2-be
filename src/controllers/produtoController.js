@@ -21,8 +21,7 @@ async function adicionarProdutos(request, response) {
     try {
         if (request.body.id_cliente) {
             const { id_cliente, id_categoria, nome, descricao, validadedias,
-                    imagem1, imagem2, imagem3, imagem4, imagemdetalhe, codigo,
-                    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida } = request.body;
+                     codigo, id_planta, id_tipoProduto, unidade_medida } = request.body;
             
             const query = `
                 INSERT INTO produtos
@@ -41,15 +40,15 @@ async function adicionarProdutos(request, response) {
             requestSql.input('nome', sql.VarChar, nome);
             requestSql.input('descricao', sql.VarChar, descricao);
             requestSql.input('validadedias', sql.Int, validadedias);
-            requestSql.input('imagem1', sql.VarChar, imagem1);
-            requestSql.input('imagem2', sql.VarChar, imagem2);
-            requestSql.input('imagem3', sql.VarChar, imagem3);
-            requestSql.input('imagem4', sql.VarChar, imagem4);
-            requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
+            requestSql.input('imagem1', sql.VarChar, '');
+            requestSql.input('imagem2', sql.VarChar, '');
+            requestSql.input('imagem3', sql.VarChar, '');
+            requestSql.input('imagem4', sql.VarChar, '');
+            requestSql.input('imagemdetalhe', sql.VarChar, '');
             requestSql.input('deleted', sql.Bit, false);
             requestSql.input('codigo', sql.VarChar, codigo);
-            requestSql.input('quantidademinima', sql.Int, quantidademinima);
-            requestSql.input('capacidade', sql.Int, capacidade);
+            requestSql.input('quantidademinima', sql.Int, 0);
+            requestSql.input('capacidade', sql.Int, 0);
             requestSql.input('ca', sql.NVarChar, ca);
             requestSql.input('id_planta', sql.Int, id_planta);
             requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
