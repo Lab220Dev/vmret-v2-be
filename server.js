@@ -5,10 +5,12 @@ const dbConfig = require('./src/config/dbConfig');
 const usuariosRoutes = require('./src/routes/usuarioRoutes');
 const funcionarioRoutes = require('./src/routes/funcionarioRoutes');
 const produtoRoutes = require('./src/routes/produtoRoutes');
+const loginRoutes = require('./src/routes/loginRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+
 
 app.use(bodyParser.json());
 
@@ -32,13 +34,16 @@ app.get('*', (req, res) => {
 });
 
 // Rotas de usuario
-app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/usuarios', autenticarToken, usuariosRoutes);
 
 // Rotas de funcionarios
 app.use('/api/funcionarios', autenticarToken, funcionarioRoutes);
 
 // Rotas de produtos
 app.use('/api/produtos', autenticarToken, produtoRoutes);
+
+// Rotas de login
+app.use('/api', loginRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
