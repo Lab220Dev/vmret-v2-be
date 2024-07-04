@@ -49,7 +49,7 @@ async function adicionarProdutos(request, response) {
             requestSql.input('codigo', sql.VarChar, codigo);
             requestSql.input('quantidademinima', sql.Int, 0);
             requestSql.input('capacidade', sql.Int, 0);
-            requestSql.input('ca', sql.NVarChar, ca);
+            requestSql.input('ca', sql.NVarChar, '');
             requestSql.input('id_planta', sql.Int, id_planta);
             requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
             requestSql.input('unidade_medida', sql.VarChar, unidade_medida);
