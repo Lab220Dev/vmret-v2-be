@@ -1,4 +1,11 @@
 const sql = require('mssql');
+const path = require('path');
+const fs = require('fs').promises;
+const multer = require('multer');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 
 async function listarFuncionarios(request, response) {
     try {
@@ -19,14 +26,24 @@ async function listarFuncionarios(request, response) {
 
 async function adicionarFuncionarios(request, response) {
     try {
-        const { id_cliente, id_setor, id_funcao,
+        const id_cliente = request.body.id_cliente;
+        const files = request.files;
+        const uploadPath = path.join(__dirname, './uploads', id_cliente.toString());
+        await fs.mkdir(uploadPath, { recursive: true });
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const filePath = path.join(uploadPath, file.originalname);
+            await fs.writeFile(filePath, file.buffer);
+        }
+
+        const {  id_setor, id_funcao,
             nome, matricula, biometria,
-            RG, CPF, CTPS, id_planta, foto,
+            RG, CPF, CTPS, id_planta,
             data_admissao, hora_inicial, hora_final,
             segunda, terca, quarta, quinta, sexta,
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
-            email, face } = request.body;
+            email, face,foto} = request.body;
         const query = `INSERT INTO funcionarios
         ( id_cliente, id_setor, id_funcao, nome, matricula, 
          biometria, RG, CPF, CTPS, id_planta, foto, data_admissao, 
@@ -40,6 +57,7 @@ async function adicionarFuncionarios(request, response) {
         @segunda, @terca, @quarta, @quinta, @sexta, @sabado, @domingo,
         @deleted, @ordem, @id_centro_custo, @status, @senha, 
         @biometria2, @email, @face)`
+
         request = new sql.Request();
         request.input('id_cliente', sql.Int, id_cliente);
         request.input('id_setor', sql.Int, id_setor);
@@ -51,7 +69,7 @@ async function adicionarFuncionarios(request, response) {
         request.input('CPF', sql.VarChar, CPF);
         request.input('CTPS', sql.VarChar, CTPS);
         request.input('id_planta', sql.Int, id_planta);
-        request.input('foto', sql.VarChar, foto);
+        request.input('foto', sql.VarChar,foto);
         request.input('data_admissao', sql.DateTime, data_admissao);
         request.input('hora_inicial', sql.Time, hora_inicial);
         request.input('hora_final', sql.Time, hora_final);
@@ -82,6 +100,16 @@ async function adicionarFuncionarios(request, response) {
         response.status(500).send('Erro ao inserir funcionário');
         return;
     }
+}
+async function foto(request, response) {
+    console.log(request.body)
+    if (!request.files) {
+        return response.status(400).send('Nenhum arquivo foi enviado.')
+    }
+
+    const { id_cliente } = request.body
+    const foto = request.file
+
 }
 async function listarCentroCusto(request, response) {
     try {
@@ -153,6 +181,8 @@ async function listarPlanta(request, response) {
 }
 
 module.exports = {
+    upload,
+    foto,
     listarFuncionarios,
     adicionarFuncionarios,
     listarCentroCusto,

@@ -11,7 +11,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use(cors({
