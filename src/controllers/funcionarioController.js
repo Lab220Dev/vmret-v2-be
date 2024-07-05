@@ -6,11 +6,15 @@ async function listarFuncionarios(request, response) {
 
         if (request.body.id_cliente) {
             query += ` AND id_cliente = '${request.body.id_cliente}'`;
-            const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
+        } else {
+            response.status(401).json("id do cliente não enviado");
             return;
         }
-        response.status(401).json("id do cliente não enviado");
+
+        query += ' AND deleted = 0';
+
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
@@ -152,11 +156,29 @@ async function listarPlanta(request, response) {
     }
 }
 
+async function deleteFuncionario(request, response) {
+    try {
+        let query = "UPDATE funcionarios SET deleted = 1 WHERE 1 = 1";
+
+        if (request.body.id_funcionario) {
+            query += ` AND id_funcionario = '${request.body.id_funcionario}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do funcionario não foi enviado");
+    } catch (error) {
+        console.error('Erro ao excluir:', error.message);
+        response.status(500).send('Erro ao excluir');
+    }
+}
+
 module.exports = {
     listarFuncionarios,
     adicionarFuncionarios,
     listarCentroCusto,
     listarSetorDiretoria,
     listarHierarquia,
-    listarPlanta
+    listarPlanta,
+    deleteFuncionario
 };

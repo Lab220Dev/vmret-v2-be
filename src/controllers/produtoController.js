@@ -6,11 +6,17 @@ async function listarProdutos(request, response) {
 
         if (request.body.id_cliente) {
             query += ` AND id_cliente = '${request.body.id_cliente}'`;
-            const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
-            return;
         }
+        else {
         response.status(401).json("id do cliente não enviado");
+        return;
+        }
+
+        query += ' AND deleted = 0';
+
+        const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
@@ -49,7 +55,7 @@ async function adicionarProdutos(request, response) {
             requestSql.input('codigo', sql.VarChar, codigo);
             requestSql.input('quantidademinima', sql.Int, 0);
             requestSql.input('capacidade', sql.Int, 0);
-            requestSql.input('ca', sql.NVarChar, ca);
+            requestSql.input('ca', sql.NVarChar, '');
             requestSql.input('id_planta', sql.Int, id_planta);
             requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
             requestSql.input('unidade_medida', sql.VarChar, unidade_medida);
@@ -86,6 +92,26 @@ async function listarPlanta(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
+async function deleteProduto(request, response) {
+    try {
+        let query = "UPDATE produtos SET deleted = 1 WHERE 1 = 1";
+
+        if (request.body.id_produto) {
+            query += ` AND id_produto = '${request.body.id_produto}'`;
+            const result = await new sql.Request().query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("id do produto não foi enviado");
+    } catch (error) {
+        console.error('Erro ao excluir:', error.message);
+        response.status(500).send('Erro ao excluir');
+    }
+}
 module.exports = {
-    listarProdutos, adicionarProdutos,listarPlanta
+    listarProdutos, 
+    adicionarProdutos,
+    listarPlanta,
+    deleteProduto
 };
