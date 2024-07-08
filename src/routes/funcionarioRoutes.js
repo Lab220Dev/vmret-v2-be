@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const funcionarioController = require('../controllers/funcionarioController');
+const funcionarioCountroller = require('../controllers/funcionarioCountroller');
 
 router.post('/listar', funcionarioCountroller.listarFuncionarios);
 router.post('/adicionar', funcionarioCountroller.upload.any(),funcionarioCountroller.adicionarFuncionarios);
@@ -9,5 +9,5 @@ router.post('/listarcentrocusto', funcionarioCountroller.listarCentroCusto);
 router.post('/listarhierarquia', funcionarioCountroller.listarHierarquia);
 router.post('/listarsetor', funcionarioCountroller.listarSetorDiretoria);
 router.post('/listarplanta', funcionarioCountroller.listarPlanta);
-router.post('/deleteFuncionario', funcionarioController.deleteFuncionario);
+router.post('/deleteFuncionario', funcionarioCountroller.deleteFuncionario);
 module.exports = router;
