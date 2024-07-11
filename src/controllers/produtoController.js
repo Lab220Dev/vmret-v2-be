@@ -1,4 +1,10 @@
 const sql = require('mssql');
+const path = require('path');
+const fs = require('fs').promises;
+const multer = require('multer');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 async function listarProdutos(request, response) {
     try {
@@ -6,17 +12,16 @@ async function listarProdutos(request, response) {
 
         if (request.body.id_cliente) {
             query += ` AND id_cliente = '${request.body.id_cliente}'`;
-        }
-        else {
-        response.status(401).json("id do cliente não enviado");
-        return;
+        } else {
+            response.status(401).json("ID do cliente não enviado");
+            return;
         }
 
         query += ' AND deleted = 0';
 
         const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
-            
+        response.status(200).json(result.recordset);
+
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
@@ -25,60 +30,99 @@ async function listarProdutos(request, response) {
 
 async function adicionarProdutos(request, response) {
     try {
-        if (request.body.id_cliente) {
-            const { id_cliente, id_categoria, nome, descricao, validadedias,
-                     codigo, id_planta, id_tipoProduto, unidade_medida } = request.body;
-            
-            const query = `
-                INSERT INTO produtos
-                (id_cliente, id_categoria, nome, descricao, validadedias,
-                imagem1, imagem2, imagem3, imagem4, imagemdetalhe, deleted, codigo,
-                quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
-                VALUES
-                (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
-                @imagem1, @imagem2, @imagem3, @imagem4, @imagemdetalhe, @deleted, @codigo,
-                @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
-            `;
-            
-            const requestSql = new sql.Request();
-            requestSql.input('id_cliente', sql.Int, id_cliente);
-            requestSql.input('id_categoria', sql.Int, id_categoria);
-            requestSql.input('nome', sql.VarChar, nome);
-            requestSql.input('descricao', sql.VarChar, descricao);
-            requestSql.input('validadedias', sql.Int, validadedias);
-            requestSql.input('imagem1', sql.VarChar, '');
-            requestSql.input('imagem2', sql.VarChar, '');
-            requestSql.input('imagem3', sql.VarChar, '');
-            requestSql.input('imagem4', sql.VarChar, '');
-            requestSql.input('imagemdetalhe', sql.VarChar, '');
-            requestSql.input('deleted', sql.Bit, false);
-            requestSql.input('codigo', sql.VarChar, codigo);
-            requestSql.input('quantidademinima', sql.Int, 0);
-            requestSql.input('capacidade', sql.Int, 0);
-            requestSql.input('ca', sql.NVarChar, '');
-            requestSql.input('id_planta', sql.Int, id_planta);
-            requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
-            requestSql.input('unidade_medida', sql.VarChar, unidade_medida);
+        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida ,imagem1, imagem2} = request.body;
+        const files = request.files;
 
-            const result = await requestSql.query(query);
-
-            if (result.rowsAffected.length > 0) {
-                response.status(201).json("Produto registrado com sucesso");
-            } else {
-                response.status(400).json("Erro ao registrar o Produto");
-            }
-        } else {
+        if (!id_cliente) {
             response.status(401).json("ID do cliente não enviado");
+            return;
+        }
+
+        // Diretórios de upload com id_cliente antes da pasta principal
+        const uploadPathPrincipal = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'secundario');
+
+        // Cria diretórios de upload se não existirem
+        await fs.mkdir(uploadPathPrincipal, { recursive: true });
+        await fs.mkdir(uploadPathSecundario, { recursive: true });
+
+        let imagem1Path = '';
+        const imagem2Path = '';
+        let filePath='';
+
+        // Salva arquivos
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+        
+            if (i === 0) {
+                filePath = path.join(uploadPathPrincipal, imagem1);
+                imagem1Path = filePath;
+            } else {
+                filePath = path.join(uploadPathSecundario, imagem2);
+                imagem2Path = filePath;
+            }
+
+            await fs.writeFile(filePath, file.buffer);
+        }
+
+        const query = `
+            INSERT INTO produtos
+            (id_cliente, id_categoria, nome, descricao, validadedias,
+            imagem1, imagem2, imagem3, imagem4, imagemdetalhe, deleted, codigo,
+            quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
+            VALUES
+            (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
+            @imagem1, @imagem2, '', '', '', @deleted, @codigo,
+            @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
+        `;
+
+        const requestSql = new sql.Request();
+        requestSql.input('id_cliente', sql.Int, id_cliente);
+        requestSql.input('id_categoria', sql.Int, id_categoria);
+        requestSql.input('nome', sql.VarChar, nome);
+        requestSql.input('descricao', sql.VarChar, descricao);
+        requestSql.input('validadedias', sql.Int, validadedias);
+        requestSql.input('imagem1', sql.VarChar, imagem1);
+        requestSql.input('imagem2', sql.VarChar, imagem2); // Armazena múltiplos caminhos de imagem como uma string
+        requestSql.input('deleted', sql.Bit, false);
+        requestSql.input('codigo', sql.VarChar, codigo);
+        requestSql.input('quantidademinima', sql.Int, 0);
+        requestSql.input('capacidade', sql.Int, 0);
+        requestSql.input('ca', sql.NVarChar, '');
+        requestSql.input('id_planta', sql.Int, id_planta);
+        requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
+        requestSql.input('unidade_medida', sql.VarChar, unidade_medida);
+
+        const result = await requestSql.query(query);
+
+        if (result.rowsAffected.length > 0) {
+            response.status(201).json("Produto registrado com sucesso");
+        } else {
+            response.status(400).json("Erro ao registrar o Produto");
         }
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
+async function imagem1(request, response) {
+    console.log(request.body);
+    if (!request.files) {
+        return response.status(400).send('Nenhum arquivo foi enviado.');
+    }
+}
+
+async function imagem2(request, response) {
+    console.log(request.body);
+    if (!request.files) {
+        return response.status(400).send('Nenhum arquivo foi enviado.');
+    }
+}
+
 async function listarPlanta(request, response) {
     try {
         let query = 'SELECT DISTINCT id_planta FROM produtos WHERE 1 = 1';
-
 
         if (request.body.id_cliente) {
             query += ` AND id_cliente = '${request.body.id_cliente}'`;
@@ -86,7 +130,7 @@ async function listarPlanta(request, response) {
             response.status(200).json(result.recordset);
             return;
         }
-        response.status(401).json("id do cliente não enviado");
+        response.status(401).json("ID do cliente não enviado");
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
@@ -103,13 +147,17 @@ async function deleteProduto(request, response) {
             response.status(200).json(result.recordset);
             return;
         }
-        response.status(401).json("id do produto não foi enviado");
+        response.status(401).json("ID do produto não foi enviado");
     } catch (error) {
         console.error('Erro ao excluir:', error.message);
         response.status(500).send('Erro ao excluir');
     }
 }
+
 module.exports = {
+    upload,
+    imagem1,
+    imagem2,
     listarProdutos, 
     adicionarProdutos,
     listarPlanta,
