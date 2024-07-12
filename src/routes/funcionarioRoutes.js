@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const funcionarioCountroller = require('../controllers/funcionarioController');
+const funcionarioController = require('../controllers/funcionarioController');
 
-router.post('/listar', funcionarioCountroller.listarFuncionarios);
-router.post('/adicionar', funcionarioCountroller.upload.any(),funcionarioCountroller.adicionarFuncionarios);
+router.post('/listar', funcionarioController.listarFuncionarios);
+router.post('/adicionar', funcionarioController.upload.any(),funcionarioController.adicionarFuncionarios);
 // router.post('/adicionarfoto', funcionarioCountroller.upload.any(), funcionarioCountroller.foto);
-router.post('/listarcentrocusto', funcionarioCountroller.listarCentroCusto);
-router.post('/listarhierarquia', funcionarioCountroller.listarHierarquia);
-router.post('/listarsetor', funcionarioCountroller.listarSetorDiretoria);
-router.post('/listarplanta', funcionarioCountroller.listarPlanta);
-router.post('/deleteFuncionario', funcionarioCountroller.deleteFuncionario);
+router.post('/listarcentrocusto', funcionarioController.listarCentroCusto);
+router.post('/listarhierarquia', funcionarioController.listarHierarquia);
+router.post('/listarsetor', funcionarioController.listarSetorDiretoria);
+router.post('/listarplanta', funcionarioController.listarPlanta);
+router.post('/deleteFuncionario', funcionarioController.deleteFuncionario);
 module.exports = router;
