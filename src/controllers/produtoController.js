@@ -30,14 +30,10 @@ async function listarProdutos(request, response) {
 
 async function adicionarProdutos(request, response) {
     try {
-        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida ,imagem1, imagem2} = request.body;
+        const id_cliente = request.body.id_cliente;
+        console.log('Arquivos recebidos:', request.files);
+
         const files = request.files;
-
-        if (!id_cliente) {
-            response.status(401).json("ID do cliente não enviado");
-            return;
-        }
-
         // Diretórios de upload com id_cliente antes da pasta principal
         const uploadPathPrincipal = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'principal');
         const uploadPathSecundario = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'secundario');
@@ -48,22 +44,27 @@ async function adicionarProdutos(request, response) {
 
         let imagem1Path = '';
         const imagem2Path = '';
-        let filePath='';
+
+        console.log('Arquivos recebidos:', files);
 
         // Salva arquivos
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
         
             if (i === 0) {
-                filePath = path.join(uploadPathPrincipal, imagem1);
+                const fileName = `${id_cliente.toString()}_${file.originalname}`; 
+                filePath = path.join(uploadPathPrincipal, file.originalname);
                 imagem1Path = filePath;
-            } else {
-                filePath = path.join(uploadPathSecundario, imagem2);
+            } else if (i === 1) {
+                const fileName = `${id_cliente.toString()}_${file.originalname}`;
+                filePath = path.join(uploadPathSecundario, file.originalname);
                 imagem2Path = filePath;
             }
 
             await fs.writeFile(filePath, file.buffer);
         }
+
+const {id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2} = request.body;
 
         const query = `
             INSERT INTO produtos
@@ -82,8 +83,8 @@ async function adicionarProdutos(request, response) {
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2); // Armazena múltiplos caminhos de imagem como uma string
+        requestSql.input('imagem1', sql.VarChar, path.basename(imagem1Path));
+        requestSql.input('imagem2', sql.VarChar, path.basename(imagem2Path));
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
@@ -95,7 +96,7 @@ async function adicionarProdutos(request, response) {
 
         const result = await requestSql.query(query);
 
-        if (result.rowsAffected.length > 0) {
+        if (result) {
             response.status(201).json("Produto registrado com sucesso");
         } else {
             response.status(400).json("Erro ao registrar o Produto");
