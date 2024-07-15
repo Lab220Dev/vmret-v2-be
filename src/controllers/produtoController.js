@@ -42,8 +42,8 @@ async function adicionarProdutos(request, response) {
         }
 
         // Diretórios de upload com id_cliente antes da pasta principal
-        const uploadPathPrincipal = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'principal');
-        const uploadPathSecundario = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });
@@ -57,11 +57,11 @@ async function adicionarProdutos(request, response) {
             let filePath;
 
             if (key === 'file_principal') {
-                const nomeArquivoPrincipal = `produto_${imagem1}_${codigo}_Princ${Date.now()}${fileExtension}`;
+                const nomeArquivoPrincipal = `${imagem1}${fileExtension}`;
                 filePath = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
                 imagem1Path = filePath;
             } else if (key.startsWith('file_secundario_')) {
-                const nomeArquivoSecundario = `produto_${imagem2}_${codigo}_Sec${Date.now()}${fileExtension}`;
+                const nomeArquivoSecundario = `${imagem2}${fileExtension}`;
                 filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
                 imagem2Paths.push(filePath);
             }
@@ -87,7 +87,7 @@ async function adicionarProdutos(request, response) {
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
         requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2); // Armazena múltiplos caminhos de imagem como uma string
+        requestSql.input('imagem2', sql.VarChar, imagem2); 
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);

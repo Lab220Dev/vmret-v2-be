@@ -32,7 +32,7 @@ async function adicionarFuncionarios(request, response) {
     try {
         const id_cliente = request.body.id_cliente;
         const files = request.files;
-        const uploadPath = path.join(__dirname, './uploads', id_cliente.toString());
+        const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
         await fs.mkdir(uploadPath, { recursive: true });
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
