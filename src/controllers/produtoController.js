@@ -4,7 +4,10 @@ const fs = require('fs').promises;
 const multer = require('multer');
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }).fields([
+    { name: 'file_principal', maxCount: 1 },
+    { name: 'file_secundario_0', maxCount: 1 },
+    { name: 'file_secundario_1', maxCount: 1 }]);
 
 async function listarProdutos(request, response) {
     try {
@@ -47,19 +50,20 @@ async function adicionarProdutos(request, response) {
         await fs.mkdir(uploadPathSecundario, { recursive: true });
 
         let imagem1Path = '';
-        const imagem2Path = '';
-        let filePath='';
+        let imagem2Paths = [];
+        for (const key in files) {
+            const file = files[key][0];
+            const fileExtension = path.extname(file.originalname);
+            let filePath;
 
-        // Salva arquivos
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-        
-            if (i === 0) {
-                filePath = path.join(uploadPathPrincipal, imagem1);
+            if (key === 'file_principal') {
+                const nomeArquivoPrincipal = `produto_${imagem1}_${codigo}_Princ${Date.now()}${fileExtension}`;
+                filePath = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
                 imagem1Path = filePath;
-            } else {
-                filePath = path.join(uploadPathSecundario, imagem2);
-                imagem2Path = filePath;
+            } else if (key.startsWith('file_secundario_')) {
+                const nomeArquivoSecundario = `produto_${imagem2}_${codigo}_Sec${Date.now()}${fileExtension}`;
+                filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+                imagem2Paths.push(filePath);
             }
 
             await fs.writeFile(filePath, file.buffer);
