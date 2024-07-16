@@ -30,16 +30,6 @@ async function listarFuncionarios(request, response) {
 
 async function adicionarFuncionarios(request, response) {
     try {
-        const id_cliente = request.body.id_cliente;
-        const files = request.files;
-        const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
-        await fs.mkdir(uploadPath, { recursive: true });
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const filePath = path.join(uploadPath, file.originalname);
-            await fs.writeFile(filePath, file.buffer);
-        }
-
         const {  id_setor, id_funcao,
             nome, matricula, biometria,
             RG, CPF, CTPS, id_planta,
@@ -48,6 +38,18 @@ async function adicionarFuncionarios(request, response) {
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
             email, face,foto} = request.body;
+
+        const id_cliente = request.body.id_cliente;
+        const files = request.files;
+        const uploadPath = path.join(__dirname, './uploads/funcionarios', id_cliente.toString());
+        await fs.mkdir(uploadPath, { recursive: true });
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const filePath = path.join(uploadPath, foto);
+            await fs.writeFile(filePath, file.buffer);
+        }
+
+
         const query = `INSERT INTO funcionarios
         ( id_cliente, id_setor, id_funcao, nome, matricula, 
          biometria, RG, CPF, CTPS, id_planta, foto, data_admissao, 
