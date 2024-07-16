@@ -9,3 +9,9 @@ npm install
 ```sh
 npm start
 ```
+
+### Iniciar o Servidor com auto-reload
+
+```sh
+nodemon --exec npm start
+```
