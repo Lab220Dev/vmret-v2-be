@@ -4,7 +4,10 @@ const fs = require('fs').promises;
 const multer = require('multer');
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }).fields([
+    { name: 'file_principal', maxCount: 1 },
+    { name: 'file_secundario_0', maxCount: 1 },
+    { name: 'file_secundario_1', maxCount: 1 }]);
 
 async function listarProdutos(request, response) {
     try {
@@ -35,30 +38,28 @@ async function adicionarProdutos(request, response) {
 
         const files = request.files;
         // Diretórios de upload com id_cliente antes da pasta principal
-        const uploadPathPrincipal = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'principal');
-        const uploadPathSecundario = path.join(__dirname, './uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });
         await fs.mkdir(uploadPathSecundario, { recursive: true });
 
         let imagem1Path = '';
-        const imagem2Path = '';
+        let imagem2Paths = [];
+        for (const key in files) {
+            const file = files[key][0];
+            const fileExtension = path.extname(file.originalname);
+            let filePath;
 
-        console.log('Arquivos recebidos:', files);
-
-        // Salva arquivos
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-        
-            if (i === 0) {
-                const fileName = `${id_cliente.toString()}_${file.originalname}`; 
-                filePath = path.join(uploadPathPrincipal, file.originalname);
+            if (key === 'file_principal') {
+                const nomeArquivoPrincipal = `${imagem1}${fileExtension}`;
+                filePath = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
                 imagem1Path = filePath;
-            } else if (i === 1) {
-                const fileName = `${id_cliente.toString()}_${file.originalname}`;
-                filePath = path.join(uploadPathSecundario, file.originalname);
-                imagem2Path = filePath;
+            } else if (key.startsWith('file_secundario_')) {
+                const nomeArquivoSecundario = `${imagem2}${fileExtension}`;
+                filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+                imagem2Paths.push(filePath);
             }
 
             await fs.writeFile(filePath, file.buffer);
@@ -83,8 +84,8 @@ const {id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoPr
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, path.basename(imagem1Path));
-        requestSql.input('imagem2', sql.VarChar, path.basename(imagem2Path));
+        requestSql.input('imagem1', sql.VarChar, imagem1);
+        requestSql.input('imagem2', sql.VarChar, imagem2); 
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
