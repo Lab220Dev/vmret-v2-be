@@ -118,7 +118,7 @@ async function adicionarProdutos(request, response) {
 
         const result = await requestSql.query(query);
 
-        if (result.rowsAffected.length > 0) {
+        if (result) {
             response.status(201).json("Produto registrado com sucesso");
         } else {
             response.status(400).json("Erro ao registrar o Produto");

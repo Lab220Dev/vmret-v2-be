@@ -31,6 +31,11 @@ async function login(request, response) {
     }
 }
 
+async function logout(request, response) {
+    response.status(200).json({ message: 'Logoff bem-sucedido' });
+}
+
 module.exports = {
-    login
+    login,
+    logout
 };
