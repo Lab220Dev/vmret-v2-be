@@ -7,7 +7,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).fields([
     { name: 'file_principal', maxCount: 1 },
     { name: 'file_secundario_0', maxCount: 1 },
-    { name: 'file_secundario_1', maxCount: 1 }]);
+    { name: 'file_secundario_1', maxCount: 1 },
+    { name: 'file_secundario_2', maxCount: 1 },
+    { name: 'file_info', maxCount: 1 }
+]);
 
 async function listarProdutos(request, response) {
     try {
@@ -33,39 +36,55 @@ async function listarProdutos(request, response) {
 
 async function adicionarProdutos(request, response) {
     try {
-        const id_cliente = request.body.id_cliente;
-        console.log('Arquivos recebidos:', request.files);
-
+        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagem3, imagem4, imagemdetalhe } = request.body;
         const files = request.files;
+
+        if (!id_cliente) {
+            response.status(401).json("ID do cliente não enviado");
+            return;
+        }
+        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
         // Diretórios de upload com id_cliente antes da pasta principal
         const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
         const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathInfoAdicional = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'info');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });
         await fs.mkdir(uploadPathSecundario, { recursive: true });
+        await fs.mkdir(uploadPathInfoAdicional, { recursive: true });
 
         let imagem1Path = '';
-        let imagem2Paths = [];
-        for (const key in files) {
-            const file = files[key][0];
-            const fileExtension = path.extname(file.originalname);
-            let filePath;
-
-            if (key === 'file_principal') {
-                const nomeArquivoPrincipal = `${imagem1}${fileExtension}`;
-                filePath = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
-                imagem1Path = filePath;
-            } else if (key.startsWith('file_secundario_')) {
-                const nomeArquivoSecundario = `${imagem2}${fileExtension}`;
-                filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
-                imagem2Paths.push(filePath);
+        let imagemdetalhePath = '';
+        let imagemSecundariasPaths = [];
+        const imagensSecundarias = [imagem2, imagem3, imagem4];
+        for (let i = 0; i < 3; i++) {
+            if (files[`file_secundario_${i}`]) {
+                const file = files[`file_secundario_${i}`][0];
+                const fileExtension = path.extname(file.originalname);
+                const nomeArquivoSecundario = `${sanitizeFileName(imagensSecundarias[i])}${fileExtension}`;
+                const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+                imagemSecundariasPaths.push(filePath);
+                await fs.writeFile(filePath, file.buffer);
             }
-
-            await fs.writeFile(filePath, file.buffer);
         }
 
-const {id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2} = request.body;
+        if (files['file_principal']) {
+            const file = files['file_principal'][0];
+            const fileExtension = path.extname(file.originalname);
+            const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}${fileExtension}`;
+            imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
+            await fs.writeFile(imagem1Path, file.buffer);
+        }
+
+        if (files['file_info']) {
+            const file = files['file_info'][0];
+            const fileExtension = path.extname(file.originalname);
+            const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}${fileExtension}`;
+            imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
+            await fs.writeFile(imagemdetalhePath, file.buffer);
+        }
 
         const query = `
             INSERT INTO produtos
@@ -74,7 +93,7 @@ const {id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoPr
             quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
             VALUES
             (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
-            @imagem1, @imagem2, '', '', '', @deleted, @codigo,
+            @imagem1, @imagem2, @imagem3, @imagem4, @imagemdetalhe, @deleted, @codigo,
             @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
         `;
 
@@ -85,7 +104,10 @@ const {id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoPr
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
         requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2); 
+        requestSql.input('imagem2', sql.VarChar, imagem2);
+        requestSql.input('imagem3', sql.VarChar, imagem3);
+        requestSql.input('imagem4', sql.VarChar, imagem4);
+        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
@@ -160,7 +182,7 @@ module.exports = {
     upload,
     imagem1,
     imagem2,
-    listarProdutos, 
+    listarProdutos,
     adicionarProdutos,
     listarPlanta,
     deleteProduto
