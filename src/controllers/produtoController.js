@@ -43,6 +43,7 @@ async function adicionarProdutos(request, response) {
             response.status(401).json("ID do cliente não enviado");
             return;
         }
+        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
 
         // Diretórios de upload com id_cliente antes da pasta principal
         const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
@@ -62,7 +63,7 @@ async function adicionarProdutos(request, response) {
             if (files[`file_secundario_${i}`]) {
                 const file = files[`file_secundario_${i}`][0];
                 const fileExtension = path.extname(file.originalname);
-                const nomeArquivoSecundario = `${imagensSecundarias[i]}${fileExtension}`;
+                const nomeArquivoSecundario = `${sanitizeFileName(imagensSecundarias[i])}${fileExtension}`;
                 const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
                 imagemSecundariasPaths.push(filePath);
                 await fs.writeFile(filePath, file.buffer);
@@ -72,7 +73,7 @@ async function adicionarProdutos(request, response) {
         if (files['file_principal']) {
             const file = files['file_principal'][0];
             const fileExtension = path.extname(file.originalname);
-            const nomeArquivoPrincipal = `${imagem1}${fileExtension}`;
+            const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}${fileExtension}`;
             imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
             await fs.writeFile(imagem1Path, file.buffer);
         }
@@ -80,7 +81,7 @@ async function adicionarProdutos(request, response) {
         if (files['file_info']) {
             const file = files['file_info'][0];
             const fileExtension = path.extname(file.originalname);
-            const nomeArquivoInfo = `${imagemdetalhe}${fileExtension}`;
+            const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}${fileExtension}`;
             imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }

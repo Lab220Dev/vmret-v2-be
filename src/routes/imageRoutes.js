@@ -22,6 +22,29 @@ router.get('/produtos/:id/:imageName',  (req, res) => {
 
 
 });
+router.post('/produtos/imagesAdicionais', (req, res) => {
+    const { idcliente, imageNames } = req.body;
+
+    if (!Array.isArray(imageNames)) {
+        return res.status(400).json({ error: 'Formato inválido para a lista de nomes de imagens' });
+    }
+
+    const images = imageNames.map((imageName) => {
+        const imagePath = path.join(__dirname, '../uploads/produtos', idcliente, 'secundario', imageName);
+
+        if (fs.existsSync(imagePath)) {
+            const data = fs.readFileSync(imagePath);
+            const base64Image = data.toString('base64');
+            const mimeType = 'image/png'; 
+            return { imageName, image: base64Image, mimeType };
+        } else {
+            return { imageName, error: 'Imagem não encontrada' };
+        }
+    });
+
+    res.json(images);
+});
+
 router.get('/funcionario/:id/:imageName',  (req, res) => {
     const imageName = decodeURIComponent(req.params.imageName);
     const idCliente = req.params.id;
