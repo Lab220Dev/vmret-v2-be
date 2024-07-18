@@ -247,7 +247,7 @@ async function atualizarFuncionario(request, response) {
                 email = @email, face = @face
             WHERE id_funcionario = @id_funcionario`;
 
-        const request = new sql.Request();
+        request = new sql.Request();
         request.input('id_setor', sql.Int, id_setor);
         request.input('id_funcao', sql.Int, id_funcao);
         request.input('nome', sql.VarChar, nome);
@@ -268,7 +268,7 @@ async function atualizarFuncionario(request, response) {
         request.input('sexta', sql.Bit, sexta);
         request.input('sabado', sql.Bit, sabado);
         request.input('domingo', sql.Bit, domingo);
-        request.input('ordem', sql.Int, ordem);
+        request.input('ordem', sql.Int, '');
         request.input('id_centro_custo', sql.Int, id_centro_custo);
         request.input('status', sql.NVarChar, status);
         request.input('senha', sql.NVarChar, senha);
