@@ -62,8 +62,8 @@ async function adicionarProdutos(request, response) {
         for (let i = 0; i < 3; i++) {
             if (files[`file_secundario_${i}`]) {
                 const file = files[`file_secundario_${i}`][0];
-                const fileExtension = path.extname(file.originalname);
-                const nomeArquivoSecundario = `${sanitizeFileName(imagensSecundarias[i])}${fileExtension}`;
+                // const fileExtension = path.extname(file.originalname);
+                const nomeArquivoSecundario = `${sanitizeFileName(imagensSecundarias[i])}`;
                 const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
                 imagemSecundariasPaths.push(filePath);
                 await fs.writeFile(filePath, file.buffer);
@@ -72,16 +72,16 @@ async function adicionarProdutos(request, response) {
 
         if (files['file_principal']) {
             const file = files['file_principal'][0];
-            const fileExtension = path.extname(file.originalname);
-            const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}${fileExtension}`;
+            // const fileExtension = path.extname(file.originalname);
+            const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}`;
             imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
             await fs.writeFile(imagem1Path, file.buffer);
         }
 
         if (files['file_info']) {
             const file = files['file_info'][0];
-            const fileExtension = path.extname(file.originalname);
-            const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}${fileExtension}`;
+            // const fileExtension = path.extname(file.originalname);
+            const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
             imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }

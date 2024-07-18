@@ -3,10 +3,21 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 
-router.get('/produtos/:id/:imageName',  (req, res) => {
+function determinarTipo(texto) {
+    if (texto.includes("Princ")) {
+        return "principal";
+    } else if (texto.includes("info")) {
+        return "info";
+    } else {
+        return null;
+    }
+}
+
+router.get('/produto/:id/:imageName', (req, res) => {
     const imageName = req.params.imageName;
     const idCliente = req.params.id;
-    const imagePath = path.join(__dirname, '../uploads/produtos', idCliente, 'principal', imageName);
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+    const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), sanitizeFileName(imageName.toString()));
 
     fs.readFile(imagePath, (err, data) => {
         if (err) {
@@ -14,7 +25,7 @@ router.get('/produtos/:id/:imageName',  (req, res) => {
         }
 
         const base64Image = data.toString('base64');
-        const mimeType = 'image/png'; 
+        const mimeType = 'image/png';
 
         res.json({ image: base64Image, mimeType });
     });
@@ -24,18 +35,18 @@ router.get('/produtos/:id/:imageName',  (req, res) => {
 });
 router.post('/produtos/imagesAdicionais', (req, res) => {
     const { idcliente, imageNames } = req.body;
-
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
     if (!Array.isArray(imageNames)) {
         return res.status(400).json({ error: 'Formato inválido para a lista de nomes de imagens' });
     }
 
     const images = imageNames.map((imageName) => {
-        const imagePath = path.join(__dirname, '../uploads/produtos', idcliente, 'secundario', imageName);
+        const imagePath = path.join(__dirname, '../uploads/produtos', idcliente.toString(), 'secundario', sanitizeFileName(imageName));
 
         if (fs.existsSync(imagePath)) {
             const data = fs.readFileSync(imagePath);
             const base64Image = data.toString('base64');
-            const mimeType = 'image/png'; 
+            const mimeType = 'image/png';
             return { imageName, image: base64Image, mimeType };
         } else {
             return { imageName, error: 'Imagem não encontrada' };
@@ -45,7 +56,7 @@ router.post('/produtos/imagesAdicionais', (req, res) => {
     res.json(images);
 });
 
-router.get('/funcionario/:id/:imageName',  (req, res) => {
+router.get('/funcionario/:id/:imageName', (req, res) => {
     const imageName = decodeURIComponent(req.params.imageName);
     const idCliente = req.params.id;
     const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(), imageName);
@@ -56,7 +67,7 @@ router.get('/funcionario/:id/:imageName',  (req, res) => {
         }
 
         const base64Image = data.toString('base64');
-        const mimeType = 'image/png'; 
+        const mimeType = 'image/png';
 
         res.json({ image: base64Image, mimeType });
     });
