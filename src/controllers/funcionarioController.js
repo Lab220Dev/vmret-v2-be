@@ -205,6 +205,91 @@ async function deleteFuncionario(request, response) {
     }
 }
 
+async function atualizarFuncionario(request, response) {
+    try {
+        const {
+            id_funcionario, 
+            id_setor, id_funcao,
+            nome, matricula, biometria,
+            RG, CPF, CTPS, id_planta,
+            data_admissao, hora_inicial, hora_final,
+            segunda, terca, quarta, quinta, sexta,
+            sabado, domingo, ordem,
+            id_centro_custo, status, senha, biometria2,
+            email, face, foto 
+        } = request.body;
+
+        let nomeFuncionario = foto; 
+
+        const id_cliente = request.body.id_cliente;
+        const files = request.files;
+
+        if (files && files.length > 0) {
+            const file = files[0]; 
+            const fileExtension = path.extname(file.originalname);
+            nomeFuncionario = `${foto}${fileExtension}`;
+            const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
+            await fs.mkdir(uploadPath, { recursive: true });
+            const filePath = path.join(uploadPath, nomeFuncionario);
+            await fs.writeFile(filePath, file.buffer);
+        }
+
+        const query = `
+            UPDATE funcionarios
+            SET id_setor = @id_setor, id_funcao = @id_funcao,
+                nome = @nome, matricula = @matricula, biometria = @biometria,
+                RG = @RG, CPF = @CPF, CTPS = @CTPS, id_planta = @id_planta,
+                foto = @foto, data_admissao = @data_admissao, hora_inicial = @hora_inicial,
+                hora_final = @hora_final, segunda = @segunda, terca = @terca,
+                quarta = @quarta, quinta = @quinta, sexta = @sexta, sabado = @sabado,
+                domingo = @domingo, ordem = @ordem, id_centro_custo = @id_centro_custo,
+                status = @status, senha = @senha, biometria2 = @biometria2,
+                email = @email, face = @face
+            WHERE id_funcionario = @id_funcionario`;
+
+        const request = new sql.Request();
+        request.input('id_setor', sql.Int, id_setor);
+        request.input('id_funcao', sql.Int, id_funcao);
+        request.input('nome', sql.VarChar, nome);
+        request.input('matricula', sql.VarChar, matricula);
+        request.input('biometria', sql.NVarChar, biometria);
+        request.input('RG', sql.VarChar, RG);
+        request.input('CPF', sql.VarChar, CPF);
+        request.input('CTPS', sql.VarChar, CTPS);
+        request.input('id_planta', sql.Int, id_planta);
+        request.input('foto', sql.VarChar, nomeFuncionario);
+        request.input('data_admissao', sql.DateTime, data_admissao);
+        request.input('hora_inicial', sql.Time, hora_inicial);
+        request.input('hora_final', sql.Time, hora_final);
+        request.input('segunda', sql.Bit, segunda);
+        request.input('terca', sql.Bit, terca);
+        request.input('quarta', sql.Bit, quarta);
+        request.input('quinta', sql.Bit, quinta);
+        request.input('sexta', sql.Bit, sexta);
+        request.input('sabado', sql.Bit, sabado);
+        request.input('domingo', sql.Bit, domingo);
+        request.input('ordem', sql.Int, ordem);
+        request.input('id_centro_custo', sql.Int, id_centro_custo);
+        request.input('status', sql.NVarChar, status);
+        request.input('senha', sql.NVarChar, senha);
+        request.input('biometria2', sql.NVarChar, biometria2);
+        request.input('email', sql.VarChar, email);
+        request.input('face', sql.VarChar, face);
+        request.input('id_funcionario', sql.Int, id_funcionario);
+
+        const result = await request.query(query);
+        if (result) {
+            response.status(200).send('Funcionário atualizado com sucesso!');
+            return;
+        }
+        response.status(400).send('Falha ao atualizar o funcionário');
+    } catch (error) {
+        console.error('Erro ao atualizar funcionário:', error.message);
+        response.status(500).send('Erro ao atualizar funcionário');
+    }
+}
+
+
 module.exports = {
     upload,
     foto,
@@ -214,5 +299,6 @@ module.exports = {
     listarSetorDiretoria,
     listarHierarquia,
     listarPlanta,
+    atualizarFuncionario,
     deleteFuncionario
 };

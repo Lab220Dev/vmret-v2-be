@@ -33,6 +33,7 @@ router.get('/produto/:id/:imageName', (req, res) => {
 
 
 });
+
 router.post('/produtos/imagesAdicionais', (req, res) => {
     const { idcliente, imageNames } = req.body;
     const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');

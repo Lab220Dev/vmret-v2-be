@@ -4,7 +4,7 @@ const funcionarioController = require('../controllers/funcionarioController');
 
 router.post('/listar', funcionarioController.listarFuncionarios);
 router.post('/adicionar', funcionarioController.upload.any(),funcionarioController.adicionarFuncionarios);
-// router.post('/adicionarfoto', funcionarioCountroller.upload.any(), funcionarioCountroller.foto);
+router.post('/atualizar', funcionarioController.upload.any(),funcionarioController.atualizarFuncionario);
 router.post('/listarcentrocusto', funcionarioController.listarCentroCusto);
 router.post('/listarhierarquia', funcionarioController.listarHierarquia);
 router.post('/listarsetor', funcionarioController.listarSetorDiretoria);

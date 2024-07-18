@@ -176,6 +176,111 @@ async function deleteProduto(request, response) {
         response.status(500).send('Erro ao excluir');
     }
 }
+async function atualizarProduto(request, response) {
+    try {
+        const { id_produto,id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagem3, imagem4, imagemdetalhe } = request.body;
+        const files = request.files;
+
+        if (!id_produto) {
+            response.status(401).json("ID do produto não enviado");
+            return;
+        }
+
+        // Função para sanitizar nomes de arquivos
+        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
+        // Diretórios de upload com id_cliente antes da pasta principal
+        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathInfoAdicional = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'info');
+
+        // Cria diretórios de upload se não existirem
+        await fs.mkdir(uploadPathPrincipal, { recursive: true });
+        await fs.mkdir(uploadPathSecundario, { recursive: true });
+        await fs.mkdir(uploadPathInfoAdicional, { recursive: true });
+
+        // Lista de caminhos das imagens atualizadas
+        let imagem1Path = imagem1;
+        let imagemdetalhePath = imagemdetalhe;
+        let imagemSecundariasPaths = [imagem2, imagem3, imagem4];
+
+        // Verifica se há alterações nas imagens secundárias
+        for (let i = 0; i < 3; i++) {
+            if (files[`file_secundario_${i}`]) {
+                const file = files[`file_secundario_${i}`][0];
+                const nomeArquivoSecundario = `${sanitizeFileName(imagemSecundariasPaths[i])}`;
+                const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+                await fs.writeFile(filePath, file.buffer);
+                imagemSecundariasPaths[i] = filePath;
+            }
+        }
+
+        // Verifica se há alteração na imagem principal
+        if (files['file_principal']) {
+            const file = files['file_principal'][0];
+            const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}`;
+            imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
+            await fs.writeFile(imagem1Path, file.buffer);
+        }
+
+        // Verifica se há alteração na imagem de informação adicional
+        if (files['file_info']) {
+            const file = files['file_info'][0];
+            const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
+            imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
+            await fs.writeFile(imagemdetalhePath, file.buffer);
+        }
+
+        // Atualiza o produto no banco de dados
+        const query = `
+            UPDATE produtos
+            SET id_cliente = @id_cliente,
+                id_categoria = @id_categoria,
+                nome = @nome,
+                descricao = @descricao,
+                validadedias = @validadedias,
+                imagem1 = @imagem1,
+                imagem2 = @imagem2,
+                imagem3 = @imagem3,
+                imagem4 = @imagem4,
+                imagemdetalhe = @imagemdetalhe,
+                codigo = @codigo,
+                id_planta = @id_planta,
+                id_tipoProduto = @id_tipoProduto,
+                unidade_medida = @unidade_medida
+            WHERE id_produto = @id_produto
+        `;
+
+        const requestSql = new sql.Request();
+        requestSql.input('id_cliente', sql.Int, id_cliente);
+        requestSql.input('id_categoria', sql.Int, id_categoria);
+        requestSql.input('nome', sql.VarChar, nome);
+        requestSql.input('descricao', sql.VarChar, descricao);
+        requestSql.input('validadedias', sql.Int, validadedias);
+        requestSql.input('imagem1', sql.VarChar, imagem1Path);
+        requestSql.input('imagem2', sql.VarChar, imagemSecundariasPaths[0]);
+        requestSql.input('imagem3', sql.VarChar, imagemSecundariasPaths[1]);
+        requestSql.input('imagem4', sql.VarChar, imagemSecundariasPaths[2]);
+        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhePath);
+        requestSql.input('codigo', sql.VarChar, codigo);
+        requestSql.input('id_planta', sql.Int, id_planta);
+        requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
+        requestSql.input('unidade_medida', sql.VarChar, unidade_medida);
+        requestSql.input('id_produto', sql.Int, id_produto);
+
+        const result = await requestSql.query(query);
+
+        // Verifica se houve sucesso na atualização
+        if (result.rowsAffected && result.rowsAffected[0] > 0) {
+            response.status(200).json("Produto atualizado com sucesso");
+        } else {
+            response.status(400).json("Erro ao atualizar o Produto");
+        }
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 
 module.exports = {
     upload,
@@ -184,5 +289,6 @@ module.exports = {
     listarProdutos,
     adicionarProdutos,
     listarPlanta,
-    deleteProduto
+    deleteProduto,
+    atualizarProduto
 };
