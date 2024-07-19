@@ -6,7 +6,9 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-
+const convertToBoolean = (value) => {
+    return value === 'true';
+};
 async function listarFuncionarios(request, response) {
     try {
         let query = 'SELECT * FROM funcionarios WHERE 1 = 1';
@@ -38,6 +40,7 @@ async function adicionarFuncionarios(request, response) {
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
             email, face,foto} = request.body;
+            console.log(request.body)
             let nomeFuncionario='';
         const id_cliente = request.body.id_cliente;
         const files = request.files;
@@ -81,15 +84,15 @@ async function adicionarFuncionarios(request, response) {
         request.input('data_admissao', sql.DateTime, data_admissao);
         request.input('hora_inicial', sql.Time, hora_inicial);
         request.input('hora_final', sql.Time, hora_final);
-        request.input('segunda', sql.Bit, segunda);
-        request.input('terca', sql.Bit, terca);
-        request.input('quarta', sql.Bit, quarta);
-        request.input('quinta', sql.Bit, quinta);
-        request.input('sexta', sql.Bit, sexta);
-        request.input('sabado', sql.Bit, sabado);
-        request.input('domingo', sql.Bit, domingo);
+        request.input('segunda', sql.Bit, convertToBoolean(segunda));
+        request.input('terca', sql.Bit, convertToBoolean(terca));
+        request.input('quarta', sql.Bit, convertToBoolean(quarta));
+        request.input('quinta', sql.Bit, convertToBoolean(quinta));
+        request.input('sexta', sql.Bit, convertToBoolean(sexta));
+        request.input('sabado', sql.Bit, convertToBoolean(sabado));
+        request.input('domingo', sql.Bit, convertToBoolean(domingo));
         request.input('deleted', sql.Bit, false);
-        request.input('ordem', sql.Int, ordem);
+        request.input('ordem', sql.Int, '');
         request.input('id_centro_custo', sql.Int, id_centro_custo);
         request.input('status', sql.NVarChar, status);
         request.input('senha', sql.NVarChar, senha);
@@ -218,7 +221,7 @@ async function atualizarFuncionario(request, response) {
             id_centro_custo, status, senha, biometria2,
             email, face, foto 
         } = request.body;
-
+        
         let nomeFuncionario = foto; 
 
         const id_cliente = request.body.id_cliente;
