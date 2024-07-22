@@ -43,6 +43,24 @@ async function adicionar(request, response) {
         response.status(500).send('Erro ao adicionar registro');
     }
 }
+
+async function deleteCentro(request, response) {
+  try {
+      let query = "UPDATE Centro_Custos SET deleted = 1 WHERE 1 = 1";
+
+      if (request.body.ID_CentroCusto) {
+          query += ` AND ID_CentroCusto = '${request.body.ID_CentroCusto}'`;
+          const result = await new sql.Request().query(query);
+          response.status(200).json(result.recordset);
+          return;
+      }
+      response.status(401).json("ID do centro não foi enviado");
+  } catch (error) {
+      console.error('Erro ao excluir:', error.message);
+      response.status(500).send('Erro ao excluir');
+  }
+}
+
 async function atualizar(request, response) {
     try {
       const { id_centro_custo, nome } = request.body;
@@ -67,5 +85,5 @@ async function atualizar(request, response) {
     }
   }
 module.exports = {
-    adicionar, listar,atualizar
+    adicionar, listar, deleteCentro, atualizar
 };
