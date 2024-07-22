@@ -1,15 +1,15 @@
 const sql = require('mssql');
 
-const mockfuncao = [{ "id_centro_custo": 1, "nome": "265936583-0", "id_funcao": 1 },
-{ "id_centro_custo": 2, "nome": "754835000-7", "id_funcao": 2 },
-{ "id_centro_custo": 3, "nome": "753803720-9", "id_funcao": 3 },
-{ "id_centro_custo": 4, "nome": "053642656-2", "id_funcao": 4 },
-{ "id_centro_custo": 5, "nome": "761168639-9", "id_funcao": 5 },
-{ "id_centro_custo": 6, "nome": "905085121-5", "id_funcao": 6 },
-{ "id_centro_custo": 7, "nome": "287833697-6", "id_funcao": 7 },
-{ "id_centro_custo": 8, "nome": "921291642-2", "id_funcao": 8 },
-{ "id_centro_custo": 9, "nome": "269737784-0", "id_funcao": 9 },
-{ "id_centro_custo": 10, "nome": "251320665-7", "id_funcao": 10 }];
+const mockfuncao = [{ "id_centro_custo": 1, "nome": "265936583-0", "id_funcao": 10 },
+  { "id_centro_custo": 2, "nome": "754835000-7", "id_funcao": 9 },
+  { "id_centro_custo": 3, "nome": "753803720-9", "id_funcao": 8 },
+  { "id_centro_custo": 4, "nome": "053642656-2", "id_funcao": 7 },
+  { "id_centro_custo": 5, "nome": "761168639-9", "id_funcao": 6 },
+  { "id_centro_custo": 6, "nome": "905085121-5", "id_funcao": 5 },
+  { "id_centro_custo": 7, "nome": "287833697-6", "id_funcao": 4 },
+  { "id_centro_custo": 8, "nome": "921291642-2", "id_funcao": 3 },
+  { "id_centro_custo": 9, "nome": "269737784-0", "id_funcao": 2 },
+  { "id_centro_custo": 10, "nome": "251320665-7", "id_funcao": 1 }];
 
 async function listar(request, response) {
     try {
