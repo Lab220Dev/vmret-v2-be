@@ -10,6 +10,7 @@ const loginRoutes = require('./src/routes/loginRoutes');
 const imageRoutes = require('./src/routes/imageRoutes');
 const CentroCustoRoutes = require('./src/routes/CentroCustoRoutes');
 const funcaoRoutes = require('./src/routes/funcaoRoutes');
+const planasRoutes = require('./src/routes/plantaRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const cors = require('cors');
 const path = require('path');
@@ -46,6 +47,10 @@ app.use('/api/cdc', autenticarToken, CentroCustoRoutes);
 
 // Rotas de Função
 app.use('/api/funcao', autenticarToken, funcaoRoutes);
+
+// Rotas de Plantas
+app.use('/api/plantas', autenticarToken, planasRoutes);
+
 // Rotas de login
 app.use('/api', loginRoutes);
 
