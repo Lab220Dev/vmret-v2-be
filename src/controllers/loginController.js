@@ -44,7 +44,82 @@ async function logout(request, response) {
     response.status(200).json({ message: 'Logoff bem-sucedido' });
 }
 
+async function menu(request, response) {
+    try {
+        const id_cliente = request.body.id_cliente;
+        if (!id_cliente) {
+            return response.status(401).json("ID do cliente não enviado");
+        }
+        const queryMenu = `
+            SELECT * FROM Menu
+            WHERE Cod_cli = @id_cliente`;
+        const requestSql = new sql.Request();
+        requestSql.input('id_cliente', sql.Int, id_cliente);
+        const MenuR = await requestSql.query(queryMenu);
+        const Menu = MenuR.recordset;;
+        const queryMenuItem = `
+            SELECT * FROM menu_itens
+            WHERE Cod_cli = @id_cliente`;
+        const MenuItemR =await requestSql.query(queryMenuItem);
+        const MenuItem = MenuItemR.recordset;
+  
+        const menuTree = buildMenuTree(Menu, MenuItem);
+        response.json({ items: menuTree });
+    } catch (err) {
+        console.error('Erro ao consultar o banco de dados', err);
+        response.status(500).send('Erro ao consultar o banco de dados');
+    }
+
+
+}
+function buildMenuTree(menus, menuItems) {
+    const menuMap = {};
+    const itemMap = {};
+
+    // Cria o mapa de menus
+    menus.forEach(menu => {
+        menuMap[menu.ID] = { 
+            label: menu.Nome, 
+            icon: menu.Icone || null, 
+            to: menu.To || null, 
+            items: [] 
+        };
+    });
+
+    // Cria o mapa de itens
+    menuItems.forEach(item => {
+        itemMap[item.ID] = { 
+            label: item.Nome, 
+            icon: item.Icone || null, 
+            to: item.to || null, 
+            items: [] 
+        };
+    });
+
+    // Organiza os itens e sub-itens
+    menuItems.forEach(item => {
+        if (item.ID_Sub_Item && item.ID_Sub_Item !== 0) {
+            // Adiciona o item como sub-item do item pai
+            if (itemMap[item.ID_Sub_Item]) {
+                itemMap[item.ID_Sub_Item].items.push(itemMap[item.ID]);
+            }
+        } else {
+            // Adiciona o item como item do menu pai
+            if (menuMap[item.ID_Item]) {
+                menuMap[item.ID_Item].items.push(itemMap[item.ID]);
+            }
+        }
+    });
+
+    // Converte o mapa de menus em uma lista
+    const menuTree = Object.values(menuMap);
+    
+    return menuTree;
+}
+
+
 module.exports = {
     login,
-    logout
+    logout,
+    menu
 };
