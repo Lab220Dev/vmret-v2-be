@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const funcionarioController = require('../controllers/funcionarioController');
+const funcionarioController = require('../../controllers/cadastro/funcionarioController');
 
 router.post('/listar', funcionarioController.listarFuncionarios);
 router.post('/adicionar', funcionarioController.upload.any(),funcionarioController.adicionarFuncionarios);
