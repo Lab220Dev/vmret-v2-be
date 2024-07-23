@@ -1,10 +1,22 @@
 const sql = require('mssql');
 
+const mockData = [{ "id_planta": 1, "nome": "Planta 1"},
+    { "id_planta": 2, "nome": "Planta 12" },
+    { "id_planta": 3, "nome": "Planta-9"},
+    { "id_planta": 4, "nome": "Planta-2" },
+    { "id_planta": 5, "nome": "Planta-9" },
+    { "id_planta": 6, "nome": "Planta-5"},
+    { "id_planta": 7, "nome": "Planta-6" },
+    { "id_planta": 8, "nome": "Planta-13" },
+    { "id_planta": 9, "nome": "Planta-0"},
+    { "id_planta": 10, "nome": "Planta-7"}];
+
 async function listar(request, response) {
     try {
-        let query = 'SELECT * FROM plantas WHERE 1 = 1';
+        // let query = 'SELECT * FROM plantas WHERE 1 = 1';
         if (request.body.id_cliente) {
-            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            // query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            let result = mockData
             response.status(200).json(result);
             return;
         }
