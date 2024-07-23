@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FuncaoController = require('../controllers/FuncaoController');
+const FuncaoController = require('../../controllers/cadastro/FuncaoController');
 
 router.post('/listar', FuncaoController.listar);
 router.post('/adicionar', FuncaoController.adicionar); 

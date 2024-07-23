@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CentroCustocontroller = require('../controllers/CentroCustoController');
+const CentroCustocontroller = require('../../controllers/cadastro/CentroCustoController');
 
 router.post('/listar', CentroCustocontroller.listar);
 router.post('/adicionar', CentroCustocontroller.adicionar); 

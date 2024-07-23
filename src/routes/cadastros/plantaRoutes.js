@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const plantaController = require('../controllers/plantaController');
+const plantaController = require('../../controllers/cadastro/plantaController');
 
 router.post('/listar', plantaController.listar);
 router.post('/adicionar', plantaController.adicionar); 

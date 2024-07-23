@@ -3,14 +3,15 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const app = express();
 const dbConfig = require('./src/config/dbConfig');
-const usuariosRoutes = require('./src/routes/usuarioRoutes');
-const funcionarioRoutes = require('./src/routes/funcionarioRoutes');
-const produtoRoutes = require('./src/routes/produtoRoutes');
+const usuariosRoutes = require('./src/routes/cadastros/usuarioRoutes');
+const funcionarioRoutes = require('./src/routes/cadastros/funcionarioRoutes');
+const produtoRoutes = require('./src/routes/cadastros/produtoRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
 const imageRoutes = require('./src/routes/imageRoutes');
-const CentroCustoRoutes = require('./src/routes/CentroCustoRoutes');
-const funcaoRoutes = require('./src/routes/funcaoRoutes');
-const planasRoutes = require('./src/routes/plantaRoutes');
+const CentroCustoRoutes = require('./src/routes/cadastros/CentroCustoRoutes');
+const funcaoRoutes = require('./src/routes/cadastros/funcaoRoutes');
+const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
+const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const cors = require('cors');
 const path = require('path');
@@ -29,7 +30,7 @@ dbConfig().catch(err => {
     console.error("Erro ao conectar ao banco de dados:", err.message);
     process.exit(1); // Encerra o processo se houver erro na conexão
 });
-
+//Rotas de Cadastro
 // Rotas de usuario
 app.use('/api/usuarios', autenticarToken, usuariosRoutes);
 
@@ -51,6 +52,8 @@ app.use('/api/funcao', autenticarToken, funcaoRoutes);
 // Rotas de Plantas
 app.use('/api/plantas', autenticarToken, planasRoutes);
 
+//Rotas de Relatorio
+app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 // Rotas de login
 app.use('/api', loginRoutes);
 
