@@ -31,13 +31,16 @@ async function relatorio(request, response) {
                 ri.ProdutoNome,
                 ri.ProdutoSKU,
                 ri.Quantidade,
-                ri.Retorno
+                ri.Retorno,
+                f.matricula,
+                f.nome,
+                f.email
             FROM
                 Retiradas r
             INNER JOIN
-                retirada_itens ri
-            ON
-                r.ID_DM_Retirada = ri.id_retirada
+                retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+            LEFT JOIN
+                funcionarios f ON r.ID_Funcionario = f.id_funcionario
             WHERE
                 r.ID_Cliente = @id_cliente
         `;
@@ -56,61 +59,51 @@ async function relatorio(request, response) {
         //     query += ' AND r.ID_Planta = @id_planta';
         //     params.id_planta = id_planta;
         // }
-        // if (id_funcionario) {
-        //     query += ' AND r.ID_Funcionario = @id_funcionario';
-        //     params.id_funcionario = id_funcionario;
-        // }
+        if (id_funcionario) {
+            query += ' AND r.ID_Funcionario = @id_funcionario';
+            params.id_funcionario = id_funcionario;
+        }
         if (data_inicial && data_final) {
             query += ' AND r.Dia BETWEEN @data_inicial AND @data_final';
             params.data_inicial = data_inicial;
             params.data_final = data_final;
         }
-        request = new sql.Request();
 
-        // Adiciona parâmetros à requisição
+        request = new sql.Request();
         request.input('id_cliente', sql.Int, params.id_cliente);
         if (params.id_dm) request.input('id_dm', sql.VarChar, id_dm.toString());
         // if (params.id_setor) request.input('id_setor', sql.VarChar, params.id_setor);
         // if (params.id_planta) request.input('id_planta', sql.VarChar, params.id_planta);
-        // if (params.id_funcionario) request.input('id_funcionario', sql.VarChar, params.id_funcionario);
+        if (params.id_funcionario) request.input('id_funcionario', sql.VarChar, params.id_funcionario);
         if (params.data_inicial) request.input('data_inicial', sql.DateTime, params.data_inicial);
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
 
         const result = await request.query(query);
-        console.log(result)
+        console.log(result);
+
         const retiradasfiltradas = result.recordset.map(row => ({
             ID_Retirada: row.ID_Retirada,
             ID_DM_Retirada: row.ID_DM_Retirada,
             ID_DM: row.ID_DM,
             ID_Cliente: row.ID_Cliente,
             ID_Funcionario: row.ID_Funcionario,
-            Forma_Autenticacao: row.Forma_Autenticacao,
-            Autenticacao: row.Autenticacao,
+            Matricula: row.matricula,
+            Nome: row.nome,
+            Email: row.email,
             Dia: row.Dia,
-            Deleted: row.Deleted,
-            Sincronizado: row.Sincronizado,
-            ID_Retirada_Item: row.ID_Retirada_Item,
-            Transacao: row.Transacao,
-            Porta: row.Porta,
-            DIP: row.DIP,
-            Andar: row.Andar,
-            Posicao: row.Posicao,
-            Mola: row.Mola,
             ProdutoID: row.ProdutoID,
             ProdutoNome: row.ProdutoNome,
             ProdutoSKU: row.ProdutoSKU,
             Quantidade: row.Quantidade,
-            Retorno: row.Retorno
         }));
-        return response.status(200).json(retiradasfiltradas);
 
+        return response.status(200).json(retiradasfiltradas);
 
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
 async function listarDM(request, response) {
     try {
         const { id_cliente } = request.query;
