@@ -6192,7 +6192,7 @@
   .p-splitter-gutter {
     flex-grow: 0;
     flex-shrink: 0;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     cursor: col-resize;
@@ -6249,19 +6249,25 @@
   .p-splitter .p-splitter-gutter {
     transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, outline-color 0.2s;
     background: #e2e8f0;
-  }
+    display: none !important; /* Esconde o separador */
+    }
+
   .p-splitter .p-splitter-gutter .p-splitter-gutter-handle {
     background: #e2e8f0;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, outline-color 0.2s;
     outline-color: transparent;
+    display: none !important; /* Esconde o separador */
   }
   .p-splitter .p-splitter-gutter .p-splitter-gutter-handle:focus-visible {
     outline: 1px solid var(--p-focus-ring-color);
     outline-offset: 2px;
     box-shadow: none;
-  }
+    display: none !important; /* Esconde o separador */
+    }
+
   .p-splitter .p-splitter-gutter-resizing {
     background: #e2e8f0;
+    display: none !important; /* Esconde o separador */
   }
 
   .p-stepper .p-stepper-nav {
@@ -10086,12 +10092,12 @@
     font-size: 1.5rem;
   }
   .p-avatar.p-avatar-xl {
-    width: 4rem;
-    height: 4rem;
-    font-size: 2rem;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
   }
   .p-avatar.p-avatar-xl .p-avatar-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .p-avatar-group .p-avatar {
