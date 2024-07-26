@@ -14,6 +14,7 @@ const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
+const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -22,6 +23,17 @@ require('dotenv').config();
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+const distPath = path.resolve(__dirname, 'dist');
+app.use(express.static(distPath));
+
+app.use(history({
+    disableDotRule: true,
+    verbose: true,
+    rewrites: [
+        { from: /^\/api\/.*$/, to: (context) => context.parsedUrl.pathname },
+        { from: /^\/uploads\/.*$/, to: (context) => context.parsedUrl.pathname }
+    ]
+}));
 app.use(cors({
     origin: '*'
 }));
@@ -62,13 +74,13 @@ app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
 app.use('/api', loginRoutes);
 
 
-
-const distPath = path.resolve(__dirname, 'dist');
-
-app.use(express.static(distPath));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+app.get('*', (req, res) => {
+    const accept = req.headers.accept || '';
+    if (accept.includes('text/html')) {
+        res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        res.status(404).send('Not Found');
+    }
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

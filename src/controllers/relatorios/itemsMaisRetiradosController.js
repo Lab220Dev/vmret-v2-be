@@ -1,4 +1,5 @@
 const sql = require('mssql');
+const { format } = require('date-fns');
 
 
 
@@ -40,19 +41,20 @@ async function relatorio(request, response) {
         }
 
         const currentDate = new Date();
-        let startDate = new Date();
+        let startDate;
         let endDate = currentDate;
-        console.log(data_inicio)
-        console.log(data_final)
-        if (data_inicio && data_final) {
+
+         if (data_inicio && data_final) {
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
-            params.data_inicio = new Date(data_inicio);
-            params.data_final = new Date(data_final);
+            params.data_inicio = new Date(data_inicio).toISOString();
+            params.data_final = new Date(data_final).toISOString();
         } else if (data_inicio) {
             query += ' AND r.Dia >= @data_inicio';
             params.data_inicio = new Date(data_inicio).toISOString();
         } else {
-            startDate.setDate(currentDate.getDate() - 30);
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
             params.data_inicio = startDate.toISOString();
             params.data_final = endDate.toISOString();
@@ -74,7 +76,7 @@ async function relatorio(request, response) {
 
         result.recordset.forEach(row => {
             const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia } = row;
-            const dataFormatada = new Date(Dia).toLocaleDateString();
+            const dataFormatada = format(new Date(Dia), 'dd/MM/yyyy - HH:mm');
 
             if (!produtosMap.has(ProdutoID)) {
                 produtosMap.set(ProdutoID, {
