@@ -1,4 +1,5 @@
 const sql = require('mssql');
+const { format } = require('date-fns');
 
 
 
@@ -75,7 +76,7 @@ async function relatorio(request, response) {
 
         result.recordset.forEach(row => {
             const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia } = row;
-            const dataFormatada = new Date(Dia).toLocaleDateString();
+            const dataFormatada = format(new Date(Dia), 'dd/MM/yyyy - HH:mm');
 
             if (!produtosMap.has(ProdutoID)) {
                 produtosMap.set(ProdutoID, {

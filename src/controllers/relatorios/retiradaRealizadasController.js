@@ -1,4 +1,5 @@
 const sql = require('mssql');
+const { format } = require('date-fns');
 
 async function relatorio(request, response) {
     try {
@@ -80,7 +81,6 @@ async function relatorio(request, response) {
 
         const result = await request.query(query);
         console.log(result);
-
         const retiradasfiltradas = result.recordset.map(row => ({
             ID_Retirada: row.ID_Retirada,
             ID_DM_Retirada: row.ID_DM_Retirada,
@@ -90,7 +90,7 @@ async function relatorio(request, response) {
             Matricula: row.matricula,
             Nome: row.nome,
             Email: row.email,
-            Dia: row.Dia,
+            Dia:  format(new Date(row.Dia), 'dd/MM/yyyy - HH:mm'),
             ProdutoID: row.ProdutoID,
             ProdutoNome: row.ProdutoNome,
             ProdutoSKU: row.ProdutoSKU,
