@@ -6,9 +6,7 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).fields([
     { name: 'file_principal', maxCount: 1 },
-    { name: 'file_secundario_0', maxCount: 1 },
-    { name: 'file_secundario_1', maxCount: 1 },
-    { name: 'file_secundario_2', maxCount: 1 },
+    { name: 'file_secundario', maxCount: 1 },
     { name: 'file_info', maxCount: 1 }
 ]);
 
@@ -36,13 +34,14 @@ async function listarProdutos(request, response) {
 
 async function adicionarProdutos(request, response) {
     try {
-        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagem3, imagem4, imagemdetalhe } = request.body;
+        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
         const files = request.files;
 
         if (!id_cliente) {
             response.status(401).json("ID do cliente não enviado");
             return;
         }
+
         const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
 
         // Diretórios de upload com id_cliente antes da pasta principal
@@ -57,34 +56,31 @@ async function adicionarProdutos(request, response) {
 
         let imagem1Path = '';
         let imagemdetalhePath = '';
-        let imagemSecundariasPaths = [];
-        const imagensSecundarias = [imagem2, imagem3, imagem4];
-        for (let i = 0; i < 3; i++) {
-            if (files[`file_secundario_${i}`]) {
-                const file = files[`file_secundario_${i}`][0];
-                // const fileExtension = path.extname(file.originalname);
-                const nomeArquivoSecundario = `${sanitizeFileName(imagensSecundarias[i])}`;
-                const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
-                imagemSecundariasPaths.push(filePath);
-                await fs.writeFile(filePath, file.buffer);
-            }
-        }
+        let imagemSecundariaPath = ''; 
 
         if (files['file_principal']) {
             const file = files['file_principal'][0];
-            // const fileExtension = path.extname(file.originalname);
             const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}`;
             imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
             await fs.writeFile(imagem1Path, file.buffer);
         }
 
+
+        if (files['file_secundario_0']) {
+            const file = files['file_secundario'][0];
+            const nomeArquivoSecundario = `${sanitizeFileName(imagem2)}`;
+            imagemSecundariaPath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+            await fs.writeFile(imagemSecundariaPath, file.buffer);
+        }
+
+        // Processa a imagem de informações adicionais
         if (files['file_info']) {
             const file = files['file_info'][0];
-            // const fileExtension = path.extname(file.originalname);
             const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
             imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }
+
         const query = `
             INSERT INTO produtos
             (id_cliente, id_categoria, nome, descricao, validadedias,
@@ -103,9 +99,9 @@ async function adicionarProdutos(request, response) {
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
         requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2);
-        requestSql.input('imagem3', sql.VarChar, imagem3);
-        requestSql.input('imagem4', sql.VarChar, imagem4);
+        requestSql.input('imagem2', sql.VarChar, imagem2); // Imagem secundária única
+        requestSql.input('imagem3', sql.VarChar, null); // Não usa imagens 3 e 4
+        requestSql.input('imagem4', sql.VarChar, null);
         requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
@@ -128,6 +124,7 @@ async function adicionarProdutos(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
 
 async function imagem1(request, response) {
     console.log(request.body);
