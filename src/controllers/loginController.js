@@ -1,5 +1,5 @@
 const sql = require('mssql');
-
+const { sendEmail, generateEmailHTML } = require('../utils/emailService');
 const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const segredo = '%$&*656$4#%$3@@@__';
@@ -27,7 +27,7 @@ async function login(request, response) {
 
         if (Usuario) {
             delete Usuario.senha;
-            const id_cliente = Usuario.id_cliente; 
+            const id_cliente = Usuario.id_cliente;
             const role = Usuario.role;
             const perfil = roleToProfile[role];
             console.log(perfil);
@@ -67,12 +67,33 @@ async function login(request, response) {
 async function logout(request, response) {
     response.status(200).json({ message: 'Logoff bem-sucedido' });
 }
-
+async function recuperarSenha(req, res) {
+    try {
+        const email = req.body.email;
+        if (!email) {
+            return res.status(400).json({ message: 'e-mail não fornecido' });
+        }
+        const query = `
+        SELECT senha FROM Usuarios
+        WHERE email = @Email`;
+        const result = await new sql.Request()
+            .input('Email', sql.VarChar, email)
+            .query(query)
+        const senha = result.recordset[0];
+        const htmlContent = generateEmailHTML(senha);
+        await sendEmail(email, 'Sua senha', htmlContent);;
+        res.status(200).json({ message: 'Senha enviada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao enviar e-mail:', error);
+        res.status(500).json({ message: 'Erro ao enviar e-mail.' });
+    }
+}
 const roleToProfile = {
     'Master': 1,
     'Gestor': 2,
     'Operador': 3,
-    'Avulso': 4
+    'Avulso': 4,
+    'Admin':5
 };
 function buildMenuTree(menus, menuItems) {
     const menuMap = {};
@@ -124,5 +145,6 @@ function cleanItems(menu) {
 }
 module.exports = {
     login,
-    logout
+    logout,
+    recuperarSenha
 };
