@@ -213,6 +213,44 @@ async function listarFuncionario(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+async function listarUltimos(request, response) {
+    try {
+        const id_cliente = request.body.id_cliente;
+
+        if (!id_cliente) {
+            response.status(401).json("ID do cliente não enviado");
+            return;
+        }
+        let query = `
+        SELECT TOP 10
+            ri.ProdutoID,
+            ri.ProdutoNome,
+            ri.ProdutoSKU,
+            ri.Quantidade,
+            r.Dia,
+            r.id_dm
+        FROM
+            Retiradas r
+        INNER JOIN
+            retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+        LEFT JOIN
+            funcionarios f ON r.ID_Funcionario = f.id_funcionario
+        WHERE
+            r.ID_Cliente = @id_cliente
+        ORDER BY r.Dia DESC
+    `;
+
+        request = new sql.Request();
+        request.input('id_cliente', sql.Int, id_cliente);
+        const result = await request.query(query);
+
+
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 module.exports = {
-    relatorio, listarDM, listarPlanta, listarSetor, listarCdC, listarFuncionario
+    relatorio, listarDM, listarPlanta, listarSetor, listarCdC, listarFuncionario, listarUltimos
 };
