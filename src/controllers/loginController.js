@@ -30,6 +30,7 @@ async function login(request, response) {
             const id_cliente = Usuario.id_cliente;
             const role = Usuario.role;
             const perfil = roleToProfile[role];
+            console.log(perfil);
             const queryMenu = `
                  SELECT * FROM Menu
                 WHERE Cod_cli = @id_cliente
@@ -45,15 +46,11 @@ async function login(request, response) {
 
             const MenuR = await requestSql.query(queryMenu);
             const Menu = MenuR.recordset;
-            // console.log('Menu',Menu)
             const MenuItemR = await requestSql.query(queryMenuItem);
             const MenuItem = MenuItemR.recordset;
-            //console.log('MenuItem:',MenuItem)
 
             const menuTree = buildMenuTree(Menu, MenuItem);
-            // console.log('Arvore:',menuTree)
             menuTree.forEach(cleanItems);
-            // console.log('arvore limpa:',menuTree)
             const token = jwt.sign({ Usuario }, segredo, opcoes);
             response.status(200).json({ token, Usuario, items: menuTree });
         } else {
@@ -92,11 +89,11 @@ async function recuperarSenha(req, res) {
     }
 }
 const roleToProfile = {
-    'Administrador':1,
-    'Master': 2,
+    'Master': 1,
+    'Gestor': 2,
     'Operador': 3,
-    'Avulso': 4
-    
+    'Avulso': 4,
+    'Admin':5
 };
 function buildMenuTree(menus, menuItems) {
     const menuMap = {};
@@ -110,6 +107,7 @@ function buildMenuTree(menus, menuItems) {
             items: []
         };
     });
+
     menuItems.forEach(item => {
         itemMap[item.ID] = {
             label: item.Nome,
@@ -118,8 +116,7 @@ function buildMenuTree(menus, menuItems) {
             items: []
         };
     });
-    console.log('item',itemMap)
-    console.log('menu',menuMap)
+
     menuItems.forEach(item => {
         if (item.ID_Sub_Item && item.ID_Sub_Item !== 0) {
             if (itemMap[item.ID_Sub_Item]) {
