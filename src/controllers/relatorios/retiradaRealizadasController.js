@@ -3,7 +3,7 @@ const { format } = require('date-fns');
 
 async function relatorio(request, response) {
     try {
-        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicial, data_final, id_cliente } = request.body;
+        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicio, data_final, id_cliente } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
@@ -64,10 +64,25 @@ async function relatorio(request, response) {
             query += ' AND r.ID_Funcionario = @id_funcionario';
             params.id_funcionario = id_funcionario;
         }
-        if (data_inicial && data_final) {
-            query += ' AND r.Dia BETWEEN @data_inicial AND @data_final';
-            params.data_inicial = data_inicial;
-            params.data_final = data_final;
+
+        const currentDate = new Date();
+        let startDate;
+        let endDate = currentDate;
+
+        if (data_inicio && data_final) {
+            query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
+            params.data_inicio = new Date(data_inicio).toISOString();
+            params.data_final = new Date(data_final).toISOString();
+        } else if (data_inicio) {
+            query += ' AND r.Dia >= @data_inicio';
+            params.data_inicio = new Date(data_inicio).toISOString();
+        } else {
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+            query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
+            params.data_inicio = startDate.toISOString();
+            params.data_final = endDate.toISOString();
         }
 
         request = new sql.Request();
@@ -76,7 +91,7 @@ async function relatorio(request, response) {
         // if (params.id_setor) request.input('id_setor', sql.VarChar, params.id_setor);
         // if (params.id_planta) request.input('id_planta', sql.VarChar, params.id_planta);
         if (params.id_funcionario) request.input('id_funcionario', sql.VarChar, params.id_funcionario);
-        if (params.data_inicial) request.input('data_inicial', sql.DateTime, params.data_inicial);
+        if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicial);
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
 
         const result = await request.query(query);
