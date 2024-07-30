@@ -9,5 +9,6 @@ router.post('/listarPlanta', itemsMaisRetirados.listarPlanta);
 router.post('/listarSetor', itemsMaisRetirados.listarSetor);
 router.post('/listarCdC', itemsMaisRetirados.listarCdC);
 router.post('/listarFuncionario', itemsMaisRetirados.listarFuncionario);
+router.post('/listarMaisRet', itemsMaisRetirados.listarMaisRet);
 
 module.exports = router;
