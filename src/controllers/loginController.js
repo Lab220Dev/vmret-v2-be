@@ -30,6 +30,10 @@ async function login(request, response) {
             const id_cliente = Usuario.id_cliente;
             const role = Usuario.role;
             const perfil = roleToProfile[role];
+            if (!perfil) {
+                response.status(401).json("Perfil de usuário inválido");
+                return;
+            }
             const queryMenu = `
                  SELECT * FROM Menu
                 WHERE Cod_cli = @id_cliente
