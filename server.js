@@ -70,6 +70,10 @@ app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 
 //Rotas de Relatorio
 app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+
+//Rotas de Relatorio
+//app.use('/api/relatorioItems/ultimos',autenticarToken, itemsMaisRetiradosRoutes);
+
 // Rotas de login
 app.use('/api', loginRoutes);
 
