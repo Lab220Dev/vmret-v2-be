@@ -3,7 +3,7 @@ const router = express.Router();
 const loginController = require('../controllers/loginController');
 
 router.post('/login', loginController.login);
-router.post('/recuperar', loginController.recuperarSenha);
+// router.post('/recuperar', loginController.recuperarSenha);
 router.post('/logout', loginController.logout); 
 
 module.exports = router;

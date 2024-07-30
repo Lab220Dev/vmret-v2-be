@@ -56,7 +56,7 @@ const generateEmailHTML = (senha) => {
 };
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",//mudar para o smpt da lab
+  host: "smtp.ethereal.email", //mudar para o smpt da lab
   port: 587,
   secure: false,
   auth: {

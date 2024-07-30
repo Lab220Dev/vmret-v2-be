@@ -1,5 +1,5 @@
 const sql = require('mssql');
-const { sendEmail, generateEmailHTML } = require('../utils/emailService');
+// const { sendEmail, generateEmailHTML } = require('../utils/emailService');
 const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const segredo = '%$&*656$4#%$3@@@__';
@@ -30,7 +30,6 @@ async function login(request, response) {
             const id_cliente = Usuario.id_cliente;
             const role = Usuario.role;
             const perfil = roleToProfile[role];
-            console.log(perfil);
             const queryMenu = `
                  SELECT * FROM Menu
                 WHERE Cod_cli = @id_cliente
@@ -48,7 +47,8 @@ async function login(request, response) {
             const Menu = MenuR.recordset;
             const MenuItemR = await requestSql.query(queryMenuItem);
             const MenuItem = MenuItemR.recordset;
-
+console.log(Menu)
+console.log(MenuItem)
             const menuTree = buildMenuTree(Menu, MenuItem);
             menuTree.forEach(cleanItems);
             const token = jwt.sign({ Usuario }, segredo, opcoes);
@@ -67,40 +67,41 @@ async function login(request, response) {
 async function logout(request, response) {
     response.status(200).json({ message: 'Logoff bem-sucedido' });
 }
-async function recuperarSenha(req, res) {
-    try {
-        const email = req.body.email;
-        if (!email) {
-            return res.status(400).json({ message: 'e-mail não fornecido' });
-        }
-        const query = `
-        SELECT senha FROM Usuarios
-        WHERE email = @Email`;
-        const result = await new sql.Request()
-            .input('Email', sql.VarChar, email)
-            .query(query)
-        const senha = result.recordset[0];
-        const htmlContent = generateEmailHTML(senha);
-        await sendEmail(email, 'Sua senha', htmlContent);;
-        res.status(200).json({ message: 'Senha enviada com sucesso!' });
-    } catch (error) {
-        console.error('Erro ao enviar e-mail:', error);
-        res.status(500).json({ message: 'Erro ao enviar e-mail.' });
-    }
-}
+// async function recuperarSenha(req, res) {
+//     try {
+//         const email = req.body.email;
+//         if (!email) {
+//             return res.status(400).json({ message: 'e-mail não fornecido' });
+//         }
+//         const query = `
+//         SELECT senha FROM Usuarios
+//         WHERE email = @Email`;
+//         const result = await new sql.Request()
+//             .input('Email', sql.VarChar, email)
+//             .query(query)
+//         const senha = result.recordset[0];
+//         const htmlContent = generateEmailHTML(senha);
+//         await sendEmail(email, 'Sua senha', htmlContent);;
+//         res.status(200).json({ message: 'Senha enviada com sucesso!' });
+//     } catch (error) {
+//         console.error('Erro ao enviar e-mail:', error);
+//         res.status(500).json({ message: 'Erro ao enviar e-mail.' });
+//     }
+// }
 const roleToProfile = {
     'Master': 1,
     'Gestor': 2,
     'Operador': 3,
     'Avulso': 4,
-    'Admin':5
+    'Administrador': 5
 };
 function buildMenuTree(menus, menuItems) {
     const menuMap = {};
     const itemMap = {};
 
+    // Popula o menuMap com os menus principais
     menus.forEach(menu => {
-        menuMap[menu.ID] = {
+        menuMap[menu.ID_item] = {
             label: menu.Nome,
             icon: menu.Icone || null,
             to: menu.Nome.toLowerCase() === 'dashboard' ? '/dashboard' : (menu.To || null),
@@ -108,6 +109,7 @@ function buildMenuTree(menus, menuItems) {
         };
     });
 
+    // Popula o itemMap com os itens do menu
     menuItems.forEach(item => {
         itemMap[item.ID] = {
             label: item.Nome,
@@ -117,6 +119,7 @@ function buildMenuTree(menus, menuItems) {
         };
     });
 
+    // Adiciona os itens aos seus menus ou sub-itens correspondentes
     menuItems.forEach(item => {
         if (item.ID_Sub_Item && item.ID_Sub_Item !== 0) {
             if (itemMap[item.ID_Sub_Item]) {
@@ -129,10 +132,12 @@ function buildMenuTree(menus, menuItems) {
         }
     });
 
+    // Converte o menuMap em um array de menus
     const menuTree = Object.values(menuMap);
 
     return menuTree;
 }
+
 
 function cleanItems(menu) {
     if (menu.items) {
@@ -146,5 +151,4 @@ function cleanItems(menu) {
 module.exports = {
     login,
     logout,
-    recuperarSenha
 };
