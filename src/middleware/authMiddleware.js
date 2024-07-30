@@ -10,7 +10,6 @@ function autenticarToken(request, response, next) {
 
     jwt.verify(token.split(' ')[1], segredo, (err, decoded) => {
         if (err) {
-            console.log(token)
             return response.status(401).json({ mensagem: "Token inválido" });
         }
         request.usuario = decoded.usuario;

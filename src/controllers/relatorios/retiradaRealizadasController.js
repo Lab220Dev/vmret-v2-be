@@ -95,7 +95,6 @@ async function relatorio(request, response) {
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
 
         const result = await request.query(query);
-        console.log(result);
         const retiradasfiltradas = result.recordset.map(row => ({
             ID_Retirada: row.ID_Retirada,
             ID_DM_Retirada: row.ID_DM_Retirada,

@@ -40,7 +40,6 @@ async function adicionarFuncionarios(request, response) {
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
             email, face,foto} = request.body;
-            console.log(request.body)
             let nomeFuncionario='';
         const id_cliente = request.body.id_cliente;
         const files = request.files;
@@ -113,7 +112,6 @@ async function adicionarFuncionarios(request, response) {
     }
 }
 async function foto(request, response) {
-    console.log(request.body)
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.')
     }

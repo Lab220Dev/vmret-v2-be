@@ -127,14 +127,12 @@ async function adicionarProdutos(request, response) {
 
 
 async function imagem1(request, response) {
-    console.log(request.body);
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.');
     }
 }
 
 async function imagem2(request, response) {
-    console.log(request.body);
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.');
     }

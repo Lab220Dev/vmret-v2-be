@@ -51,8 +51,6 @@ async function login(request, response) {
             const Menu = MenuR.recordset;
             const MenuItemR = await requestSql.query(queryMenuItem);
             const MenuItem = MenuItemR.recordset;
-console.log(Menu)
-console.log(MenuItem)
             const menuTree = buildMenuTree(Menu, MenuItem);
             menuTree.forEach(cleanItems);
             const token = jwt.sign({ Usuario }, segredo, opcoes);
