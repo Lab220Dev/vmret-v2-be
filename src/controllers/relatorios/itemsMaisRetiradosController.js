@@ -249,10 +249,45 @@ INNER JOIN
 left JOIN
     Produtos p ON ri.ProdutoID = p.ID_Produto  
 WHERE
-    r.ID_Cliente = 57
+    r.ID_Cliente = @id_cliente
 ORDER BY
     r.Dia DESC`;
 
+    const request = new sql.Request();
+    request.input("id_cliente", sql.Int, id_cliente);
+    const result = await request.query(query);
+
+    response.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+
+async function listarMaisRet(request, response) {
+  const id_cliente = request.body.id_cliente;
+
+  try {
+    if (!id_cliente) {
+      response.status(401).json("O ID do cliente não foi enviado");
+      return;
+    }
+    let query = `SELECT TOP 5
+    ri.ProdutoNome, 
+    ri.ProdutoSKU, 
+    SUM(ri.Quantidade) AS TotalQuantidade
+FROM 
+    Retirada_Itens ri
+JOIN 
+    Retiradas r ON ri.ID_DM = r.ID_DM
+WHERE 
+    r.Dia >= DATEADD(MONTH, -6, GETDATE())
+    AND r.ID_Cliente = 57
+GROUP BY 
+    ri.ProdutoNome, 
+    ri.ProdutoSKU
+ORDER BY 
+    TotalQuantidade DESC`;
     const request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);
@@ -271,4 +306,5 @@ module.exports = {
   listarCdC,
   listarFuncionario,
   listarUltimos,
+  listarMaisRet,
 };
