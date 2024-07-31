@@ -73,6 +73,7 @@ async function relatorio(request, response) {
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
             params.data_inicio = new Date(data_inicio).toISOString();
             params.data_final = new Date(data_final).toISOString();
+
         } else if (data_inicio) {
             query += ' AND r.Dia >= @data_inicio';
             params.data_inicio = new Date(data_inicio).toISOString();
@@ -88,12 +89,11 @@ async function relatorio(request, response) {
         request = new sql.Request();
         request.input('id_cliente', sql.Int, params.id_cliente);
         if (params.id_dm) request.input('id_dm', sql.VarChar, id_dm.toString());
-        // if (params.id_setor) request.input('id_setor', sql.VarChar, params.id_setor);
-        // if (params.id_planta) request.input('id_planta', sql.VarChar, params.id_planta);
+        if (params.id_setor) request.input('id_setor', sql.VarChar, params.id_setor);
+        if (params.id_planta) request.input('id_planta', sql.VarChar, params.id_planta);
         if (params.id_funcionario) request.input('id_funcionario', sql.VarChar, params.id_funcionario);
-        if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicial);
+        if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicio);
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
-
         const result = await request.query(query);
         const retiradasfiltradas = result.recordset.map(row => ({
             ID_Retirada: row.ID_Retirada,
