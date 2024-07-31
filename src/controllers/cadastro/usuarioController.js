@@ -31,19 +31,20 @@ async function adicionar(request, response){
 
 async function listar(request, response){
     try {
-        let query = "SELECT * FROM usuarios WHERE 1 = 1";
+        let query;
         if(request.body.id_cliente){
-            query += `AND id_cliente = '${request.body.id_cliente}'`;
-            const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
-            return;
-        }else{
-            const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
-            return;
+            query = `SELECT * FROM usuarios WHERE id_cliente = '${request.body.id_cliente}'`;
+        } else {
+            query = `
+                SELECT usuarios.*, clientes.nome AS nome_cliente 
+                FROM usuarios 
+                LEFT JOIN clientes ON usuarios.id_cliente = clientes.id_cliente
+            `;
         }
-        
-        response.status(401).json("ID do cliente não enviado");        
+
+        // Executa a query
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);       
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
