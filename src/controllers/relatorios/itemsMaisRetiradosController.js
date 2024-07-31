@@ -234,7 +234,7 @@ async function listarUltimos(request, response) {
       return;
     }
     let query = `
-        SELECT TOP 10
+        SELECT TOP 5
     ri.ProdutoID,
     ri.ProdutoNome,
     ri.ProdutoSKU,
@@ -282,7 +282,7 @@ JOIN
     Retiradas r ON ri.ID_DM = r.ID_DM
 WHERE 
     r.Dia >= DATEADD(MONTH, -6, GETDATE())
-    AND r.ID_Cliente = 57
+    AND r.ID_Cliente = @id_cliente
 GROUP BY 
     ri.ProdutoNome, 
     ri.ProdutoSKU
