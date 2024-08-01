@@ -10,6 +10,7 @@ const upload = multer({ storage: storage }).fields([
     { name: 'file_info', maxCount: 1 }
 ]);
 
+
 async function listarProdutos(request, response) {
     try {
         let query = 'SELECT * FROM produtos WHERE 1 = 1';
@@ -42,7 +43,14 @@ async function adicionarProdutos(request, response) {
             return;
         }
 
-        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+        const sanitizeFileName = (filename) => {
+            if (typeof filename === 'string') {
+                return filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+            } else {
+                console.error('Filename is not a string:', filename);
+                return 'unknown_filename'; // Retorna um nome padrão ou lança um erro, dependendo do que você deseja
+            }
+        };
 
         // Diretórios de upload com id_cliente antes da pasta principal
         const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
@@ -56,7 +64,7 @@ async function adicionarProdutos(request, response) {
 
         let imagem1Path = '';
         let imagemdetalhePath = '';
-        let imagemSecundariaPath = ''; 
+        let imagem2Path = ''; 
 
         if (files['file_principal']) {
             const file = files['file_principal'][0];
@@ -64,16 +72,14 @@ async function adicionarProdutos(request, response) {
             imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
             await fs.writeFile(imagem1Path, file.buffer);
         }
-
-
-        if (files['file_secundario_0']) {
+        
+        if (files['file_secundario']) {
             const file = files['file_secundario'][0];
             const nomeArquivoSecundario = `${sanitizeFileName(imagem2)}`;
-            imagemSecundariaPath = path.join(uploadPathSecundario, nomeArquivoSecundario);
-            await fs.writeFile(imagemSecundariaPath, file.buffer);
+            imagem2Path = path.join(uploadPathSecundario, nomeArquivoSecundario);
+            await fs.writeFile(imagem2Path, file.buffer);
         }
-
-        // Processa a imagem de informações adicionais
+        
         if (files['file_info']) {
             const file = files['file_info'][0];
             const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
@@ -84,11 +90,11 @@ async function adicionarProdutos(request, response) {
         const query = `
             INSERT INTO produtos
             (id_cliente, id_categoria, nome, descricao, validadedias,
-            imagem1, imagem2, imagem3, imagem4, imagemdetalhe, deleted, codigo,
+            imagem1, imagem2, imagemdetalhe, deleted, codigo,
             quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
             VALUES
             (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
-            @imagem1, @imagem2, @imagem3, @imagem4, @imagemdetalhe, @deleted, @codigo,
+            @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
             @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
         `;
 
@@ -100,8 +106,6 @@ async function adicionarProdutos(request, response) {
         requestSql.input('validadedias', sql.Int, validadedias);
         requestSql.input('imagem1', sql.VarChar, imagem1);
         requestSql.input('imagem2', sql.VarChar, imagem2); // Imagem secundária única
-        requestSql.input('imagem3', sql.VarChar, null); // Não usa imagens 3 e 4
-        requestSql.input('imagem4', sql.VarChar, null);
         requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
@@ -127,12 +131,21 @@ async function adicionarProdutos(request, response) {
 
 
 async function imagem1(request, response) {
+    console.log(request.body);
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.');
     }
 }
 
 async function imagem2(request, response) {
+    console.log(request.body);
+    if (!request.files) {
+        return response.status(400).send('Nenhum arquivo foi enviado.');
+    }
+}
+
+async function imagemdetalhe (request, response) {
+    console.log(request.body);
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.');
     }
@@ -173,7 +186,7 @@ async function deleteProduto(request, response) {
 }
 async function atualizarProduto(request, response) {
     try {
-        const { id_produto,id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagem3, imagem4, imagemdetalhe } = request.body;
+        const { id_produto,id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
         const files = request.files;
 
         if (!id_produto) {
@@ -197,18 +210,18 @@ async function atualizarProduto(request, response) {
         // Lista de caminhos das imagens atualizadas
         let imagem1Path = imagem1;
         let imagemdetalhePath = imagemdetalhe;
-        let imagemSecundariasPaths = [imagem2, imagem3, imagem4];
+        let imagem2Path = imagem2;
 
         // Verifica se há alterações nas imagens secundárias
-        for (let i = 0; i < 3; i++) {
-            if (files[`file_secundario_${i}`]) {
-                const file = files[`file_secundario_${i}`][0];
-                const nomeArquivoSecundario = `${sanitizeFileName(imagemSecundariasPaths[i])}`;
-                const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
-                await fs.writeFile(filePath, file.buffer);
-                imagemSecundariasPaths[i] = filePath;
-            }
+        
+        if (files[`file_secundario`]) {
+            const file = files[`file_secundario`][0];
+            const nomeArquivoSecundario = `${sanitizeFileName(imagem2)}`;
+            const filePath = path.join(uploadPathSecundario, nomeArquivoSecundario);
+            await fs.writeFile(filePath, file.buffer);
+            imagem2Path = filePath; // Corrige para atualizar o caminho da imagem secundária
         }
+        
 
         // Verifica se há alteração na imagem principal
         if (files['file_principal']) {
@@ -236,8 +249,6 @@ async function atualizarProduto(request, response) {
                 validadedias = @validadedias,
                 imagem1 = @imagem1,
                 imagem2 = @imagem2,
-                imagem3 = @imagem3,
-                imagem4 = @imagem4,
                 imagemdetalhe = @imagemdetalhe,
                 codigo = @codigo,
                 id_planta = @id_planta,
@@ -253,9 +264,7 @@ async function atualizarProduto(request, response) {
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
         requestSql.input('imagem1', sql.VarChar, imagem1Path);
-        requestSql.input('imagem2', sql.VarChar, imagemSecundariasPaths[0]);
-        requestSql.input('imagem3', sql.VarChar, imagemSecundariasPaths[1]);
-        requestSql.input('imagem4', sql.VarChar, imagemSecundariasPaths[2]);
+        requestSql.input('imagem2', sql.VarChar, imagem2Path);
         requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhePath);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('id_planta', sql.Int, id_planta);
@@ -281,6 +290,7 @@ module.exports = {
     upload,
     imagem1,
     imagem2,
+    imagemdetalhe,
     listarProdutos,
     adicionarProdutos,
     listarPlanta,
