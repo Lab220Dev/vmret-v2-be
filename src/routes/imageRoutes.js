@@ -9,7 +9,7 @@ function determinarTipo(texto) {
     } else if (texto.includes("info")) {
         return "info";
     } else {
-        return null;
+        return "Secundario";
     }
 }
 

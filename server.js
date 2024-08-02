@@ -29,7 +29,7 @@ app.use(express.static(distPath));
 
 app.use(history({
     disableDotRule: true,
-    verbose: true,
+    verbose: false,
     rewrites: [
         { from: /^\/api\/.*$/, to: (context) => context.parsedUrl.pathname },
         { from: /^\/uploads\/.*$/, to: (context) => context.parsedUrl.pathname }
