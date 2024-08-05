@@ -1,21 +1,16 @@
 const sql = require('mssql');
 
-const mockData = [{ "id_centro_custo": 1, "nome": "265936583-0"},
-{ "id_centro_custo": 2, "nome": "754835000-7" },
-{ "id_centro_custo": 3, "nome": "753803720-9"},
-{ "id_centro_custo": 4, "nome": "053642656-2" },
-{ "id_centro_custo": 5, "nome": "761168639-9" },
-{ "id_centro_custo": 6, "nome": "905085121-5"},
-{ "id_centro_custo": 7, "nome": "287833697-6" },
-{ "id_centro_custo": 8, "nome": "921291642-2" },
-{ "id_centro_custo": 9, "nome": "269737784-0"},
-{ "id_centro_custo": 10, "nome": "251320665-7"}];
 
 async function listar(request, response) {
     try {
-        if (request.body.id_cliente) {
-            let result = mockData
-            response.status(200).json(result);
+      const id_cliente = request.body.id_cliente;
+        if (id_cliente) {
+          const query =
+          "SELECT *  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0";
+          request = new sql.Request();
+          request.input("id_cliente", sql.Int, id_cliente);
+          const result = await request.query(query);
+          response.status(200).json(result.recordset);
             return;
         }
         response.status(401).json("ID do cliente não enviado");
@@ -27,20 +22,30 @@ async function listar(request, response) {
 
 async function adicionar(request, response) {
     try {
-        const { codigo, nome } = request.body;
+        const {id_cliente,codigo, nome } = request.body;
 
-        if (!codigo || !nome) {
-            response.status(400).json("Dados insuficientes");
+        if (!id_cliente) {
+          response.status(401).json("ID do cliente não enviado");
+          return;
+        }
+        const query =`INSERT INTO Centro_Custos
+          ( ID_Cliente, Codigo, Nome, Deleted)
+          VALUES(@ID_Cliente, @codigo,@nome,@deleted);
+        `;
+        request = new sql.Request();
+        request.input('ID_Cliente', sql.Int, id_cliente);
+        request.input('codigo', sql.Int, codigo);
+        request.input('nome', sql.VarChar,nome);
+        request.input('Deleted', sql.Bit, false);
+        const result = await request.query(query);
+        if (result) {
+            response.status(201).send('Centro do Custo criado com sucesso!');
             return;
         }
-        const lastId = mockData.length > 0 ? mockData[mockData.length - 1].id_centro_custo : 0;
-        const newId = lastId + 1;
-        mockData.push({  id_centro_custo: newId,codigo, nome });
-
-        response.status(201).json("Registro adicionado com sucesso");
+        response.status(400).send('Falha ao criar o Centro do Custo');
     } catch (error) {
         console.error('Erro ao adicionar registro:', error.message);
-        response.status(500).send('Erro ao adicionar registro');
+        response.status(500).send('Erro ao adicionar Centro de Custo');
     }
 }
 
@@ -63,25 +68,29 @@ async function deleteCentro(request, response) {
 
 async function atualizar(request, response) {
     try {
-      const { id_centro_custo, nome } = request.body;
+      const { id_centro_custo, nome, Codigo } = request.body;
 
       if (!id_centro_custo) {
         response.status(400).json("ID do centro de custo não enviado");
         return;
       }
-      const index = mockData.findIndex(item => item.id_centro_custo === id_centro_custo);
-  
-      if (index !== -1) {
-        // Atualizar o registro
-        mockData[index].nome = nome;
-        mockData[index].id_centro_custo = id_centro_custo;
-        response.status(200).json("Registro atualizado com sucesso");
-      } else {
-        response.status(404).json("Registro não encontrado");
-      }
+      const query =`UPDATE Centro_Custos
+          SET ID_Cliente=@ID_Cliente, Codigo=@Codigo, Nome=@Nome, Deleted=@Deleted)
+          WHERE ID_CentroCusto = @ID_CentroCusto`;
+        request = new sql.Request();
+        request.input('ID_Cliente', sql.VarChar, id_cliente);
+        request.input('codigo', sql.Int, Codigo);
+        request.input('nome', VarChar.Bit,nome);
+        request.input('Deleted', sql.Bit, false);
+        const result = await request.query(query);
+        if (result) {
+            response.status(200).send(' centro de custo atualizado com sucesso!');
+            return;
+        }
+        response.status(400).send('Falha ao atualizar o  centro de custo');
     } catch (error) {
-      console.error('Erro ao atualizar registro:', error.message);
-      response.status(500).send('Erro ao atualizar registro');
+      console.error('Erro ao atualizar  centro de custo:', error.message);
+      response.status(500).send('Erro ao atualizar  centro de custo');
     }
   }
 module.exports = {

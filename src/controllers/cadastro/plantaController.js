@@ -1,23 +1,14 @@
 const sql = require('mssql');
 
-const mockData = [{ "id_planta": 1, "nome": "Planta 1"},
-    { "id_planta": 2, "nome": "Planta 12" },
-    { "id_planta": 3, "nome": "Planta-9"},
-    { "id_planta": 4, "nome": "Planta-2" },
-    { "id_planta": 5, "nome": "Planta-9" },
-    { "id_planta": 6, "nome": "Planta-5"},
-    { "id_planta": 7, "nome": "Planta-6" },
-    { "id_planta": 8, "nome": "Planta-13" },
-    { "id_planta": 9, "nome": "Planta-0"},
-    { "id_planta": 10, "nome": "Planta-7"}];
 
 async function listar(request, response) {
     try {
-        // let query = 'SELECT * FROM plantas WHERE 1 = 1';
+         let query = 'SELECT * FROM plantas WHERE deleted = 0';
         if (request.body.id_cliente) {
-            // query += ` AND id_cliente = '${request.body.id_cliente}'`;
-            let result = mockData
-            response.status(200).json(result);
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            request = new sql.Request();
+            const result = await request.query(query);
+            response.status(200).json(result.recordset);
             return;
         }
         response.status(401).json("ID do cliente não enviado");
@@ -57,7 +48,7 @@ async function adicionar(request, response) {
 async function atualizar(request, response) {
     try {
         const { codigo, nome, userid, senha, urlapi,
-            clienteid } = request.body;
+            clienteid,id_planta } = request.body;
         const id_cliente = request.body.id_cliente;
         const query = `UPDATE plantas 
         SET id_cliente = @id_cliente,
@@ -66,7 +57,8 @@ async function atualizar(request, response) {
         userid = @userid,
         senha = @senha,
         urlapi = @urlapi,
-        clienteid = @clienteid`;
+        clienteid = @clienteid
+        WHERE id_planta = @id_planta`;
         request = new sql.Request();
         request.input('id_cliente', sql.Int, id_cliente);
         request.input('codigo', sql.NVarChar, codigo);
@@ -75,6 +67,7 @@ async function atualizar(request, response) {
         request.input('senha', sql.NVarChar, senha);
         request.input('urlapi', sql.NVarChar, urlapi);
         request.input('clienteid', sql.NVarChar, clienteid);
+        request.input('id_planta', sql.NVarChar, id_planta);
         const result = await request.query(query);
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
             response.status(200).json("Produto atualizado com sucesso");

@@ -12,6 +12,8 @@ const CentroCustoRoutes = require('./src/routes/cadastros/CentroCustoRoutes');
 const funcaoRoutes = require('./src/routes/cadastros/funcaoRoutes');
 const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
 const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
+const DMRoute = require('./src/routes/cadastros/DMRoutes');
+const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
@@ -65,6 +67,12 @@ app.use('/api/funcao', autenticarToken, funcaoRoutes);
 
 // Rotas de Plantas
 app.use('/api/plantas', autenticarToken, planasRoutes);
+
+// Rotas de DMs
+app.use('/api/DM', autenticarToken, DMRoute);
+
+// Rotas de Usuarios DMs
+app.use('/api/UDM', autenticarToken, UDMRoute);
 
 //Rotas de Relatorio
 app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);

@@ -52,22 +52,18 @@ async function relatorio(request, response) {
             query += ' AND r.ID_DM = @id_dm';
             params.id_dm = id_dm;
         }
-        // if (id_setor) {
-        //     query += ' AND r.ID_Setor = @id_setor';
-        //     params.id_setor = id_setor;
-        // }
-        // if (id_planta) {
-        //     query += ' AND r.ID_Planta = @id_planta';
-        //     params.id_planta = id_planta;
-        // }
+        if (id_setor) {
+            query += ' AND r.ID_Setor = @id_setor';
+            params.id_setor = id_setor;
+        }
+        if (id_planta) {
+            query += ' AND r.ID_Planta = @id_planta';
+            params.id_planta = id_planta;
+        }
         if (id_funcionario) {
             query += ' AND r.ID_Funcionario = @id_funcionario';
             params.id_funcionario = id_funcionario;
         }
-
-        const currentDate = new Date();
-        let startDate;
-        let endDate = currentDate;
 
         if (data_inicio && data_final) {
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
@@ -77,13 +73,9 @@ async function relatorio(request, response) {
         } else if (data_inicio) {
             query += ' AND r.Dia >= @data_inicio';
             params.data_inicio = new Date(data_inicio).toISOString();
-        } else {
-            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-            query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
-            params.data_inicio = startDate.toISOString();
-            params.data_final = endDate.toISOString();
+        } else if (data_final) {
+            query += ' AND r.Dia <= @data_final';
+            params.data_final = new Date(data_final).toISOString();
         }
 
         request = new sql.Request();
@@ -104,7 +96,7 @@ async function relatorio(request, response) {
             Matricula: row.matricula,
             Nome: row.nome,
             Email: row.email,
-            Dia:  format(new Date(row.Dia), 'dd/MM/yyyy - HH:mm'),
+            Dia: format(new Date(row.Dia), 'dd/MM/yyyy - HH:mm'),
             ProdutoID: row.ProdutoID,
             ProdutoNome: row.ProdutoNome,
             ProdutoSKU: row.ProdutoSKU,
@@ -120,25 +112,30 @@ async function relatorio(request, response) {
 }
 async function listarDM(request, response) {
     try {
-        const { id_cliente } = request.query;
-
-        if (!id_cliente) {
-            response.status(401).json("ID do cliente não enviado");
-            return;
-        }
-        const query = 'SELECT DISTINCT id_dm FROM Retiradas WHERE id_cliente = @id_cliente';
-
-        request = new sql.Request();
-        request.input('id_cliente', sql.Int, id_cliente);
-        const result = await request.query(query);
-
-
-        response.status(200).json(result.recordset);
+      const id_cliente = request.body.id_cliente;
+  
+      if (!id_cliente) {
+        response.status(401).json("ID do cliente não enviado");
+        return;
+      }
+      const query =
+        "SELECT *  FROM DMS WHERE IDcliente = @id_cliente AND Deleted = 0";
+  
+      request = new sql.Request();
+      request.input("id_cliente", sql.Int, id_cliente);
+      const result = await request.query(query);
+      const retiradasfiltradas = result.recordset.map(row => ({
+        ID_DM: row.ID_DM,
+        ID_Cliente: row.IDcliente,
+        Identificacao: row.Identificacao,
+        Numero: row.Numero
+    }));
+      response.status(200).json(retiradasfiltradas);
     } catch (error) {
-        console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
+      console.error("Erro ao executar consulta:", error.message);
+      response.status(500).send("Erro ao executar consulta");
     }
-}
+  }
 module.exports = {
-    relatorio,listarDM
+    relatorio, listarDM
 };

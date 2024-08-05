@@ -44,32 +44,22 @@ async function relatorio(request, response) {
       params.id_funcionario = id_funcionario;
     }
 
-    const currentDate = new Date();
-    let startDate;
-    let endDate = currentDate;
-
     if (data_inicio && data_final) {
+      // Se o usuário enviar data_inicio e data_final
+      if (new Date(data_inicio) > new Date(data_final)) {
+        return response.status(400).json("A data de início não pode ser posterior à data final");
+      }
       query += " AND r.Dia BETWEEN @data_inicio AND @data_final";
       params.data_inicio = new Date(data_inicio).toISOString();
       params.data_final = new Date(data_final).toISOString();
     } else if (data_inicio) {
+      // Se o usuário enviar apenas a data_inicio
       query += " AND r.Dia >= @data_inicio";
       params.data_inicio = new Date(data_inicio).toISOString();
-    } else {
-      startDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-      endDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0
-      );
-
-      query += " AND r.Dia BETWEEN @data_inicio AND @data_final";
-      params.data_inicio = startDate.toISOString();
-      params.data_final = endDate.toISOString();
+    } else if (data_final) {
+      // Se o usuário enviar apenas a data_final
+      query += " AND r.Dia <= @data_final";
+      params.data_final = new Date(data_final).toISOString();
     }
 
     request = new sql.Request();
@@ -130,13 +120,18 @@ async function listarDM(request, response) {
       return;
     }
     const query =
-      "SELECT DISTINCT id_dm FROM Retiradas WHERE id_cliente = @id_cliente";
+      "SELECT *  FROM DMS WHERE IDcliente = @id_cliente AND Deleted = 0";
 
     request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);
-
-    response.status(200).json(result.recordset);
+    const retiradasfiltradas = result.recordset.map(row => ({
+      ID_DM: row.ID_DM,
+      ID_Cliente: row.IDcliente,
+      Identificacao: row.Identificacao,
+      Numero: row.Numero
+  }));
+    response.status(200).json(retiradasfiltradas);
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
