@@ -15,7 +15,7 @@ async function listarDM(request, response) {
     request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);
-    response.status(200).json(result);
+    response.status(200).json(result.recordset);
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
