@@ -16,11 +16,13 @@ const DMRoute = require('./src/routes/cadastros/DMRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
+const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { gerarPDF } = require("./src/controllers/relatorios/FichasController");
 require('dotenv').config();
 
 app.use(express.urlencoded({ extended: true }));
@@ -77,8 +79,13 @@ app.use('/api/UDM', autenticarToken, UDMRoute);
 //Rotas de Relatorio
 app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 
-//Rotas de Relatorio
+//Rotas de Relatorio Itens
 app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+
+app.use('/api/fichasRetiradas',autenticarToken, FichasRoutes);
+
+// APP.use ('/api/gerarPDF.php', autenticarToken)
+
 
 
 
