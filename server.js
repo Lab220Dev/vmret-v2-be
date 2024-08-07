@@ -9,6 +9,7 @@ const produtoRoutes = require('./src/routes/cadastros/produtoRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
 const imageRoutes = require('./src/routes/imageRoutes');
 const CentroCustoRoutes = require('./src/routes/cadastros/CentroCustoRoutes');
+const SetorRoutes = require('./src/routes/cadastros/SetorRoutes');
 const funcaoRoutes = require('./src/routes/cadastros/funcaoRoutes');
 const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
 const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
@@ -61,6 +62,9 @@ app.use('/api/image', autenticarToken,imageRoutes);
 
 // Rotas de Centro de Custo
 app.use('/api/cdc', autenticarToken, CentroCustoRoutes);
+
+// Rotas de Centro de Custo
+app.use('/api/Setor', autenticarToken, SetorRoutes);
 
 // Rotas de Função
 app.use('/api/funcao', autenticarToken, funcaoRoutes);
