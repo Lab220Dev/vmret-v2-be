@@ -18,12 +18,14 @@ const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
+const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { gerarPDF } = require("./src/controllers/relatorios/FichasController");
 require('dotenv').config();
 
 app.use(express.urlencoded({ extended: true }));
@@ -86,8 +88,13 @@ app.use('/api/SDM', autenticarToken, SDMRoutes);
 //Rotas de Relatorio Retirada
 app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 
-//Rotas de Relatorio Items mais Retirados
+//Rotas de Relatorio Items mais Retirados Itens
 app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+
+app.use('/api/fichasRetiradas',autenticarToken, FichasRoutes);
+
+// APP.use ('/api/gerarPDF.php', autenticarToken)
+
 
 //Rotas de Relatorio Items mais Retirados
 app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
