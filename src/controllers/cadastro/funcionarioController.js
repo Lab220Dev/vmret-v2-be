@@ -32,15 +32,15 @@ async function listarFuncionarios(request, response) {
 
 async function adicionarFuncionarios(request, response) {
     try {
-        const {  id_setor, id_funcao,
+        const { id_setor, id_funcao,
             nome, matricula, biometria,
             RG, CPF, CTPS, id_planta,
             data_admissao, hora_inicial, hora_final,
             segunda, terca, quarta, quinta, sexta,
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
-            email, face,foto} = request.body;
-            let nomeFuncionario='';
+            email, face, foto } = request.body;
+        let nomeFuncionario = '';
         const id_cliente = request.body.id_cliente;
         const files = request.files;
         const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
@@ -48,8 +48,8 @@ async function adicionarFuncionarios(request, response) {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const fileExtension = path.extname(file.originalname);
-            nomeFuncionario =`${foto}${fileExtension}`;
-            const filePath = path.join(uploadPath,nomeFuncionario);
+            nomeFuncionario = `${foto}${fileExtension}`;
+            const filePath = path.join(uploadPath, nomeFuncionario);
             await fs.writeFile(filePath, file.buffer);
         }
 
@@ -209,7 +209,7 @@ async function deleteFuncionario(request, response) {
 async function atualizarFuncionario(request, response) {
     try {
         const {
-            id_funcionario, 
+            id_funcionario,
             id_setor, id_funcao,
             nome, matricula, biometria,
             RG, CPF, CTPS, id_planta,
@@ -217,16 +217,16 @@ async function atualizarFuncionario(request, response) {
             segunda, terca, quarta, quinta, sexta,
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
-            email, face, foto 
+            email, face, foto
         } = request.body;
-        
-        let nomeFuncionario = foto; 
+
+        let nomeFuncionario = foto;
 
         const id_cliente = request.body.id_cliente;
         const files = request.files;
 
         if (files && files.length > 0) {
-            const file = files[0]; 
+            const file = files[0];
             const fileExtension = path.extname(file.originalname);
             nomeFuncionario = `${foto}${fileExtension}`;
             const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
@@ -289,7 +289,24 @@ async function atualizarFuncionario(request, response) {
         response.status(500).send('Erro ao atualizar funcionário');
     }
 }
+async function listarOperadores(request, response) {
+    const {id_cliente} = request.body;
+    try {
+        if (!id_cliente) {
+            return response.status(401).json("ID do cliente não enviado");
+        }
 
+        let query = 'SELECT * FROM Usuarios WHERE deleted = 0 AND role = \'Operador\' AND id_cliente = @id_cliente';
+        const dbRequest = new sql.Request();
+        dbRequest.input('id_cliente', sql.Int, id_cliente);
+
+        const result = await dbRequest.query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 
 module.exports = {
     upload,
@@ -301,5 +318,6 @@ module.exports = {
     listarHierarquia,
     listarPlanta,
     atualizarFuncionario,
-    deleteFuncionario
+    deleteFuncionario,
+    listarOperadores
 };
