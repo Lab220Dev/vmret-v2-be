@@ -20,21 +20,22 @@ async function listar(request, response) {
 
 async function adicionar(request, response) {
     try {
-        const { codigo, nome, userid = '', senha = '', urlapi = '',
+        const { codigo, nome, userId = '', senha = '', urlapi = '',
             clienteid = '' } = request.body;
         const id_cliente = request.body.id_cliente;
         const query = `INSERT INTO plantas (id_cliente, codigo, nome,
-         userID, senha, urlapi, clienteid )
-         VALUES (@id_cliente, @codigo, @nome, @userid, @senha,
-          @urlapi, @clienteid)`;
+         userId, senha, urlapi, clientid , deleted)
+         VALUES (@id_cliente, @codigo, @nome, @userId, @senha,
+          @urlapi, @clientid, @deleted)`;
         request = new sql.Request();
         request.input('id_cliente', sql.Int, id_cliente);
         request.input('codigo', sql.NVarChar, codigo);
         request.input('nome', sql.VarChar, nome);
-        request.input('userid', sql.NVarChar, userid);
+        request.input('deleted', sql.Bit, false);
+        request.input('userid', sql.NVarChar, userId);
         request.input('senha', sql.NVarChar, senha);
         request.input('urlapi', sql.NVarChar, urlapi);
-        request.input('clienteid', sql.NVarChar, clienteid);
+        request.input('clientid', sql.NVarChar, clienteid);
         const result = await request.query(query);
         if (result) {
             response.status(201).send('Planta criada com sucesso!');
@@ -47,27 +48,27 @@ async function adicionar(request, response) {
 }
 async function atualizar(request, response) {
     try {
-        const { codigo, nome, userid, senha, urlapi,
+        const { codigo, nome, userId, senha, urlapi,
             clienteid,id_planta } = request.body;
         const id_cliente = request.body.id_cliente;
         const query = `UPDATE plantas 
         SET id_cliente = @id_cliente,
         codigo = @codigo,
         nome = @nome,
-        userid = @userid,
+        userId = @userid,
         senha = @senha,
         urlapi = @urlapi,
-        clienteid = @clienteid
+        clientid = @clientid
         WHERE id_planta = @id_planta`;
         request = new sql.Request();
         request.input('id_cliente', sql.Int, id_cliente);
         request.input('codigo', sql.NVarChar, codigo);
         request.input('nome', sql.VarChar, nome);
-        request.input('userid', sql.NVarChar, userid);
+        request.input('userId', sql.NVarChar, userId);
         request.input('senha', sql.NVarChar, senha);
         request.input('urlapi', sql.NVarChar, urlapi);
-        request.input('clienteid', sql.NVarChar, clienteid);
-        request.input('id_planta', sql.NVarChar, id_planta);
+        request.input('clientid', sql.NVarChar, clienteid);
+        request.input('id_planta', sql.Int, id_planta);
         const result = await request.query(query);
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
             response.status(200).json("Produto atualizado com sucesso");

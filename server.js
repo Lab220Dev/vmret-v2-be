@@ -17,6 +17,7 @@ const DMRoute = require('./src/routes/cadastros/DMRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
+const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
 const autenticarToken = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
@@ -78,11 +79,14 @@ app.use('/api/DM', autenticarToken, DMRoute);
 // Rotas de Usuarios DMs
 app.use('/api/UDM', autenticarToken, UDMRoute);
 
-//Rotas de Relatorio
+//Rotas de Relatorio Retirada
 app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 
-//Rotas de Relatorio
+//Rotas de Relatorio Items mais Retirados
 app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+
+//Rotas de Relatorio Items mais Retirados
+app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
 
 
 
