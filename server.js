@@ -91,9 +91,8 @@ app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
 //Rotas de Relatorio Items mais Retirados Itens
 app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
 
-app.use('/api/fichasRetiradas',autenticarToken, FichasRoutes);
-
-// APP.use ('/api/gerarPDF.php', autenticarToken)
+//Rotas de Relatório para Fichas Retiradas
+app.use('/api/fichasretiradas',autenticarToken, FichasRoutes);
 
 
 //Rotas de Relatorio Items mais Retirados

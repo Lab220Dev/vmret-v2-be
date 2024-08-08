@@ -1,80 +1,8 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
-const PDFDocument = require('pdfkit');
 
 async function criarRequest() {
   return new sql.Request();
-}
-
-async function gerarPDF(request, response) {
-  try {
-    const id_cliente = request.body.id_cliente;
-    
-    if (!id_cliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
-    }
-
-    let query = `
-      SELECT
-        ri.ProdutoID,
-        ri.ProdutoNome,
-        ri.ProdutoSKU,
-        ri.Quantidade,
-        r.Dia,
-        r.id_dm,
-        p.Descricao AS ProdutoDescricao  
-      FROM
-        Retiradas r
-      INNER JOIN
-        retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
-      LEFT JOIN
-        Produtos p ON ri.ProdutoID = p.ID_Produto  
-      WHERE
-        r.ID_Cliente = @id_cliente
-        AND (r.ID_Funcionario = @id_funcionario)
-        AND (p.ID_Planta = @id_planta)
-      ORDER BY
-        r.Dia DESC
-    `;
-
-    const requestSql = await criarRequest();
-    requestSql.input('id_cliente', sql.Int, id_cliente);
-    const result = await requestSql.query(query);
-    const retiradas = result.recordset;
-
-    // Configurar o PDF
-    const doc = new PDFDocument();
-    let buffers = [];
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', () => {
-        let pdfData = Buffer.concat(buffers);
-        response.writeHead(200, {
-            'Content-Length': Buffer.byteLength(pdfData),
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment;filename=relatorio.pdf',
-        }).end(pdfData);
-    });
-
-    // Adicionar conteúdo ao PDF
-    doc.fontSize(16).text('Relatório de Fichas', { align: 'center' });
-    doc.moveDown();
-
-    retiradas.forEach(retirada => {
-        doc.fontSize(12).text(`ID Retirada: ${retirada.ID_Retirada}`);
-        doc.text(`Data: ${new Date(retirada.Dia).toLocaleDateString()}`);
-        doc.text(`Produto: ${retirada.ProdutoNome}`);
-        doc.text(`Quantidade: ${retirada.Quantidade}`);
-        doc.text(`Funcionário: ${retirada.nome} (Matrícula: ${retirada.matricula})`);
-        doc.moveDown();
-    });
-
-    doc.end();
-
-  } catch (error) {
-    console.error('Erro ao gerar PDF:', error.message);
-    response.status(500).send('Erro ao gerar PDF');
-  }
 }
 
 async function relatorio(request, response) {
@@ -86,20 +14,29 @@ async function relatorio(request, response) {
     }
 
     let query = `
-      SELECT 
-        ri.ProdutoID,
-        ri.ProdutoNome,
-        ri.ProdutoSKU,
-        ri.Quantidade,
-        r.Dia
-      FROM
-        Retiradas r
-      INNER JOIN
-        retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
-      LEFT JOIN
+      SELECT
+    ri.ProdutoID,
+    ri.ProdutoNome,
+    ri.ProdutoSKU,
+    ri.Quantidade,
+    r.Dia,
+    r.id_dm,
+    fr.Texto AS TextoFicha,
+    p.Descricao AS ProdutoDescricao  
+FROM
+    Retiradas r
+INNER JOIN
+    retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+LEFT JOIN
+    Produtos p ON ri.ProdutoID = p.ID_Produto
+    LEFT JOIN
         funcionarios f ON r.ID_Funcionario = f.id_funcionario
-      WHERE
-        r.ID_Cliente = @id_cliente
+      LEFT JOIN
+        Ficha_Retirada fr ON r.ID_Cliente = fr.id_cliente
+WHERE
+    r.ID_Cliente = @id_cliente
+    AND (r.ID_Funcionario = @id_funcionario)
+    AND (p.ID_Planta = @id_planta)
     `;
 
     let params = { id_cliente };
@@ -142,7 +79,7 @@ async function relatorio(request, response) {
     const produtosMap = new Map();
 
     result.recordset.forEach((row) => {
-      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia } = row;
+      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia, TextoFicha } = row;
       const dataFormatada = format(new Date(Dia), "dd/MM/yyyy - HH:mm");
 
       if (!produtosMap.has(ProdutoID)) {
@@ -151,6 +88,7 @@ async function relatorio(request, response) {
           ProdutoNome,
           ProdutoSKU,
           quantidade_no_periodo: 0,
+          TextoFicha, // Adiciona o texto da ficha ao mapeamento
           Detalhes: [],
         });
       }
@@ -175,50 +113,6 @@ async function relatorio(request, response) {
   }
 }
 
-async function listarPlanta(request, response) {
-  try {
-    const id_cliente = request.body.id_cliente;
-
-    if (!id_cliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
-    }
-    const query = "SELECT DISTINCT id_planta FROM funcionarios WHERE id_cliente = @id_cliente";
-
-    const requestSql = await criarRequest();
-    requestSql.input("id_cliente", sql.Int, id_cliente);
-    const result = await requestSql.query(query);
-
-    response.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
-  }
-}
-
-async function listarFuncionario(request, response) {
-  try {
-    const id_cliente = request.body.id_cliente;
-
-    if (!id_cliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
-    }
-    const query = "SELECT DISTINCT ID_FUNCIONARIO, nome FROM funcionarios WHERE id_cliente = @id_cliente";
-
-    const requestSql = await criarRequest();
-    requestSql.input("id_cliente", sql.Int, id_cliente);
-    const result = await requestSql.query(query);
-    response.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
-  }
-}
-
 module.exports = {
-  gerarPDF,
-  listarPlanta,
-  listarFuncionario,
-  relatorio
+  relatorio,
 };
