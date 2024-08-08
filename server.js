@@ -14,6 +14,7 @@ const funcaoRoutes = require('./src/routes/cadastros/funcaoRoutes');
 const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
 const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
 const DMRoute = require('./src/routes/cadastros/DMRoutes');
+const TermoRoutes = require('./src/routes/cadastros/TermoRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
@@ -98,7 +99,8 @@ app.use('/api/fichasretiradas',autenticarToken, FichasRoutes);
 //Rotas de Relatorio Items mais Retirados
 app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
 
-
+// Rotas de Texto
+app.use('/api/termo',autenticarToken, TermoRoutes);
 
 // Rotas de login
 app.use('/api', loginRoutes);
