@@ -1,6 +1,7 @@
 const sql = require('mssql');
 const path = require('path');
 const fs = require('fs').promises;
+const { logWithOperation } = require('../../middleware/Logger');
 const multer = require('multer');
 
 const storage = multer.memoryStorage();
@@ -39,7 +40,7 @@ async function adicionarFuncionarios(request, response) {
             segunda, terca, quarta, quinta, sexta,
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
-            email, face, foto } = request.body;
+            email, face, foto,id_usuario } = request.body;
         let nomeFuncionario = '';
         const id_cliente = request.body.id_cliente;
         const files = request.files;
@@ -101,11 +102,13 @@ async function adicionarFuncionarios(request, response) {
 
         const result = await request.query(query);
         if (result) {
+        logWithOperation('info', `O usuario ${id_usuario} Criou um Funcionario`, `sucesso`, 'Cadastro Funcionario', id_cliente, id_usuario);
             response.status(201).send('Funcionário criado com sucesso!');
             return;
         }
         response.status(400).send('Falha ao criar o funcionario');
     } catch (error) {
+        logWithOperation('error', `O usuario ${id_usuario} Falhou ao criar um Funcionario: ${err.message}`, 'Falha', 'Cadastro Funcionario', id_cliente, id_usuario);
         console.error('Erro ao inserir funcionário:', error.message);
         response.status(500).send('Erro ao inserir funcionário');
         return;
@@ -217,7 +220,7 @@ async function atualizarFuncionario(request, response) {
             segunda, terca, quarta, quinta, sexta,
             sabado, domingo, ordem,
             id_centro_custo, status, senha, biometria2,
-            email, face, foto
+            email, face, foto,id_usuario
         } = request.body;
 
         let nomeFuncionario = foto;
@@ -280,11 +283,13 @@ async function atualizarFuncionario(request, response) {
 
         const result = await request.query(query);
         if (result) {
+            logWithOperation('info', `O usuario ${id_usuario} Atualizou um o cadastro do Funcionario ${id_funcionario}`, `sucesso`, 'Atualização Funcionario', id_cliente, id_usuario);
             response.status(200).send('Funcionário atualizado com sucesso!');
             return;
         }
         response.status(400).send('Falha ao atualizar o funcionário');
     } catch (error) {
+        logWithOperation('error', `O usuario ${id_usuario} Falhou ao atuaizar o cadastro do Funcionario ${id_funcionario}: ${err.message}`, 'Falha', 'Atualização Funcionario', id_cliente, id_usuario);
         console.error('Erro ao atualizar funcionário:', error.message);
         response.status(500).send('Erro ao atualizar funcionário');
     }

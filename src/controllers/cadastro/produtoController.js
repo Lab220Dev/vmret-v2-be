@@ -2,7 +2,7 @@ const sql = require('mssql');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
-
+const { logWithOperation } = require('../../middleware/Logger');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).fields([
     { name: 'file_principal', maxCount: 1 },
@@ -64,7 +64,7 @@ async function adicionarProdutos(request, response) {
 
         let imagem1Path = '';
         let imagemdetalhePath = '';
-        let imagem2Path = ''; 
+        let imagem2Path = '';
 
         if (files['file_principal']) {
             const file = files['file_principal'][0];
@@ -72,14 +72,14 @@ async function adicionarProdutos(request, response) {
             imagem1Path = path.join(uploadPathPrincipal, nomeArquivoPrincipal);
             await fs.writeFile(imagem1Path, file.buffer);
         }
-        
+
         if (files['file_secundario']) {
             const file = files['file_secundario'][0];
             const nomeArquivoSecundario = `${sanitizeFileName(imagem2)}`;
             imagem2Path = path.join(uploadPathSecundario, nomeArquivoSecundario);
             await fs.writeFile(imagem2Path, file.buffer);
         }
-        
+
         if (files['file_info']) {
             const file = files['file_info'][0];
             const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
@@ -119,8 +119,11 @@ async function adicionarProdutos(request, response) {
         const result = await requestSql.query(query);
 
         if (result) {
+            logWithOperation('info', `Produto ${id_produto} Criado com sucesso`, `sucesso`, 'Adicionar Produto', id_cliente, id_usuario);
             response.status(201).json("Produto registrado com sucesso");
+
         } else {
+            logWithOperation('error', `Erro ao adicionar um Produto: ${err.message}`, 'Falha', 'Adicionar Produto', id_cliente, id_usuario);
             response.status(400).json("Erro ao registrar o Produto");
         }
     } catch (error) {
@@ -144,7 +147,7 @@ async function imagem2(request, response) {
     }
 }
 
-async function imagemdetalhe (request, response) {
+async function imagemdetalhe(request, response) {
     console.log(request.body);
     if (!request.files) {
         return response.status(400).send('Nenhum arquivo foi enviado.');
@@ -171,22 +174,24 @@ async function listarPlanta(request, response) {
 async function deleteProduto(request, response) {
     try {
         let query = "UPDATE produtos SET deleted = 1 WHERE 1 = 1";
-
-        if (request.body.id_produto) {
-            query += ` AND id_produto = '${request.body.id_produto}'`;
+        const { id_produto, id_cliente, id_usuario } = request.body;
+        if (id_produto) {
+            query += ` AND id_produto = '${id_produto}'`;
             const result = await new sql.Request().query(query);
+            logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
             response.status(200).json(result.recordset);
             return;
         }
         response.status(401).json("ID do produto não foi enviado");
     } catch (error) {
         console.error('Erro ao excluir:', error.message);
+        logWithOperation('error', `Erro ao Deletadar o item ${id_produto}: ${err.message}`, 'Falha', 'Delete Produto', id_cliente, id_usuario);
         response.status(500).send('Erro ao excluir');
     }
 }
 async function atualizarProduto(request, response) {
     try {
-        const { id_produto,id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
+        const { id_produto, id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
         const files = request.files;
 
         if (!id_produto) {
@@ -213,7 +218,7 @@ async function atualizarProduto(request, response) {
         let imagem2Path = imagem2;
 
         // Verifica se há alterações nas imagens secundárias
-        
+
         if (files[`file_secundario`]) {
             const file = files[`file_secundario`][0];
             const nomeArquivoSecundario = `${sanitizeFileName(imagem2)}`;
@@ -221,7 +226,7 @@ async function atualizarProduto(request, response) {
             await fs.writeFile(filePath, file.buffer);
             imagem2Path = filePath; // Corrige para atualizar o caminho da imagem secundária
         }
-        
+
 
         // Verifica se há alteração na imagem principal
         if (files['file_principal']) {
@@ -276,8 +281,10 @@ async function atualizarProduto(request, response) {
 
         // Verifica se houve sucesso na atualização
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
+            logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
             response.status(200).json("Produto atualizado com sucesso");
         } else {
+            logWithOperation('error', `Erro ao Deletadar o item ${id_produto}: ${err.message}`, 'Falha', 'Delete Produto', id_cliente, id_usuario);
             response.status(400).json("Erro ao atualizar o Produto");
         }
     } catch (error) {

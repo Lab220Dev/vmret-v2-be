@@ -1,9 +1,10 @@
 const sql = require('mssql');
 const { format } = require('date-fns');
+const { logWithOperation } = require('../../middleware/Logger');
 
 async function relatorio(request, response) {
     try {
-        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicio, data_final, id_cliente } = request.body;
+        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicio, data_final, id_cliente,id_usuario } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
@@ -102,10 +103,11 @@ async function relatorio(request, response) {
             ProdutoSKU: row.ProdutoSKU,
             Quantidade: row.Quantidade,
         }));
-
+        logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Retirada Realizada', id_cliente, id_usuario);
         return response.status(200).json(retiradasfiltradas);
 
     } catch (error) {
+        logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Retirada Realizada', id_cliente, id_usuario);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }

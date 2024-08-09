@@ -1,5 +1,6 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
+const { logWithOperation } = require('../../middleware/Logger');
 
 async function relatorio(request, response) {
   try {
@@ -9,6 +10,7 @@ async function relatorio(request, response) {
       data_inicio,
       data_final,
       id_cliente,
+      id_usuario
     } = request.body;
 
     if (!id_cliente) {
@@ -103,6 +105,7 @@ async function relatorio(request, response) {
     });
 
     const produtosList = Array.from(produtosMap.values());
+    logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Itens Mais Retirados', id_cliente, id_usuario);
 
     return response.status(200).json(produtosList);
   } catch (error) {
