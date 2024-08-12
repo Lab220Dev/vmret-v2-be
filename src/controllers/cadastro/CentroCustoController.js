@@ -22,45 +22,46 @@ async function listar(request, response) {
 }
 
 async function adicionar(request, response) {
+  const { id_cliente, Codigo, Nome, id_usuario } = request.body;
+  const query = `INSERT INTO Centro_Custos
+              (ID_Cliente, Codigo, Nome, Deleted)
+              VALUES (@ID_Cliente, @codigo, @nome, @deleted);`;
+  const params = {
+    ID_Cliente: id_cliente,
+    Codigo: Codigo,
+    Nome: Nome,
+    Deleted: false
+  };
   try {
-    const { id_cliente, codigo, nome, id_usuario } = request.body;
-
     if (!id_cliente) {
       response.status(401).json("ID do cliente não enviado");
       return;
     }
-    const query = `INSERT INTO Centro_Custos
-              (ID_Cliente, Codigo, Nome, Deleted)
-              VALUES (@ID_Cliente, @codigo, @nome, @deleted);`;
-
     request = new sql.Request();
     request.input('ID_Cliente', sql.Int, id_cliente);
-    request.input('codigo', sql.Int, codigo);
-    request.input('nome', sql.VarChar, nome);
+    request.input('codigo', sql.Int, Codigo);
+    request.input('nome', sql.VarChar, Nome);
     request.input('Deleted', sql.Bit, false);
 
     const result = await request.query(query);
 
-    if (result) {
-      logWithOperation('info', `O usuario ${id_usuario} Criou um Novo Centro de Custo`, 'sucesso', 'Centro de Custo', id_cliente, id_usuario, query);
-      response.status(201).send('Centro do Custo criado com sucesso!');
-      return;
-    }
-    response.status(400).send('Falha ao criar o Centro do Custo');
-  } catch (error) {
-    if (error.message.includes('Query não fornecida para logging')) {
-      // Trata especificamente o caso onde a query não foi fornecida
-      console.error('Erro crítico: ', error.message);
-      response.status(500).send('Erro crítico: Falha na operação');
+    if (result.rowsAffected[0] > 0) {
+      logWithOperation('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(201).send('Centro de Custo criado com sucesso!');
     } else {
-      logWithOperation('error', `O usuario ${id_usuario} Falhou em criar um novo centro de custo: ${error.message}`, 'Falha', 'Centro de Custo', id_cliente, id_usuario);
-      console.error('Erro ao adicionar registro:', error.message);
-      response.status(500).send('Erro ao adicionar Centro de Custo');
+      logWithOperation('info', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(400).send('Falha ao criar o Centro de Custo');
     }
+  } catch (error) {
+    const errorMessage = error.message.includes('Query não fornecida para logging') 
+      ? 'Erro crítico: Falha na operação'
+      : `Erro ao adicionar Centro de Custo: ${error.message}`;
+
+    logWithOperation('error', errorMessage, 'Falha', 'INSERT', id_cliente, id_usuario, query, params);
+    console.error('Erro ao adicionar registro:', error.message);
+    response.status(500).send('Erro ao adicionar Centro de Custo');
   }
 }
-
-
 
 async function deleteCentro(request, response) {
   const { id_usuario, id_cliente, ID_CentroCusto } = request.body;
@@ -103,28 +104,30 @@ async function deleteCentro(request, response) {
 
 
 async function atualizar(request, response) {
+
+  const { ID_CentroCusto, Nome, Codigo, id_cliente, id_usuario } = request.body;
+  
+  const params = {
+    ID_Cliente: id_cliente,
+    Codigo: Codigo,
+    Nome: Nome,
+    Deleted: false,
+    ID_CentroCusto: ID_CentroCusto
+  };
+  
+  const query = `UPDATE Centro_Custos
+  SET ID_Cliente = @ID_Cliente,
+      Codigo = @Codigo,
+      Nome = @Nome,
+      Deleted = @Deleted
+  WHERE ID_CentroCusto = @ID_CentroCusto`;
+
   try {
-    const { ID_CentroCusto, Nome, Codigo, id_cliente, id_usuario } = request.body;
 
     if (!ID_CentroCusto) {
       response.status(400).json("ID do centro de custo não enviado");
       return;
     }
-
-    const query = `UPDATE Centro_Custos
-                   SET ID_Cliente = @ID_Cliente,
-                       Codigo = @Codigo,
-                       Nome = @Nome,
-                       Deleted = @Deleted
-                   WHERE ID_CentroCusto = @ID_CentroCusto`;
-
-    const params = {
-      ID_Cliente: id_cliente,
-      Codigo: Codigo,
-      Nome: Nome,
-      Deleted: false,
-      ID_CentroCusto: ID_CentroCusto
-    };
 
     const sqlRequest = new sql.Request();
     sqlRequest.input('ID_Cliente', sql.Int, id_cliente);
@@ -139,11 +142,11 @@ async function atualizar(request, response) {
       logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(200).send('Centro de custo atualizado com sucesso!');
     } else {
-      logQuery('error', `O usuário ${id_usuario} tentou atualizar o Centro de Custo ${ID_CentroCusto}, mas nenhuma linha foi alterada`, 'nenhuma alteração', 'Atualizar', id_cliente, id_usuario, query, params);
+      logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
     }
   } catch (error) {
-    logQuery('error', ` ${error.message}`, 'erro técnico', 'Atualizar', id_cliente, id_usuario, query, params);
+    logQuery('error', ` ${error.message}`, 'erro', 'UPDATE', id_cliente, id_usuario, query, params);
     console.error('Erro ao atualizar centro de custo:', error.message);
     response.status(500).send('Erro ao atualizar centro de custo');
   }
