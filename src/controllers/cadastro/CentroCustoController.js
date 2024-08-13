@@ -1,6 +1,8 @@
 const sql = require('mssql');
 const { logQuery } = require('../../utils/logUtils');
-
+const convertToBoolean = (value) => {
+  return value === 'true';
+};
 
 async function listar(request, response) {
   try {
