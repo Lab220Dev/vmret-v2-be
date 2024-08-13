@@ -1,5 +1,5 @@
 const sql = require('mssql');
-
+const { logQuery } = require('../../utils/logUtils');
 const convertToBoolean = (value) => {
     return value === 'true';
 };
@@ -14,10 +14,25 @@ async function listar(request, response) {
     }
 }
 async function adicionar(request, response) {
-    try {
-        const { nome, cpfcnpj, ativo, usarapi, textoretirada } = request.body;
+    const { nome, cpfcnpj, ativo, usarapi, textoretirada,id_cliente,id_usuario } = request.body;
         const query = `INSERT INTO clientes (nome, cpfcnpj,ativo,,created,updated,last_login,usar_api,atualizado,textoretirado )
         Values (@nome, @cpfcnpj, @ativo, @created, @updated, @last_login, @usar_api, @atualizado, @textoretirado)`
+        const params = {
+            nome: nome,
+            cpfcnpj: cpfcnpj,
+            ativo: ativo,
+            created: new Date(),
+            updated: new Date(),
+            last_login: '1900-01-01 00:00:00.000',
+            usar_api: convertToBoolean(usarapi),
+            atualizado: false,
+            textoretirado: textoretirada
+          };
+        try {
+        if (!id_cliente) {
+            response.status(401).json("ID do cliente não enviado");
+            return;
+          }
         request = new sql.Request();
         request.input('nome', sql.VarChar, nome);
         request.input('cpfcnpj', sql.VarChar, cpfcnpj);
@@ -29,10 +44,13 @@ async function adicionar(request, response) {
         request.input('atualizado', sql.Bit, false);
         request.input('textoretirado', sql.NVarChar, textoretirada);
         const result = await request.query(query);
-        if (result) {
-            response.status(201).send("Cliente criado com sucesso!");
-            return
-        }
+        if (result.rowsAffected[0] > 0) {
+            logWithOperation('info', `Usuário ${id_usuario} criou um novo Cliente`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(201).send('Centro de Custo criado com sucesso!');
+          } else {
+            logWithOperation('info', `Usuário ${id_usuario} falhou ao criar Cliente`, 'ERRO', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o Centro de Custo');
+          }
         response.status(400).send("Falha ao criar o usuário!");
     } catch (error) {
         console.error('Erro ao inserir o usuário:', error.message);
