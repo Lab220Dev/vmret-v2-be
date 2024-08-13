@@ -1,6 +1,8 @@
 const sql = require('mssql');
 
 async function Salvar(request, response) {
+    const { id_cliente, texto, id = "" ,id_usuario} = request.body;
+    
     try {
         const { id_cliente, Texto } = request.body;
 

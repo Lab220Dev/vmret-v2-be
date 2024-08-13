@@ -1,6 +1,8 @@
 const sql = require('mssql');
 const { logQuery } = require('../../utils/logUtils');
-
+const convertToBoolean = (value) => {
+  return value === 'true';
+};
 
 async function listar(request, response) {
   try {
@@ -46,18 +48,17 @@ async function adicionar(request, response) {
     const result = await request.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logWithOperation('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
       response.status(201).send('Centro de Custo criado com sucesso!');
     } else {
-      logWithOperation('info', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
       response.status(400).send('Falha ao criar o Centro de Custo');
     }
   } catch (error) {
     const errorMessage = error.message.includes('Query não fornecida para logging') 
       ? 'Erro crítico: Falha na operação'
       : `Erro ao adicionar Centro de Custo: ${error.message}`;
-
-    logWithOperation('error', errorMessage, 'Falha', 'INSERT', id_cliente, id_usuario, query, params);
+    logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
     console.error('Erro ao adicionar registro:', error.message);
     response.status(500).send('Erro ao adicionar Centro de Custo');
   }
@@ -95,13 +96,10 @@ async function deleteCentro(request, response) {
       response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
     }
   } catch (error) {
-    logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error('Erro ao excluir:', error.message);
     response.status(500).send('Erro ao excluir');
   }
 }
-
-
 
 async function atualizar(request, response) {
 

@@ -2,7 +2,7 @@ const sql = require('mssql');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
-const { logWithOperation } = require('../../middleware/Logger');
+const { logQuery } = require('../../utils/logUtils');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).fields([
     { name: 'file_principal', maxCount: 1 },
@@ -34,8 +34,36 @@ async function listarProdutos(request, response) {
 }
 
 async function adicionarProdutos(request, response) {
+    const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe, id_usuario } = request.body;
+    const query = `
+    INSERT INTO produtos
+    (id_cliente, id_categoria, nome, descricao, validadedias,
+    imagem1, imagem2, imagemdetalhe, deleted, codigo,
+    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
+    VALUES
+    (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
+    @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
+    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
+`;
+    const params = {
+        id_cliente: id_cliente,
+        id_categoria: id_categoria,
+        nome: nome,
+        descricao: descricao,
+        validadedias: validadedias,
+        imagem1: imagem1,
+        imagem2: imagem2,
+        imagemdetalhe: imagemdetalhe,
+        deleted: false,
+        codigo: codigo,
+        quantidademinima: 0,
+        capacidade: 0,
+        ca: '',
+        id_planta: id_planta,
+        id_tipoProduto: id_tipoProduto,
+        unidade_medida: unidade_medida,
+    };
     try {
-        const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
         const files = request.files;
 
         if (!id_cliente) {
@@ -87,16 +115,7 @@ async function adicionarProdutos(request, response) {
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }
 
-        const query = `
-            INSERT INTO produtos
-            (id_cliente, id_categoria, nome, descricao, validadedias,
-            imagem1, imagem2, imagemdetalhe, deleted, codigo,
-            quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
-            VALUES
-            (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
-            @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
-            @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
-        `;
+
 
         const requestSql = new sql.Request();
         requestSql.input('id_cliente', sql.Int, id_cliente);
@@ -118,15 +137,19 @@ async function adicionarProdutos(request, response) {
 
         const result = await requestSql.query(query);
 
-        if (result) {
-            logWithOperation('info', `Produto ${id_produto} Criado com sucesso`, `sucesso`, 'Adicionar Produto', id_cliente, id_usuario);
+        if (result.rowsAffected[0] > 0) {
+            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).json("Produto registrado com sucesso");
 
         } else {
-            logWithOperation('error', `Erro ao adicionar um Produto: ${err.message}`, 'Falha', 'Adicionar Produto', id_cliente, id_usuario);
+            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao registrar o Produto");
         }
     } catch (error) {
+        const errorMessage = error.message.includes('Query não fornecida para logging')
+            ? 'Erro crítico: Falha na operação'
+            : `Erro ao adicionar Centro de Custo: ${error.message}`;
+        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
@@ -172,28 +195,66 @@ async function listarPlanta(request, response) {
 }
 
 async function deleteProduto(request, response) {
+    let query = "UPDATE produtos SET deleted = 1 WHERE id_produto = @id_produto";
+    const { id_produto, id_cliente, id_usuario } = request.body;
+    const params = {
+        id_produto: id_produto
+    };
     try {
-        let query = "UPDATE produtos SET deleted = 1 WHERE 1 = 1";
-        const { id_produto, id_cliente, id_usuario } = request.body;
         if (id_produto) {
-            query += ` AND id_produto = '${id_produto}'`;
-            const result = await new sql.Request().query(query);
-            logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
-            response.status(200).json(result.recordset);
-            return;
+            const sqlRequest = new sql.Request();
+            sqlRequest.input('id_produto', sql.Int, id_produto);
+            const result = await sqlRequest.query(query);
+            if (result.rowsAffected[0] > 0) {
+                logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
+                response.status(200).json(result.recordset);
+            } else {
+                logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+            }
         }
         response.status(401).json("ID do produto não foi enviado");
     } catch (error) {
         console.error('Erro ao excluir:', error.message);
-        logWithOperation('error', `Erro ao Deletadar o item ${id_produto}: ${err.message}`, 'Falha', 'Delete Produto', id_cliente, id_usuario);
+        logQuery('error', err.message, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
         response.status(500).send('Erro ao excluir');
     }
 }
 async function atualizarProduto(request, response) {
+    const { id_usuario, id_produto, id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
+    const query = `
+    UPDATE produtos
+    SET id_cliente = @id_cliente,
+        id_categoria = @id_categoria,
+        nome = @nome,
+        descricao = @descricao,
+        validadedias = @validadedias,
+        imagem1 = @imagem1,
+        imagem2 = @imagem2,
+        imagemdetalhe = @imagemdetalhe,
+        codigo = @codigo,
+        id_planta = @id_planta,
+        id_tipoProduto = @id_tipoProduto,
+        unidade_medida = @unidade_medida
+    WHERE id_produto = @id_produto
+`;
+    const params = {
+        id_cliente: id_cliente,
+        id_categoria: id_categoria,
+        nome: nome,
+        descricao: descricao,
+        validadedias: validadedias,
+        imagem1: imagem1,
+        imagem2: imagem2,
+        imagemdetalhe: imagemdetalhe,
+        codigo: codigo,
+        id_planta: id_planta,
+        id_tipoProduto: id_tipoProduto,
+        unidade_medida: unidade_medida,
+        id_produto: id_produto
+    };
     try {
-        const { id_produto, id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
         const files = request.files;
-
         if (!id_produto) {
             response.status(401).json("ID do produto não enviado");
             return;
@@ -217,7 +278,6 @@ async function atualizarProduto(request, response) {
         let imagemdetalhePath = imagemdetalhe;
         let imagem2Path = imagem2;
 
-        // Verifica se há alterações nas imagens secundárias
 
         if (files[`file_secundario`]) {
             const file = files[`file_secundario`][0];
@@ -227,8 +287,6 @@ async function atualizarProduto(request, response) {
             imagem2Path = filePath; // Corrige para atualizar o caminho da imagem secundária
         }
 
-
-        // Verifica se há alteração na imagem principal
         if (files['file_principal']) {
             const file = files['file_principal'][0];
             const nomeArquivoPrincipal = `${sanitizeFileName(imagem1)}`;
@@ -236,31 +294,12 @@ async function atualizarProduto(request, response) {
             await fs.writeFile(imagem1Path, file.buffer);
         }
 
-        // Verifica se há alteração na imagem de informação adicional
         if (files['file_info']) {
             const file = files['file_info'][0];
             const nomeArquivoInfo = `${sanitizeFileName(imagemdetalhe)}`;
             imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }
-
-        // Atualiza o produto no banco de dados
-        const query = `
-            UPDATE produtos
-            SET id_cliente = @id_cliente,
-                id_categoria = @id_categoria,
-                nome = @nome,
-                descricao = @descricao,
-                validadedias = @validadedias,
-                imagem1 = @imagem1,
-                imagem2 = @imagem2,
-                imagemdetalhe = @imagemdetalhe,
-                codigo = @codigo,
-                id_planta = @id_planta,
-                id_tipoProduto = @id_tipoProduto,
-                unidade_medida = @unidade_medida
-            WHERE id_produto = @id_produto
-        `;
 
         const requestSql = new sql.Request();
         requestSql.input('id_cliente', sql.Int, id_cliente);
@@ -281,13 +320,14 @@ async function atualizarProduto(request, response) {
 
         // Verifica se houve sucesso na atualização
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
-            logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
+            logQuery('info', `Produto ${id_produto} Deletado com sucesso`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(200).json("Produto atualizado com sucesso");
         } else {
-            logWithOperation('error', `Erro ao Deletadar o item ${id_produto}: ${err.message}`, 'Falha', 'Delete Produto', id_cliente, id_usuario);
+            logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao atualizar o Produto");
         }
     } catch (error) {
+        logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }

@@ -1,6 +1,6 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
-const { logWithOperation } = require('../../middleware/Logger');
+const { logQuery } = require('../../utils/logUtils');
 
 async function relatorio(request, response) {
   try {

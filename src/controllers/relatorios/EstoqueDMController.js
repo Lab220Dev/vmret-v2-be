@@ -1,6 +1,5 @@
 const sql = require('mssql');
-const { logWithOperation } = require('../../middleware/Logger');
-
+const { logQuery } = require('../../utils/logUtils');
 async function listarDM(request, response) {
     try {
         if (!request.body.id_cliente) {
@@ -22,6 +21,12 @@ async function listarDM(request, response) {
 async function relatorio(request, response) {
     try {
         const { id_cliente, dms, id_usuario } = request.body;
+        const params = {
+            id_cliente: id_cliente,
+            ID_DM: dms
+          };
+        let query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM';
+
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
         }
@@ -30,14 +35,18 @@ async function relatorio(request, response) {
             return response.status(401).json("ID_DM não enviado");
         }
 
-        let query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM';
         const dbRequest = new sql.Request();
         dbRequest.input('id_cliente', sql.Int, id_cliente);
         dbRequest.input('ID_DM', sql.Int, dms);
         
         const result = await dbRequest.query(query);
-        logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Estoque DM', id_cliente, id_usuario);
-        response.status(200).json(result.recordset);
+        if (result.rowsAffected[0] > 0) {
+            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(201).send('Centro de Custo criado com sucesso!');
+          } else {
+            logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o Centro de Custo');
+          }
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Estoque DM', id_cliente, id_usuario);
