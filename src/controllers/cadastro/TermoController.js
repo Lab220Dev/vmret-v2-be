@@ -2,27 +2,30 @@ const sql = require('mssql');
 
 async function Salvar(request, response) {
     try {
-        const { id_cliente, texto, id = "" } = request.body;
+        const { id_cliente, Texto } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
         }   
 
-        let query;
         const dbRequest = new sql.Request();
         dbRequest.input('ID_Cliente', sql.Int, id_cliente);
-        dbRequest.input('Texto', sql.NText, texto);
+        dbRequest.input('Texto', sql.NText, Texto);
 
-        if (!id) {
-            // Insert query
-            query = `INSERT INTO Ficha_Retirada (ID_Cliente, Texto)
-                     VALUES (@ID_Cliente, @Texto);`;
-        } else {
-            // Update query
+        // Verifica se já existe um registro para o id_cliente
+        const checkQuery = `SELECT ID FROM Ficha_Retirada WHERE ID_Cliente = @ID_Cliente`;
+        const checkResult = await dbRequest.query(checkQuery);
+
+        let query;
+        if (checkResult.recordset.length > 0) {
+            // Se existir, atualiza o registro
             query = `UPDATE Ficha_Retirada
                      SET Texto = @Texto
-                     WHERE ID = @ID;`;
-            dbRequest.input('ID', sql.Int, id); // Include the ID for the update
+                     WHERE ID_Cliente = @ID_Cliente`;
+        } else {
+            // Se não existir, cria um novo registro
+            query = `INSERT INTO Ficha_Retirada (ID_Cliente, Texto)
+                     VALUES (@ID_Cliente, @Texto);`;
         }
 
         const result = await dbRequest.query(query);
@@ -32,6 +35,7 @@ async function Salvar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
 async function Recuperar(request, response) {
     try {
         const { id_cliente, id="" } = request.body;
