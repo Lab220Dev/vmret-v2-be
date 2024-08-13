@@ -1,6 +1,6 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
-
+const { logQuery } = require('../../utils/logUtils')
 async function criarRequest() {
   return new sql.Request();
 }

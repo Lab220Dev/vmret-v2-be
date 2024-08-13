@@ -1,13 +1,25 @@
 const sql = require('mssql');
 const CryptoJS = require('crypto-js');
-;
+const { logQuery } = require('../../utils/logUtils');
+
 async function adicionar(request, response) {
+    const { nome, email, senha, ativo, id_planta, id_cliente, role, id_usuario } = request.body;
+    const query = `INSERT INTO usuarios (nome, email, senha, ativo, deleted, id_planta, id_cliente, role)
+    Values (@nome, @email, @senha, @ativo, @deleted, @id_planta, @id_cliente, @role)`
+    const hashMD5 = CryptoJS.MD5(senha).toString();
+    const params = {
+        nome: nome,
+        email: email,
+        senha: hashMD5,
+        ativo: ativo,
+        deleted: false,
+        id_planta: id_planta,
+        id_cliente: id_cliente,
+        role: role,
+    };
     try {
-        const { nome, email, senha, ativo, id_planta, id_cliente, role } = request.body;
-        const query = `INSERT INTO usuarios (nome, email, senha, ativo, deleted, id_planta, id_cliente, role)
-        Values (@nome, @email, @senha, @ativo, @deleted, @id_planta, @id_cliente, @role)`
         request = new sql.Request();
-        const hashMD5 = CryptoJS.MD5(senha).toString();
+
         request.input('nome', sql.VarChar, nome);
         request.input('email', sql.VarChar, email);
         request.input('senha', sql.VarChar, hashMD5);
@@ -17,12 +29,20 @@ async function adicionar(request, response) {
         request.input('id_cliente', sql.Int, id_cliente);
         request.input('role', sql.NVarChar, role);
         const result = await request.query(query);
-        if (result) {
+        if (result.rowsAffected[0] > 0) {
+            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send("Usuário criado com sucesso!");
             return
+        } else {
+            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o Centro de Custo');
         }
         response.status(400).send("Falha ao criar o usuário!");
     } catch (error) {
+        const errorMessage = error.message.includes('Query não fornecida para logging')
+            ? 'Erro crítico: Falha na operação'
+            : `Erro ao adicionar Centro de Custo: ${error.message}`;
+        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao inserir o usuário:', error.message);
         response.status(500).send('Erro ao inserir o usuário');
     }
@@ -76,14 +96,23 @@ async function listarPlanta(request, response) {
     }
 }
 async function deleteUsuario(request, response) {
-    try {
-        let query = "UPDATE usuarios SET deleted = 1 WHERE 1 = 1";
+    const id_usuario = request.body.id_usuario;
+    let query = "UPDATE usuarios SET deleted = 1 WHERE id_usuario = @id_usuario";
 
-        if (request.body.id_usuario) {
-            query += ` AND id_usuario = '${request.body.id_usuario}'`;
-            const result = await new sql.Request().query(query);
-            response.status(200).json(result.recordset);
-            return;
+    try {
+
+        if (id_usuario) {
+            const sqlRequest = new sql.Request();
+            sqlRequest.input('id_usuario', sql.Int, id_usuario);
+            const result = await sqlRequest.query(query);
+            if (result.rowsAffected[0] > 0) {
+                logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+                response.status(200).json(result.recordset);
+            } else {
+                //throw new Error(`Erro ao excluir: ${ID_CentroCusto} não encontrado.`);
+                logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+            }
         }
         response.status(401).json("id do usuario não foi enviado");
     } catch (error) {
@@ -93,8 +122,9 @@ async function deleteUsuario(request, response) {
 }
 
 async function atualizarUsuario(request, response) {
+    const { id_usuario, nome, email, senha, ativo, id_planta, id_cliente, role } = request.body;
+    
     try {
-        const { id_usuario, nome, email, senha, ativo, id_planta, id_cliente, role } = request.body;
 
         // Construindo a query dinamicamente
         let query = `UPDATE usuarios SET `;
@@ -155,5 +185,5 @@ async function atualizarUsuario(request, response) {
 }
 
 module.exports = {
-    adicionar, listar, listarPlanta,atualizarUsuario,deleteUsuario
+    adicionar, listar, listarPlanta, atualizarUsuario, deleteUsuario
 };

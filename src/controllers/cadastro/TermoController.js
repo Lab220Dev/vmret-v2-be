@@ -1,8 +1,9 @@
 const sql = require('mssql');
 
 async function Salvar(request, response) {
+    const { id_cliente, texto, id = "" ,id_usuario} = request.body;
+    
     try {
-        const { id_cliente, texto, id = "" } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
