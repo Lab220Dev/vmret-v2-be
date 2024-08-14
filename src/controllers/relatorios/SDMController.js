@@ -29,11 +29,11 @@ async function relatorio(request, response) {
         dbRequest.input('dia', sql.Date, formattedDate);
 
         const result = await dbRequest.query(query);
-        logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Status DM', id_cliente, id_usuario);
+       // logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Status DM', id_cliente, id_usuario);
         response.status(200).json(result.recordset);
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
-        logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Status DM', id_cliente, id_usuario);
+       // logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Status DM', id_cliente, id_usuario);
         response.status(500).send('Erro ao executar consulta');
     }
 }

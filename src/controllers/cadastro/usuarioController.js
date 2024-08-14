@@ -30,11 +30,11 @@ async function adicionar(request, response) {
         request.input('role', sql.NVarChar, role);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send("Usuário criado com sucesso!");
             return
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).send('Falha ao criar o Centro de Custo');
         }
         response.status(400).send("Falha ao criar o usuário!");
@@ -42,7 +42,7 @@ async function adicionar(request, response) {
         const errorMessage = error.message.includes('Query não fornecida para logging')
             ? 'Erro crítico: Falha na operação'
             : `Erro ao adicionar Centro de Custo: ${error.message}`;
-        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+        //logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao inserir o usuário:', error.message);
         response.status(500).send('Erro ao inserir o usuário');
     }
@@ -97,20 +97,24 @@ async function listarPlanta(request, response) {
 }
 async function deleteUsuario(request, response) {
     const id_usuario = request.body.id_usuario;
+    const id_usuario_delete = request.body.id_usuario_delete;
+    const id_cliente = request.body.id_cliente;
     let query = "UPDATE usuarios SET deleted = 1 WHERE id_usuario = @id_usuario";
-
+    const params = {
+        id_cliente: id_usuario_delete,
+    };
     try {
 
         if (id_usuario) {
             const sqlRequest = new sql.Request();
-            sqlRequest.input('id_usuario', sql.Int, id_usuario);
+            sqlRequest.input('id_usuario', sql.Int, id_usuario_delete);
             const result = await sqlRequest.query(query);
             if (result.rowsAffected[0] > 0) {
-                logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
                 response.status(200).json(result.recordset);
+                return
             } else {
                 //throw new Error(`Erro ao excluir: ${ID_CentroCusto} não encontrado.`);
-                logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+                //ogQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
                 response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
             }
         }

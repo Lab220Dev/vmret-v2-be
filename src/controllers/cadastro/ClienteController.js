@@ -45,10 +45,10 @@ async function adicionar(request, response) {
         request.input('textoretirado', sql.NVarChar, textoretirada);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send('Centro de Custo criado com sucesso!');
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).send('Falha ao criar o Centro de Custo');
         }
         response.status(400).send("Falha ao criar o usuário!");
@@ -56,7 +56,7 @@ async function adicionar(request, response) {
         const errorMessage = error.message.includes('Query não fornecida para logging')
             ? 'Erro crítico: Falha na operação'
             : `Erro ao adicionar Centro de Custo: ${error.message}`;
-        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+        //logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao inserir o usuário:', error.message);
         response.status(500).send('Erro ao inserir o usuário');
     }
@@ -96,14 +96,14 @@ async function atualizar(request, response) {
         request.input('textoretirada', sql.NVarChar, textoretirada);
         const result = await request.query(query);
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
-            logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
+            //logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(200).json("Cliente atualizado com sucesso");
         } else {
-            logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao atualizar o Cliente");
         }
     } catch (error) {
-        logQuery('error', ` ${error.message}`, 'erro', 'UPDATE', id_cliente, id_usuario, query, params);
+        //logQuery('error', ` ${error.message}`, 'erro', 'UPDATE', id_cliente, id_usuario, query, params);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
@@ -126,15 +126,15 @@ async function deletar(request, response) {
         const result = await sqlRequest.query(query);
 
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+            //logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
             response.status(200).json({ message: "cliente excluído com sucesso" });
         } else {
-            logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
             response.status(404).json({ error: "cliente não encontrado" });
         }
 
     } catch (error) {
-        logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+        //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
         console.error('Erro ao excluir:', error.message);
         response.status(500).send('Erro ao excluir');
     }
