@@ -92,17 +92,17 @@ async function adicionar(request, response) {
     const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `Usuário ${id_usuario} criou uma DM`, 'sucesso', 'INSERT', IDcliente, id_usuario, query, params);
+      //logQuery('info', `Usuário ${id_usuario} criou uma DM`, 'sucesso', 'INSERT', IDcliente, id_usuario, query, params);
       response.status(201).send('Centro de Custo criado com sucesso!');
     } else {
-      logQuery('error', `Usuário ${id_usuario} falhou ao criar Uma DM`, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
+      //logQuery('error', `Usuário ${id_usuario} falhou ao criar Uma DM`, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
       response.status(400).send('Falha ao criar dm');
     }
   } catch (error) {
     const errorMessage = error.message.includes('Query não fornecida para logging')
       ? 'Erro crítico: Falha na operação'
       : `${error.message}`;
-    logQuery('error', errorMessage, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
+    //logQuery('error', errorMessage, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
     console.error('Erro ao adicionar registro:', error.message);
     response.status(500).send('Erro ao adicionar Centro de Custo');
   }
@@ -179,17 +179,17 @@ WHERE
 
     const result = await sqlRequest.query(query);
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `Usuário ${id_usuario} Atualizou a DM  ${ID_DM}`, 'sucesso', 'UPDATE', IDcliente, id_usuario, query, params);
+      //logQuery('info', `Usuário ${id_usuario} Atualizou a DM  ${ID_DM}`, 'sucesso', 'UPDATE', IDcliente, id_usuario, query, params);
       response.status(201).send('Centro de Custo criado com sucesso!');
     } else {
-      logQuery('error', `Usuário ${id_usuario} Nao Atualizou a DM  ${ID_DM}`, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
+      //logQuery('error', `Usuário ${id_usuario} Nao Atualizou a DM  ${ID_DM}`, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
       response.status(400).send('Falha ao criar o Centro de Custo');
     }
   } catch (error) {
     const errorMessage = error.message.includes('Query não fornecida para logging')
       ? 'Erro crítico: Falha na operação'
       : `${error.message}`;
-    logQuery('error', errorMessage, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
+    //logQuery('error', errorMessage, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
     console.error('Erro ao adicionar registro:', error.message);
     response.status(500).send('Erro ao adicionar Centro de Custo');
   }
@@ -308,17 +308,17 @@ async function adicionarItensDM(request, response) {
 
     const insertResult = await sqlRequest2.query(insertQuery);
     if (insertResult.rowsAffected[0] > 0) {
-      logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, insertQuery, params);
+      //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, insertQuery, params);
       response.status(201).send("Item DM criado com sucesso!");
     } else {
-      logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
+      //logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
       response.status(400).send("Falha ao criar o item DM!");
     }
   } catch (error) {
     const errorMessage = error.message.includes('Query não fornecida para logging') 
       ? 'Erro crítico: Falha na operação'
       : `Erro ao adicionar Centro de Custo: ${error.message}`;
-    logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
+    //logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
     console.error('Erro ao executar a consulta:', error);
     response.status(500).send("Erro interno do servidor");
   }
@@ -342,15 +342,15 @@ async function deletarItensDM(request, response) {
     const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${id_item}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+      //ogQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${id_item}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
       response.status(200).json({ message: "Item excluído com sucesso" });
     } else {
-      logQuery('error', `Erro ao excluir: ${id_item} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+      //logQuery('error', `Erro ao excluir: ${id_item} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
       response.status(404).json({ error: "Item não encontrado" });
     }
 
   } catch (error) {
-    logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+   //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
@@ -373,15 +373,15 @@ async function deletarDM(request, response) {
     const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `O usuário ${id_usuario} deletou a DM ${ID_DM}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+      //logQuery('info', `O usuário ${id_usuario} deletou a DM ${ID_DM}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
       response.status(200).json({ message: "DM excluído com sucesso" });
     } else {
-      logQuery('error', `Erro ao excluir: ${ID_DM} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+      //logQuery('error', `Erro ao excluir: ${ID_DM} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
       response.status(404).json({ error: "Item não encontrado" });
     }
 
   } catch (error) {
-    logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+    //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }

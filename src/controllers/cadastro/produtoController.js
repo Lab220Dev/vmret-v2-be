@@ -138,18 +138,18 @@ async function adicionarProdutos(request, response) {
         const result = await requestSql.query(query);
 
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Produto`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+           // logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).json("Produto registrado com sucesso");
 
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar Produto`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao registrar o Produto");
         }
     } catch (error) {
         const errorMessage = error.message.includes('Query não fornecida para logging')
             ? 'Erro crítico: Falha na operação'
-            : `Erro ao adicionar Produto: ${error.message}`;
-        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            : `Erro ao adicionar Centro de Custo: ${error.message}`;
+       // logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
@@ -206,17 +206,17 @@ async function deleteProduto(request, response) {
             sqlRequest.input('id_produto', sql.Int, id_produto);
             const result = await sqlRequest.query(query);
             if (result.rowsAffected[0] > 0) {
-                logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
+                //logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
                 response.status(200).json(result.recordset);
             } else {
-                logQuery('error', `Erro ao excluir: ${id_produto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-                response.status(400).send('Nenhuma alteração foi feita no Produto.');
+               // logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
             }
         }
         response.status(401).json("ID do produto não foi enviado");
     } catch (error) {
         console.error('Erro ao excluir:', error.message);
-        logQuery('error', err.message, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+       // logQuery('error', err.message, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
         response.status(500).send('Erro ao excluir');
     }
 }
@@ -320,14 +320,14 @@ async function atualizarProduto(request, response) {
 
         // Verifica se houve sucesso na atualização
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
-            logQuery('info', `Produto ${id_produto} Deletado com sucesso`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
+           // logQuery('info', `Produto ${id_produto} Deletado com sucesso`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(200).json("Produto atualizado com sucesso");
         } else {
-            logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+           // logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao atualizar o Produto");
         }
     } catch (error) {
-        logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+       // logQuery('error', `${err.message}`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }

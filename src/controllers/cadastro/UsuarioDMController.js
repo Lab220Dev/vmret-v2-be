@@ -108,11 +108,11 @@ async function atualizar(request, response) {
         request.input('admin_cliente', sql.Bit, admin_cliente);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} atualizou`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
-            response.status(201).send('usuario criado com sucesso!');
+          //  logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(201).send('Centro de Custo criado com sucesso!');
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar usuario`, 'falha', 'UPDATE', id_cliente, id_usuario, query, params);
-            response.status(400).send('Falha ao criar o usuario');
+           // logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o Centro de Custo');
         }
     } catch (error) {
         console.error('Erro ao atualizar Usuario dm:', error.message);
@@ -136,11 +136,12 @@ async function deletar(request, response) {
         const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-        logQuery('info', `O usuário ${id_usuario} deletou o usuario ${id}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+       // logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
         response.status(200).json(result.recordset);
       } else {
-        logQuery('error',`Erro ao excluir: ${id} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-        response.status(400).send('Nenhuma alteração foi feita no usuario.');
+        //throw new Error(`Erro ao excluir: ${ID_CentroCusto} não encontrado.`);
+       // logQuery('error',`Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+        response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
       }
 
     } catch (error) {

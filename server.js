@@ -19,6 +19,7 @@ const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 // const ConsultaStatusRoutes = require('./src/routes/cadastros/ConsultaStatusRoutes');
 // const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
+const LogRoutes = require('./src/routes/relatorios/LogRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
@@ -87,6 +88,9 @@ app.use('/api/UDM', autenticarToken, UDMRoute);
 
 // Rotas de Relatorio Status DMs
 app.use('/api/SDM', autenticarToken, SDMRoutes);
+
+// Rotas de Relatorio Status DMs
+app.use('/api/Log', autenticarToken, LogRoutes);
 
 //Rotas de Relatorio Retirada
 app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);

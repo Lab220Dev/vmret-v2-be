@@ -47,17 +47,17 @@ const params = {
     request.input('Deleted', sql.Bit, false);
     const result = await request.query(query);
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `Usuário ${id_usuario} criou uma nova Função`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
-      response.status(201).send('Função criado com sucesso!');
+      //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(201).send('Centro do Custo criado com sucesso!');
     }else{
-      logQuery('error',  `Usuário ${id_usuario} falhou ao criar Função`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
-      response.status(400).send('Falha ao criar a Função');
+      //logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(400).send('Falha ao criar o Centro do Custo');
     }
   } catch (error) {
      const errorMessage = error.message.includes('Query não fornecida para logging') 
       ? 'Erro crítico: Falha na operação'
-      : `Erro ao adicionar Função: ${error.message}`;
-    logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      : `Erro ao adicionar Centro de Custo: ${error.message}`;
+    //logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
     console.error('Erro ao adicionar registro:', error.message);
     response.status(500).send('Erro ao adicionar registro');
   }
@@ -93,15 +93,15 @@ async function atualizar(request, response) {
     request.input('id_funcao', sql.Int, id_funcao);
     const result = await request.query(query);
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `O usuário ${id_usuario} atualizou a Função ${id_funcao}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
-      response.status(200).send(' Função atualizada com sucesso!');
+     // logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
+      response.status(200).send(' centro de custo atualizado com sucesso!');
       return;
     }else{
-      logQuery('error', `Usuário ${id_usuario} tentou atualizar a Função ${id_funcao}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
-      response.status(400).send('Falha ao atualizar a Função');
+      //ogQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+      response.status(400).send('Falha ao atualizar o  centro de custo');
     }
   } catch (error) {
-    logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+    //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error('Erro ao atualizar registro:', error.message);
     response.status(500).send('Erro ao atualizar registro');
   }
@@ -121,16 +121,16 @@ async function deleteFuncao(request, response) {
       query += ` AND id_funcao = '${request.body.id_funcao}'`;
       const result = await new sql.Request().query(query);
       if(result.rowsAffected[0] > 0){
-       logQuery('info', `O usuário ${id_usuario} deletou a Função ${id_funcao}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+       //logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
         response.status(200).json(result.recordset);
       }else{
-        logQuery('error',`Erro ao excluir: ${id_funcao} não encontrada.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-        response.status(400).send('Nenhuma alteração foi feita na Função.');
+       // logQuery('error',`Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+        response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
       }
     }
     response.status(401).json("ID da função não foi enviada");
   } catch (error) {
-    logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+    //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error('Erro ao excluir:', error.message);
     response.status(500).send('Erro ao excluir');
   }

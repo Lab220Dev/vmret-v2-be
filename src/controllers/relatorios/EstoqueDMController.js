@@ -41,15 +41,15 @@ async function relatorio(request, response) {
         
         const result = await dbRequest.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send('Centro de Custo criado com sucesso!');
           } else {
-            logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+           // logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).send('Falha ao criar o Centro de Custo');
           }
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
-        logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Estoque DM', id_cliente, id_usuario);
+       // logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Estoque DM', id_cliente, id_usuario);
         response.status(500).send('Erro ao executar consulta');
     }
 }
