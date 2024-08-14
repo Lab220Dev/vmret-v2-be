@@ -66,10 +66,7 @@ async function adicionar(request, response) {
 
 async function deleteCentro(request, response) {
   const { id_usuario, id_cliente, ID_CentroCusto } = request.body;
-  let query = "UPDATE Centro_Custos SET deleted = 1 WHERE ID_Centro_Custo = @ID_Centro_Custo";
-  const params = {
-    ID_CentroCusto: ID_CentroCusto
-  };
+  
   try {
     if (!ID_CentroCusto) {
       response.status(401).json("ID do centro não foi enviado");
@@ -140,7 +137,7 @@ async function atualizar(request, response) {
       logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(200).send('Centro de custo atualizado com sucesso!');
     } else {
-      logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+      logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas nao teve sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
     }
   } catch (error) {

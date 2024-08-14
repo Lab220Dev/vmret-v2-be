@@ -50,17 +50,17 @@ async function adicionar(request, response) {
         request.input('clientid', sql.NVarChar, clienteid);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            logQuery('info', `Usuário ${id_usuario} criou uma nova Planta`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send('Planta criada com sucesso!');
             return;
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
-            response.status(400).send('Falha ao criar o Centro de Custo');
+            logQuery('error', `Usuário ${id_usuario} falhou ao criar Planta`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o Planta');
         }
     } catch (error) {
         const errorMessage = error.message.includes('Query não fornecida para logging')
             ? 'Erro crítico: Falha na operação'
-            : `Erro ao adicionar Centro de Custo: ${error.message}`;
+            : `Erro ao adicionar Planta: ${error.message}`;
         logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao adicionar Planta:', error.message);
         response.status(500).send('Erro ao adicionar Planta');
@@ -102,10 +102,10 @@ async function atualizar(request, response) {
         request.input('id_planta', sql.Int, id_planta);
         const result = await request.query(query);
         if (result.rowsAffected && result.rowsAffected[0] > 0) {
-            logQuery('info', `O usuário ${id_usuario} atualizou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
+            logQuery('info', `O usuário ${id_usuario} atualizou a Planta ${id_planta}`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(200).json("Produto atualizado com sucesso");
         } else {
-            logQuery('error', `Usuário ${id_usuario} tentou atualizar o Centro ${ID_CentroCusto}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
+            logQuery('error', `Usuário ${id_usuario} tentou atualizar a Planta ${id_planta}, mas sem sucesso.`, 'Falha', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(400).json("Erro ao atualizar o Produto");
         }
     } catch (error) {

@@ -66,12 +66,12 @@ async function adicionar(request, response) {
     request.input('Deleted', sql.Bit, false);
     const result = await request.query(query);
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+      logQuery('info', `O usuário ${id_usuario} deletou o Setor ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
 
       response.status(201).send('Setor criado com sucesso!');
       return;
     } else {
-      logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+      logQuery('info', `O usuário ${id_usuario} deletou o Setor ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
 
       response.status(400).send('Falha ao criar o Setor');
     }
@@ -110,18 +110,18 @@ async function atualizar(request, response) {
     request.input('id_setor', sql.Int, id_setor);
     const result = await request.query(query);
     if (result.rowsAffected[0] > 0) {
-      logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery('info', `Usuário ${id_usuario} atualizou o Setor ${id_setor }`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(200).send('Setor atualizado com sucesso!');
       return;
     } else {
-      logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery('error', `Erro ao atualizar: ${id_setor } não encontrado.`, 'falha', 'UPDATE', id_cliente, id_usuario, query, params);
       response.status(400).send('Falha ao atualizar o  Setor');
     }
   } catch (error) {
     const errorMessage = error.message.includes('Query não fornecida para logging')
       ? 'Erro crítico: Falha na operação'
-      : `Erro ao adicionar Centro de Custo: ${error.message}`;
-    logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      : `Erro ao atualizar Setor: ${error.message}`;
+    logQuery('error', errorMessage, 'falha', 'UPDATE', id_cliente, id_usuario, query, params);
     console.error('Erro ao atualizar registro:', error.message);
     response.status(500).send('Erro ao atualizar registro');
   }
@@ -141,11 +141,11 @@ async function deleteFuncao(request, response) {
       sqlRequest.input('id_setor', sql.Int, id_setor);
       const result = await sqlRequest.query(query);
       if (result.rowsAffected[0] > 0) {
-        logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+        logQuery('info', `O usuário ${id_usuario} deletou o Setor ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
         response.status(200).json(result.recordset);
       } else {
          logQuery('error', `Erro ao excluir: ${id_setor} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-        response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+        response.status(400).send('Nenhuma alteração foi feita no Setor.');
       }
     }
     response.status(401).json("ID do Setor não foi enviado");
