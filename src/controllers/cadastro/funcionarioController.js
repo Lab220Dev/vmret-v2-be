@@ -237,6 +237,7 @@ async function deleteFuncionario(request, response) {
             if (result.rowsAffected[0] > 0) {
                // logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
                 response.status(200).json(result.recordset);
+                return
             } else {
                // logQuery('error', `Erro ao excluir: ${id_funcionario} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
                 response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
