@@ -7,41 +7,55 @@ async function relatorio(request, response) {
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
         }
-        const queryParts = [];
-        const queryParams = {};
-
-        queryParts.push("ID_DM = @id_dm");
-        queryParams.id_dm = id_dm;
-
-        queryParts.push("id_cliente = @id_cliente");
-        queryParams.id_cliente = id_cliente;
-
-        if (id_funcionario) {
-            queryParts.push("id_funcionario = @id_funcionario");
-            queryParams.id_funcionario = id_funcionario;
-        }
-
-        if (data_inicio && data_final) {
-            queryParts.push("CONVERT(date, status_time) BETWEEN @data_inicio AND @data_final");
-            queryParams.data_inicio = data_inicio;
-            queryParams.data_final = data_final;
-        } else if (data_inicio) {
-            queryParts.push("CONVERT(date, status_time) >= @data_inicio");
-            queryParams.data_inicio = data_inicio;
-        } else if (data_final) {
-            queryParts.push("CONVERT(date, status_time) <= @data_final");
-            queryParams.data_final = data_final;
-        }
-
-        const query = `
-            SELECT * FROM Log_Web 
-            WHERE ${queryParts.join(' AND ')}
-        `;
-
+        let query = `
+        SELECT *
+        FROM
+            Log_Web
+        WHERE
+            ID_Cliente = @id_cliente
+    `;
+        let params = { id_cliente };
+        if (id_dm) {
+            query += " AND ID_DM = @id_dm";
+            params.id_dm = id_dm;
+          }
+          if (id_usuario) {
+            query += " AND ID_Usuario = @id_usuario";
+            params.id_usuario = id_usuario;
+          }
+      
+          if (id_funcionario) {
+            query += " AND ID_Funcionario = @id_funcionario";
+            params.id_funcionario = id_funcionario;
+          }
+          if (operacao) {
+            query += " AND Operacao = @operacao";
+            params.operacao = operacao;
+          }
+      
+          if (data_inicio && data_final) {
+            // Se o usuário enviar data_inicio e data_final
+            if (new Date(data_inicio) > new Date(data_final)) {
+              return response.status(400).json("A data de início não pode ser posterior à data final");
+            }
+            query += " AND Dia BETWEEN @data_inicio AND @data_final";
+            params.data_inicio = new Date(data_inicio).toISOString();
+            params.data_final = new Date(data_final).toISOString();
+          } else if (data_inicio) {
+            query += " AND Dia >= @data_inicio";
+            params.data_inicio = new Date(data_inicio).toISOString();
+          } else if (data_final) {
+            query += " AND Dia <= @data_final";
+            params.data_final = new Date(data_final).toISOString();
+          }
         const dbRequest = new sql.Request();
-        for (const param in queryParams) {
-            dbRequest.input(param, sql.Date, queryParams[param]);
-        }
+        dbRequest.input("id_cliente", sql.Int, params.id_cliente);
+        if (params.id_dm) dbRequest.input("id_dm", sql.Int, id_dm);
+        if (params.id_funcionario) dbRequest.input("id_funcionario", sql.Int, params.id_funcionario);
+         if (params.id_usuario)  dbRequest.input("id_usuario", sql.Int, params.id_usuario);
+         if (params.operacao) dbRequest.input("operacao", sql.VarChar, params.operacao);   
+        if (params.data_inicio) dbRequest.input("data_inicio", sql.DateTime, params.data_inicio);
+        if (params.data_final) dbRequest.input("data_final", sql.DateTime, params.data_final);
 
         const result = await dbRequest.query(query);
 
@@ -54,4 +68,4 @@ async function relatorio(request, response) {
 
 module.exports = {
     relatorio
- };
+};
