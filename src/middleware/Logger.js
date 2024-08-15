@@ -21,34 +21,42 @@ class SQLTransport extends Transport {
             resultado,
             idCliente = this.defaultIdCliente,
             idUsuario = this.defaultIdUsuario,
-            query // Inclui a query
+            query
         } = info;
 
         if (!query) {
             console.error('Erro: Query não fornecida para logging.');
-            callback(); // Finaliza o callback, mas não prossegue com o logging se a query não estiver presente
+            callback();
             return;
         }
 
         try {
             const request = new sql.Request();
+            await request.beginTransaction(); // Inicia a transação
+
             await request.input('idCliente', sql.Int, idCliente);
             await request.input('idUsuario', sql.Int, idUsuario);
             await request.input('operacao', sql.NVarChar, operacao);
             await request.input('resultado', sql.NVarChar, resultado);
             await request.input('Log_Web', sql.NVarChar, message);
             await request.input('timestamp', sql.DateTime, timestamp);
-            await request.input('Log_String', sql.NVarChar, query); // Adiciona a query como input
+            await request.input('Log_String', sql.NVarChar, query);
+
             await request.query(`
                 INSERT INTO Log_Web (ID_Cliente, ID_Usuario, Operacao, Log_Web, Resultado, Dia, Log_String)
                 VALUES (@idCliente, @idUsuario, @operacao, @Log_Web, @resultado, @timestamp, @Log_String)
             `);
+
+            await request.commitTransaction(); // Confirma a transação
+
         } catch (err) {
+            await request.rollbackTransaction(); // Reverte a transação em caso de erro
             console.error('Erro ao gravar log no banco de dados:', err);
         }
-        callback(); // Finaliza o callback após o logging
+        callback();
     }
 }
+
 
 const logger = createLogger({
     level: 'info',
