@@ -86,7 +86,7 @@ async function adicionarFuncionarios(request, response) {
     };
     try {
         const files = request.files;
-        const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
+        const uploadPath = path.join(__dirname, '../../uploads/funcionarios', id_cliente.toString());
         await fs.mkdir(uploadPath, { recursive: true });
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -311,11 +311,11 @@ async function atualizarFuncionario(request, response) {
     try {
         if (files && files.length > 0) {
             const file = files[0];
-            const fileExtension = path.extname(file.originalname);
-            nomeFuncionario = `${foto}${fileExtension}`;
-            const uploadPath = path.join(__dirname, '../uploads/funcionarios', id_cliente.toString());
+            //const fileExtension = path.extname(file.originalname);
+            //nomeFuncionario = `${foto}${fileExtension}`;
+            const uploadPath = path.join(process.cwd(), 'src', 'uploads', 'funcionarios', id_cliente.toString());
             await fs.mkdir(uploadPath, { recursive: true });
-            const filePath = path.join(uploadPath, nomeFuncionario);
+            const filePath = path.join(uploadPath, foto);
             await fs.writeFile(filePath, file.buffer);
         }
         request = new sql.Request();
@@ -328,7 +328,7 @@ async function atualizarFuncionario(request, response) {
         request.input('CPF', sql.VarChar, CPF);
         request.input('CTPS', sql.VarChar, CTPS);
         request.input('id_planta', sql.Int, id_planta);
-        request.input('foto', sql.VarChar, nomeFuncionario);
+        request.input('foto', sql.VarChar, foto);
         request.input('data_admissao', sql.DateTime, data_admissao);
         request.input('hora_inicial', sql.Time, hora_inicial);
         request.input('hora_final', sql.Time, hora_final);
@@ -354,7 +354,7 @@ async function atualizarFuncionario(request, response) {
             response.status(200).json(result.recordset);
             return;
         } else {
-            logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+            //logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
             response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
         }
     } catch (error) {
