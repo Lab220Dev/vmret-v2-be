@@ -58,9 +58,10 @@ router.post('/produtos/imagesAdicionais', (req, res) => {
 });
 
 router.get('/funcionario/:id/:imageName', (req, res) => {
-    const imageName = decodeURIComponent(req.params.imageName);
+    const imageName = req.params.imageName;
     const idCliente = req.params.id;
-    const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(), imageName);
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+    const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(),  sanitizeFileName(imageName.toString()));
     fs.readFile(imagePath, (err, data) => {
         if (err) {
             console.error('Error reading image file:', err);

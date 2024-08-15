@@ -128,7 +128,7 @@ async function deleteFuncao(request, response) {
         response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
       }
     }
-    response.status(401).json("ID do centro não foi enviado");
+    response.status(401).json("ID da função não foi enviada");
   } catch (error) {
     //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error('Erro ao excluir:', error.message);

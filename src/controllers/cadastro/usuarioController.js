@@ -183,8 +183,8 @@ async function atualizarUsuario(request, response) {
             response.status(400).send("Falha ao atualizar o usuário!");
         }
     } catch (error) {
-        console.error('Erro ao atualizar funcionário:', error.message);
-        response.status(500).send('Erro ao atualizar funcionário');
+        console.error('Erro ao atualizar usuário:', error.message);
+        response.status(500).send('Erro ao atualizar usuario');
     }
 }
 

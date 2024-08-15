@@ -1,5 +1,6 @@
 const sql = require('mssql');
 const CryptoJS = require('crypto-js');
+const { logQuery } = require('../../utils/logUtils');
 
 async function listar(request, response) {
     try {
@@ -64,11 +65,11 @@ async function adicionar(request, response) {
         request.input('admin_cliente', sql.Bit, false);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
-            response.status(201).send('Centro de Custo criado com sucesso!');
+            logQuery('info', `Usuário ${id_usuario} criou um novo usuario`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(201).send('usuario criado com sucesso!');
         } else {
-            logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
-            response.status(400).send('Falha ao criar o Centro de Custo');
+            logQuery('error', `Usuário ${id_usuario} falhou ao criar usuario`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            response.status(400).send('Falha ao criar o usuario');
         }
     } catch (error) {
         console.error('Erro ao adicionar Usuario DM:', error.message);
@@ -114,8 +115,8 @@ async function atualizar(request, response) {
             response.status(400).send('Falha ao criar o Centro de Custo');
         }
     } catch (error) {
-        console.error('Erro ao adicionar Usuario dm:', error.message);
-        response.status(500).send('Erro ao adicionar Usuario dm');
+        console.error('Erro ao atualizar Usuario dm:', error.message);
+        response.status(500).send('Erro ao atualizar Usuario dm');
     }
 }
 async function deletar(request, response) {

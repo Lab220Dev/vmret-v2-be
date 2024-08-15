@@ -66,10 +66,7 @@ async function adicionar(request, response) {
 
 async function deleteCentro(request, response) {
   const { id_usuario, id_cliente, ID_CentroCusto } = request.body;
-  let query = "UPDATE Centro_Custos SET deleted = 1 WHERE ID_Centro_Custo = @ID_Centro_Custo";
-  const params = {
-    ID_CentroCusto: ID_CentroCusto
-  };
+  
   try {
     if (!ID_CentroCusto) {
       response.status(401).json("ID do centro não foi enviado");
