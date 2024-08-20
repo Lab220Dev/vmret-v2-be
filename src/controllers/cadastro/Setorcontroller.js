@@ -65,21 +65,22 @@ async function listarItensDisponiveisSetor(request, response) {
     response.status(500).send('Erro ao executar consulta');
   }
 }
+
 async function adicionarItem(request, response) {
   try {
     const { id_produto, deleted, id_centro_custo, id_cliente, id_setor, id_usuario, ordem, quantidade } = request.body;
 
     if (id_cliente && id_produto) {
+      const requestDb = new sql.Request();
+
       // Recupera o SKU, nome e imagem1 do produto
       const queryProduto = `
         SELECT codigo AS sku, nome, imagem1
         FROM Produtos
         WHERE id_produto = @id_produto AND Deleted = 0
       `;
-
-      request = new sql.Request();
-      request.input("id_produto", sql.Int, id_produto);
-      const produtoResult = await request.query(queryProduto);
+      requestDb.input("id_produto", sql.Int, id_produto);
+      const produtoResult = await requestDb.query(queryProduto);
 
       if (produtoResult.recordset.length > 0) {
         const { sku, nome: nomeProduto, imagem1 } = produtoResult.recordset[0];
@@ -89,8 +90,7 @@ async function adicionarItem(request, response) {
           SELECT ISNULL(MAX(id_item_setor), 0) + 1 AS novo_id_item_setor
           FROM Ret_Itens_setor
         `;
-
-        const idResult = await request.query(queryMaxId);
+        const idResult = await requestDb.query(queryMaxId);
         const novoIdItemSetor = idResult.recordset[0].novo_id_item_setor;
 
         // Insere o novo item com o novo ID gerado
@@ -98,19 +98,18 @@ async function adicionarItem(request, response) {
           INSERT INTO Ret_Itens_setor (id_item_setor, id_cliente, id_setor, id_produto, deleted, sku, nome, imagem1, qtd_limite)
           VALUES (@novo_id_item_setor, @id_cliente, @id_setor, @id_produto, @deleted, @sku, @nome, @imagem1, @qtd_limite)
         `;
+        const insertRequest = new sql.Request();
+        insertRequest.input("novo_id_item_setor", sql.Int, novoIdItemSetor);
+        insertRequest.input("id_cliente", sql.Int, id_cliente);
+        insertRequest.input("id_setor", sql.Int, id_setor);
+        insertRequest.input("id_produto", sql.Int, id_produto);
+        insertRequest.input("deleted", sql.Bit, 0); // Ajuste para 0 para false
+        insertRequest.input("sku", sql.NVarChar, sku);
+        insertRequest.input("nome", sql.NVarChar, nomeProduto);
+        insertRequest.input("imagem1", sql.NVarChar, imagem1);
+        insertRequest.input("qtd_limite", sql.Int, quantidade);
 
-        request = new sql.Request();
-        request.input("novo_id_item_setor", sql.Int, novoIdItemSetor);
-        request.input("id_cliente", sql.Int, id_cliente);
-        request.input("id_setor", sql.Int, id_setor);
-        request.input("id_produto", sql.Int, id_produto);
-        request.input("deleted", sql.Bit, false);
-        request.input("sku", sql.NVarChar, sku);
-        request.input("nome", sql.NVarChar, nomeProduto);
-        request.input("imagem1", sql.NVarChar, imagem1);
-        request.input("qtd_limite", sql.Int, quantidade);
-
-        await request.query(insertQuery);
+        await insertRequest.query(insertQuery);
 
         response.status(201).json({ message: 'Item adicionado com sucesso' });
       } else {
@@ -119,7 +118,7 @@ async function adicionarItem(request, response) {
       return;
     }
 
-    response.status(401).json("ID do cliente ou ID do produto não enviado");
+    response.status(400).json({ message: 'ID do cliente ou ID do produto não enviado' });
   } catch (error) {
     console.error('Erro ao executar consulta:', error.message);
     response.status(500).send('Erro ao executar consulta');
