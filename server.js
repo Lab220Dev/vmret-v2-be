@@ -16,6 +16,7 @@ const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
 const DMRoute = require('./src/routes/cadastros/DMRoutes');
 const TermoRoutes = require('./src/routes/cadastros/TermoRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
+const ImportRoute = require('./src/routes/cadastros/ImportRoute');
 // const ConsultaStatusRoutes = require('./src/routes/cadastros/ConsultaStatusRoutes');
 // const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
@@ -111,6 +112,9 @@ app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
 
 // Rotas de Texto
 app.use('/api/termo',autenticarToken, TermoRoutes);
+
+// Rotas de Texto
+app.use('/api/import',autenticarToken, ImportRoute);
 
 // Rotas de login
 app.use('/api', loginRoutes);
