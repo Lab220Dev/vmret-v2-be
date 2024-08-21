@@ -14,21 +14,84 @@ async function listarDM(request, response) {
   try {
     const id_cliente = request.body.id_cliente;
 
-    if (!id_cliente) {
-      const query =
-        "SELECT *  FROM DMS WHERE Deleted = 0";
-      request = new sql.Request();
-      const result = await request.query(query);
-      response.status(200).json(result.recordset);
-      return;
-    }
-    const query =
-      "SELECT *  FROM DMS WHERE IDcliente = @id_cliente AND Deleted = 0";
+    let query;
+    let sqlRequest = new sql.Request();
 
-    request = new sql.Request();
-    request.input("id_cliente", sql.Int, id_cliente);
-    const result = await request.query(query);
-    response.status(200).json(result.recordset);
+    if (!id_cliente) {
+      query = `
+        SELECT 
+          DMS.*, 
+          Controladoras.ID as ControladoraID, 
+          Controladoras.Tipo_Controladora, 
+          Controladoras.Placa, 
+          Controladoras.DIP, 
+          Controladoras.Andar, 
+          Controladoras.Posicao, 
+          Controladoras.Mola1, 
+          Controladoras.Mola2
+        FROM 
+          DMS
+        LEFT JOIN 
+          Controladoras 
+        ON 
+          DMS.ID_DM = Controladoras.ID_DM
+        WHERE 
+          DMS.Deleted = 0`;
+    } else {
+      query = `
+        SELECT 
+          DMS.*, 
+          Controladoras.ID as ControladoraID, 
+          Controladoras.Tipo_Controladora, 
+          Controladoras.Placa, 
+          Controladoras.DIP, 
+          Controladoras.Andar, 
+          Controladoras.Posicao, 
+          Controladoras.Mola1, 
+          Controladoras.Mola2
+        FROM 
+          DMS
+        LEFT JOIN 
+          Controladoras 
+        ON 
+          DMS.ID_DM = Controladoras.ID_DM
+        WHERE 
+          DMS.IDcliente = @id_cliente 
+          AND DMS.Deleted = 0`;
+
+      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    }
+
+    const result = await sqlRequest.query(query);
+
+    // Agrupa as DMs com suas respectivas controladoras
+    const dmsMap = new Map();
+    result.recordset.forEach(row => {
+      const dmId = row.ID_DM;
+      if (!dmsMap.has(dmId)) {
+        dmsMap.set(dmId, {
+          ...row,
+          Controladoras: []
+        });
+      }
+
+      if (row.ControladoraID) {
+        dmsMap.get(dmId).Controladoras.push({
+          ID: row.ControladoraID,
+          Tipo_Controladora: row.Tipo_Controladora,
+          Placa: row.Placa,
+          DIP: row.DIP,
+          Andar: row.Andar,
+          Posicao: row.Posicao,
+          Mola1: row.Mola1,
+          Mola2: row.Mola2
+        });
+      }
+    });
+
+    const dmsArray = Array.from(dmsMap.values());
+
+    response.status(200).json(dmsArray);
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
@@ -37,165 +100,284 @@ async function listarDM(request, response) {
 
 async function adicionar(request, response) {
   const {
-    IDcliente, Ativo, Chave, ClienteID, Integracao, ClienteNome, Created, Deleted, Devolucao, Enviada, ID_CR_Usuario,
-    ID_DM, Identificacao, Numero, OP_Biometria, OP_Facial, OP_Senha, URL, Updated, UserID, Versao, id_usuario
+    IDcliente, Ativo, Chave, ClienteID, Integracao, ClienteNome, Created, Deleted, Devolucao, Enviada,
+    Identificacao, Numero, OP_Biometria, OP_Facial, OP_Senha, URL, Updated, UserID, Versao, id_usuario,
+    controladoras
   } = request.body;
 
-  const query = `INSERT INTO DMs (
-    IDcliente, Numero, Identificacao, Ativo, Deleted, Created, Updated, Versao, Enviada, OP_Senha, OP_Biometria, 
-    OP_Facial, Integracao, ClienteID, UserID, Chave)
+  const queryDM = `INSERT INTO DMs (
+    IDcliente, Numero, Devolucao, Identificacao, Ativo, Deleted, Created, Updated, Versao, Enviada, OP_Senha, OP_Biometria, 
+    OP_Facial, Integracao, ClienteID, ClienteNome, UserID, Chave, ID_CR_Usuario)
+    OUTPUT INSERTED.ID_DM
     VALUES (
-    @IDcliente, @Numero, @Identificacao, @Ativo, @Deleted, @Created, @Updated, @Versao, @Enviada, @OP_Senha, 
-    @OP_Biometria, @OP_Facial, @Integracao, @ClienteID, @UserID, @Chave)`;
-    const params = {
-      IDcliente: IDcliente,
-      Numero: Numero,
-      Identificacao: (Identificacao),
-      Ativo: (Ativo),
-      Deleted: false,
-      Created: new Date(),
-      Updated: '1900-01-01 00:00:00.000',
-      Versao: 1,
-      Enviada: false,
-      OP_Senha: (OP_Senha),
-      OP_Biometria: (OP_Biometria),
-      OP_Facial: (OP_Facial),
-      Integracao: (Integracao),
-      ClienteID: ClienteID,
-      UserID: UserID,
-      Chave: Chave
-    };
+    @IDcliente, @Numero, @Devolucao, @Identificacao, @Ativo, @Deleted, @Created, @Updated, @Versao, @Enviada, @OP_Senha, 
+    @OP_Biometria, @OP_Facial, @Integracao, @ClienteID, @ClienteNome, @UserID, @Chave, @ID_CR_Usuario)`;
+
+  let transaction;
+
   try {
     if (!IDcliente) {
       response.status(401).json("ID do cliente não enviado");
       return;
     }
 
-    const sqlRequest = new sql.Request();
+    transaction = new sql.Transaction();
+    await transaction.begin();
+
+    const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('IDcliente', sql.Int, IDcliente);
     sqlRequest.input('Numero', sql.VarChar, Numero);
+    sqlRequest.input('Devolucao', sql.Bit, Devolucao);
     sqlRequest.input('Identificacao', sql.NVarChar, Identificacao);
     sqlRequest.input('Ativo', sql.Bit, Ativo);
     sqlRequest.input('Deleted', sql.Bit, false);
     sqlRequest.input('Created', sql.DateTime, new Date());
     sqlRequest.input('Updated', sql.DateTime, '1900-01-01 00:00:00.000');
-    sqlRequest.input('Versao', sql.Int, Versao || 1); // Default to 1 if not provided
-    sqlRequest.input('Enviada', sql.Bit, (Enviada));
-    sqlRequest.input('OP_Senha', sql.Bit, (OP_Senha));
-    sqlRequest.input('OP_Biometria', sql.Bit, (OP_Biometria));
-    sqlRequest.input('OP_Facial', sql.Bit, (OP_Facial));
-    sqlRequest.input('Integracao', sql.Bit, (Integracao));
+    sqlRequest.input('Versao', sql.Int, Versao || 1);
+    sqlRequest.input('Enviada', sql.Bit, Enviada);
+    sqlRequest.input('OP_Senha', sql.Bit, OP_Senha);
+    sqlRequest.input('OP_Biometria', sql.Bit, OP_Biometria);
+    sqlRequest.input('OP_Facial', sql.Bit, OP_Facial);
+    sqlRequest.input('Integracao', sql.Bit, Integracao);
     sqlRequest.input('ClienteID', sql.VarChar, ClienteID);
+    sqlRequest.input('ClienteNome', sql.NVarChar, ClienteNome);
     sqlRequest.input('UserID', sql.VarChar, UserID);
     sqlRequest.input('Chave', sql.NVarChar, Chave);
+    sqlRequest.input('ID_CR_Usuario', sql.Int, id_usuario);
 
-    const result = await sqlRequest.query(query);
+    const resultDM = await sqlRequest.query(queryDM);
 
-    if (result.rowsAffected[0] > 0) {
-      //logQuery('info', `Usuário ${id_usuario} criou uma DM`, 'sucesso', 'INSERT', IDcliente, id_usuario, query, params);
-      response.status(201).send('Centro de Custo criado com sucesso!');
+    if (resultDM && resultDM.recordset && resultDM.recordset.length > 0) {
+      const dmId = resultDM.recordset[0].ID_DM;
+
+      if (controladoras && controladoras.length > 0) {
+        for (const controladora of controladoras) {
+          const queryControladora = `
+                  INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
+                  VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
+
+          const sqlRequestControladora = new sql.Request(transaction);
+          sqlRequestControladora.input('ID_Cliente', sql.Int, IDcliente);
+          sqlRequestControladora.input('ID_DM', sql.Int, dmId);
+          sqlRequestControladora.input('Tipo_Controladora', sql.NVarChar, controladora.tipo);
+
+          // Preencher os valores específicos para cada tipo de controladora
+          if (controladora.tipo === '2018') {
+            sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
+            sqlRequestControladora.input('DIP', sql.Int, null);
+            sqlRequestControladora.input('Andar', sql.Int, null);
+            sqlRequestControladora.input('Posicao', sql.Int, null);
+            sqlRequestControladora.input('Mola1', sql.Int, controladora.dados.checkboxes.join(','));
+            sqlRequestControladora.input('Mola2', sql.Int, null);
+          } else if (controladora.tipo === '2023') {
+            sqlRequestControladora.input('Placa', sql.Int, null);
+            sqlRequestControladora.input('DIP', sql.Int, controladora.dados.dip);
+            sqlRequestControladora.input('Andar', sql.Int, controladora.dados.andar);
+            sqlRequestControladora.input('Posicao', sql.Int, controladora.dados.posicao);
+            sqlRequestControladora.input('Mola1', sql.Int, null);
+            sqlRequestControladora.input('Mola2', sql.Int, null);
+          } else if (controladora.tipo === '2024') {
+            sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
+            sqlRequestControladora.input('DIP', sql.Int, null);
+            sqlRequestControladora.input('Andar', sql.Int, null);
+            sqlRequestControladora.input('Posicao', sql.Int, null);
+            sqlRequestControladora.input('Mola1', sql.Int, controladora.dados.mola1);
+            sqlRequestControladora.input('Mola2', sql.Int, controladora.dados.mola2);
+          }
+
+          await sqlRequestControladora.query(queryControladora);
+        }
+      }
+
+      // Commita a transação se tudo deu certo
+      await transaction.commit();
+      response.status(201).send('DM e Controladoras criadas com sucesso!');
     } else {
-      //logQuery('error', `Usuário ${id_usuario} falhou ao criar Uma DM`, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
-      response.status(400).send('Falha ao criar dm');
+      // Rollback em caso de falha na inserção da DM
+      await transaction.rollback();
+      response.status(400).send('Falha ao criar DM');
     }
   } catch (error) {
+    // Rollback em caso de qualquer erro
+    if (transaction) await transaction.rollback();
+
     const errorMessage = error.message.includes('Query não fornecida para logging')
       ? 'Erro crítico: Falha na operação'
       : `${error.message}`;
-    //logQuery('error', errorMessage, 'falha', 'INSERT', IDcliente, id_usuario, query, params);
     console.error('Erro ao adicionar registro:', error.message);
-    response.status(500).send('Erro ao adicionar Centro de Custo');
+    response.status(500).send('Erro ao adicionar DM');
   }
 }
+
 
 async function atualizar(request, response) {
-  const {Ativo,Chave,ClienteID,ClienteNome,Created, Deleted,Devolucao,Enviada,ID_CR_Usuario,
-    ID_DM,IDcliente,Identificacao,Integracao,Numero,OP_Biometria,OP_Facial,OP_Senha,URL,UserID,Versao,id_usuario} = request.body;
-  const query = `UPDATE DMs
-SET
-    IDcliente = @IDcliente,
-    Numero = @Numero,
-    Identificacao = @Identificacao,
-    Ativo = @Ativo,
-    Deleted = @Deleted,
-    Created = @Created,
-    Updated = @Updated,
-    Versao = @Versao,
-    Enviada = @Enviada,
-    OP_Senha = @OP_Senha,
-    OP_Biometria = @OP_Biometria,
-    OP_Facial = @OP_Facial,
-    Integracao = @Integracao,
-    ClienteID = @ClienteID,
-    UserID = @UserID,
-    Chave = @Chave
-WHERE 
-    ID_DM = @ID_DM;`;
+  const {
+    id_usuario,
+    ID_DM,
+    IDcliente,
+    ClienteNome,
+    Numero,
+    Identificacao,
+    Ativo,
+    Deleted,
+    Created,
+    Updated,
+    Versao,
+    Enviada,
+    OP_Senha,
+    OP_Biometria,
+    OP_Facial,
+    Integracao,
+    ClienteID,
+    Chave,
+    Devolucao,
+    Controladoras
+  } = request.body;
 
-  const params = {
-    IDcliente: IDcliente,
-    Numero: Numero,
-    Identificacao: (Identificacao),
-    Ativo: (Ativo),
-    Deleted: false,
-    Created: Created,
-    Devolucao: (Devolucao),
-    Updated: new Date(),
-    Versao:Versao,
-    Enviada: (Devolucao),
-    OP_Senha: (OP_Senha),
-    OP_Biometria: (OP_Biometria),
-    OP_Facial: (OP_Facial),
-    Integracao: (Integracao),
-    ClienteID: ClienteID,
-    UserID: UserID,
-    Chave: Chave
-  };
+  let transaction;
+
   try {
-    if (!IDcliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
+    if (!ID_DM || !IDcliente) {
+      return response.status(400).json({ message: "ID_DM e IDcliente são obrigatórios." });
+    }
+
+    transaction = new sql.Transaction();
+    await transaction.begin();
+
+    const updateDMQuery = `
+          UPDATE DMs SET
+              Numero = @Numero,
+              Identificacao = @Identificacao,
+              Ativo = @Ativo,
+              Deleted = @Deleted,
+              Created = @Created,
+              Updated = @Updated,
+              Versao = @Versao,
+              Enviada = @Enviada,
+              OP_Senha = @OP_Senha,
+              OP_Biometria = @OP_Biometria,
+              OP_Facial = @OP_Facial,
+              Integracao = @Integracao,
+              ClienteID = @ClienteID,
+              ClienteNome = @ClienteNome,
+              Chave = @Chave,
+              Devolucao = @Devolucao
+          WHERE ID_DM = @ID_DM AND IDcliente = @IDcliente`;
+
+    const requestDM = new sql.Request(transaction);
+    requestDM.input('ID_DM', sql.Int, ID_DM);
+    requestDM.input('IDcliente', sql.Int, IDcliente);
+    requestDM.input('Numero', sql.VarChar, Numero);
+    requestDM.input('Identificacao', sql.NVarChar, Identificacao);
+    requestDM.input('Ativo', sql.Bit, Ativo);
+    requestDM.input('Deleted', sql.Bit, Deleted);
+    requestDM.input('Created', sql.DateTime, Created);
+    requestDM.input('Updated', sql.DateTime, Updated || new Date());
+    requestDM.input('Versao', sql.Int, Versao);
+    requestDM.input('Enviada', sql.Bit, Enviada);
+    requestDM.input('OP_Senha', sql.Bit, OP_Senha);
+    requestDM.input('OP_Biometria', sql.Bit, OP_Biometria);
+    requestDM.input('OP_Facial', sql.Bit, OP_Facial);
+    requestDM.input('Integracao', sql.Bit, Integracao);
+    requestDM.input('ClienteID', sql.VarChar, ClienteID);
+    requestDM.input('ClienteNome', sql.NVarChar, ClienteNome);
+    requestDM.input('Chave', sql.NVarChar, Chave);
+    requestDM.input('Devolucao', sql.Bit, Devolucao);
+
+    await requestDM.query(updateDMQuery);
+
+    // Busca as controladoras existentes para essa DM
+    const selectControladorasQuery = `SELECT * FROM Controladoras WHERE ID_DM = @ID_DM`;
+    const resultControladoras = await requestDM.query(selectControladorasQuery);
+    const existingControladoras = resultControladoras.recordset;
+
+    // Mapeia as controladoras existentes por ID
+    const existingMap = new Map(existingControladoras.map(c => [c.ID, c]));
+
+    for (const controladora of Controladoras) {
+      const andar = Array.isArray(controladora.dados.andar) ? controladora.dados.andar.join(',') : controladora.dados.andar || null;
+      const posicao = Array.isArray(controladora.dados.posicao) ? controladora.dados.posicao.join(',') : controladora.dados.posicao || null;
+
+      // Se a controladora já existe, faz update
+      if (controladora.ID && existingMap.has(controladora.ID)) {
+        const updateControladoraQuery = `
+              UPDATE Controladoras SET
+                  Tipo_Controladora = @Tipo_Controladora,
+                  Placa = @Placa,
+                  DIP = @DIP,
+                  Andar = @Andar,
+                  Posicao = @Posicao,
+                  Mola1 = @Mola1,
+                  Mola2 = @Mola2
+              WHERE ID = @ID`;
+
+        const requestControladora = new sql.Request(transaction);
+        requestControladora.input('ID', sql.Int, controladora.ID);
+        requestControladora.input('Tipo_Controladora', sql.NVarChar, controladora.tipo);
+        requestControladora.input('Placa', sql.Int, controladora.dados.placa || null);
+        requestControladora.input('DIP', sql.Int, controladora.dados.dip || null);
+        requestControladora.input('Andar', sql.VarChar, andar);
+        requestControladora.input('Posicao', sql.VarChar, posicao);
+
+        if (controladora.tipo === '2018') {
+          requestControladora.input('Mola1', sql.VarChar, controladora.dados.checkboxes.join(',') || null);  // Armazena os checkboxes no Mola1
+          requestControladora.input('Mola2', sql.Int, null);  // Não usa Mola2
+        } else {
+          requestControladora.input('Mola1', sql.VarChar, controladora.dados.motor || null);  // Armazena motor1 no Mola1
+          requestControladora.input('Mola2', sql.VarChar, controladora.dados.motor2 || null);  // Armazena motor2 no Mola2
+        }
+
+        await requestControladora.query(updateControladoraQuery);
+        existingMap.delete(controladora.ID);
+      } else {
+        const insertControladoraQuery = `
+              INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
+              VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
+
+        const requestControladora = new sql.Request(transaction);
+        requestControladora.input('ID_Cliente', sql.Int, IDcliente);
+        requestControladora.input('ID_DM', sql.Int, ID_DM);
+        requestControladora.input('Tipo_Controladora', sql.NVarChar, controladora.tipo);
+        requestControladora.input('Placa', sql.Int, controladora.dados.placa || null);
+        requestControladora.input('DIP', sql.Int, controladora.dados.dip || null);
+        requestControladora.input('Andar', sql.VarChar, andar);
+        requestControladora.input('Posicao', sql.VarChar, posicao);
+
+        if (controladora.tipo === '2018') {
+          requestControladora.input('Mola1', sql.VarChar, controladora.dados.checkboxes.join(',') || null);  // Armazena os checkboxes no Mola1
+          requestControladora.input('Mola2', sql.Int, null);  // Não usa Mola2
+        } else {
+          requestControladora.input('Mola1', sql.VarChar, controladora.dados.motor || null);  // Armazena motor1 no Mola1
+          requestControladora.input('Mola2', sql.VarChar, controladora.dados.motor2 || null);  // Armazena motor2 no Mola2
+        }
+
+        await requestControladora.query(insertControladoraQuery);
+      }
     }
 
 
-    const sqlRequest = new sql.Request();
-    sqlRequest.input('IDcliente', sql.Int, IDcliente);
-    sqlRequest.input('Numero', sql.VarChar, Numero);
-    sqlRequest.input('Identificacao', sql.NVarChar, Identificacao);
-    sqlRequest.input('Ativo', sql.Bit, (Ativo));
-    sqlRequest.input('Deleted', sql.Bit, false);
-    sqlRequest.input('Created', sql.DateTime, Created);
-    sqlRequest.input('Updated', sql.DateTime, new Date());
-    sqlRequest.input('Versao', sql.Int, Versao);
-    sqlRequest.input('Enviada', sql.Bit, (Enviada));
-    sqlRequest.input('OP_Senha', sql.Bit, (OP_Senha));
-    sqlRequest.input('OP_Biometria', sql.Bit, (OP_Biometria));
-    sqlRequest.input('OP_Facial', sql.Bit, (OP_Facial));
-    sqlRequest.input('Integracao', sql.Bit, (Integracao));
-    sqlRequest.input('ClienteID', sql.VarChar, ClienteID);
-    sqlRequest.input('UserID', sql.VarChar, UserID);
-    sqlRequest.input('Chave', sql.NVarChar, Chave);
-    sqlRequest.input('ID_DM', sql.Int, ID_DM);
 
-    const result = await sqlRequest.query(query);
-    if (result.rowsAffected[0] > 0) {
-      //logQuery('info', `Usuário ${id_usuario} Atualizou a DM  ${ID_DM}`, 'sucesso', 'UPDATE', IDcliente, id_usuario, query, params);
-      response.status(201).send('Centro de Custo criado com sucesso!');
-    } else {
-      //logQuery('error', `Usuário ${id_usuario} Nao Atualizou a DM  ${ID_DM}`, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
-      response.status(400).send('Falha ao criar o Centro de Custo');
+
+    // Remove controladoras que não estão mais na lista enviada pelo frontend
+    for (const [id, controladora] of existingMap) {
+      const deleteControladoraQuery = `DELETE FROM Controladoras WHERE ID = @ID`;
+      const requestDeleteControladora = new sql.Request(transaction);
+      requestDeleteControladora.input('ID', sql.Int, id);
+      await requestDeleteControladora.query(deleteControladoraQuery);
     }
+
+    // Comitar a transação
+    await transaction.commit();
+    response.status(200).json({ message: "DM e controladoras atualizadas com sucesso." });
   } catch (error) {
-    const errorMessage = error.message.includes('Query não fornecida para logging')
-      ? 'Erro crítico: Falha na operação'
-      : `${error.message}`;
-    //logQuery('error', errorMessage, 'falha', 'UPDATE', IDcliente, id_usuario, query, params);
-    console.error('Erro ao adicionar registro:', error.message);
-    response.status(500).send('Erro ao adicionar Centro de Custo');
+    // Rollback em caso de erro
+    if (transaction) await transaction.rollback();
+    console.error("Erro ao atualizar DM:", error);
+    response.status(500).json({ message: "Erro ao atualizar DM." });
   }
-
-
 }
+
+
 
 async function listarItensDM(request, response) {
   try {
@@ -207,7 +389,7 @@ async function listarItensDM(request, response) {
       SELECT * FROM DM_Itens
       WHERE Deleted = 0 AND ID_DM = @id_dm AND ID_Cliente = @id_cliente
     `;
-    const request = new sql.Request();
+      const request = new sql.Request();
       request.input('id_dm', sql.Int, id_dm);
       request.input('id_cliente', sql.Int, id_cliente);
       const result = await request.query(query);
@@ -315,7 +497,7 @@ async function adicionarItensDM(request, response) {
       response.status(400).send("Falha ao criar o item DM!");
     }
   } catch (error) {
-    const errorMessage = error.message.includes('Query não fornecida para logging') 
+    const errorMessage = error.message.includes('Query não fornecida para logging')
       ? 'Erro crítico: Falha na operação'
       : `Erro ao adicionar Centro de Custo: ${error.message}`;
     //logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
@@ -350,7 +532,7 @@ async function deletarItensDM(request, response) {
     }
 
   } catch (error) {
-   //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+    //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
@@ -389,5 +571,5 @@ async function deletarDM(request, response) {
 
 
 module.exports = {
-  adicionar, listarDM, listarItensDM, adicionarItensDM, deletarItensDM, atualizar , deletarDM
+  adicionar, listarDM, listarItensDM, adicionarItensDM, deletarItensDM, atualizar, deletarDM
 }
