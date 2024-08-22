@@ -20,24 +20,24 @@ async function listarDM(request, response) {
 
 async function relatorio(request, response) {
     try {
-        const { id_cliente, dms, id_usuario } = request.body;
+        const { id_cliente, id_dm, id_usuario } = request.body;
         const params = {
             id_cliente: id_cliente,
-            ID_DM: dms
+            ID_DM: id_dm
           };
         let query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM';
-
+          console.log('recebido no relatorio:',request.body)
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
         }
 
-        if (!dms) {
+        if (!id_dm) {
             return response.status(401).json("ID_DM não enviado");
         }
 
         const dbRequest = new sql.Request();
         dbRequest.input('id_cliente', sql.Int, id_cliente);
-        dbRequest.input('ID_DM', sql.Int, dms);
+        dbRequest.input('ID_DM', sql.Int, id_dm);
         
         const result = await dbRequest.query(query);
         if (result.rowsAffected[0] > 0) {

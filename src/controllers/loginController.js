@@ -65,7 +65,7 @@ async function login(request, response) {
             const MenuItem = MenuItemR.recordset;
             const menuTree = buildMenuTree(Menu, MenuItem);
             menuTree.forEach(cleanItems);
-            const token = jwt.sign({ Usuario }, segredo, opcoes);
+            const token = jwt.sign({ usuario: Usuario, roles: [role] }, segredo, opcoes);
             response.status(200).json({ token, Usuario, items: menuTree });
         } else {
             response.status(401).json("E-mail ou senha inválidos");

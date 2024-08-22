@@ -7,6 +7,7 @@ const usuariosRoutes = require('./src/routes/cadastros/usuarioRoutes');
 const funcionarioRoutes = require('./src/routes/cadastros/funcionarioRoutes');
 const produtoRoutes = require('./src/routes/cadastros/produtoRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
+const apiKeyRoutes = require('./src/routes/apiKeyRoutes');
 const imageRoutes = require('./src/routes/imageRoutes');
 const CentroCustoRoutes = require('./src/routes/cadastros/CentroCustoRoutes');
 const SetorRoutes = require('./src/routes/cadastros/SetorRoutes');
@@ -25,7 +26,7 @@ const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealiza
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
-const autenticarToken = require('./src/middleware/authMiddleware');
+const { autenticarToken, autorizarRoles } = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
@@ -118,6 +119,8 @@ app.use('/api/import',autenticarToken, ImportRoute);
 
 // Rotas de login
 app.use('/api', loginRoutes);
+
+app.use('/api/key',autenticarToken, apiKeyRoutes);
 
 // Rotas de cliente para admin
 app.use('/api/admin/cliente', ClienteRoute);
