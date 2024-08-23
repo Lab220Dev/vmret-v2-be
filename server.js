@@ -92,16 +92,16 @@ app.use('/api/UDM', autenticarToken, UDMRoute);
 app.use('/api/SDM', autenticarToken, SDMRoutes);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/Log', autenticarToken, LogRoutes);
+app.use('/api/Log', autenticarToken,autorizarRoles(['Master']), LogRoutes);
 
 //Rotas de Relatorio Retirada
-app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
+app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master']), retiradaRealizadaRoute);
 
 //Rotas de Relatorio Items mais Retirados Itens
-app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+app.use('/api/relatorioItems',autenticarToken,autorizarRoles(['Master']), itemsMaisRetiradosRoutes);
 
 //Rotas de Relatório para Fichas Retiradas
-app.use('/api/fichasretiradas',autenticarToken, FichasRoutes);
+app.use('/api/fichasretiradas',autenticarToken,autorizarRoles(['Master']), FichasRoutes);
 
 // //Rotas de Relatório para Fichas Retiradas
 // app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
@@ -109,13 +109,13 @@ app.use('/api/fichasretiradas',autenticarToken, FichasRoutes);
 // app.use('/api/consultastatus',autenticarToken, ConsultaStatusRoutes);
 
 //Rotas de Relatorio Items mais Retirados
-app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
+app.use('/api/Estoque', autenticarToken, autorizarRoles(['Master', 'Operador']), EstoqueDMRoutes);
 
 // Rotas de Texto
-app.use('/api/termo',autenticarToken, TermoRoutes);
+app.use('/api/termo',autenticarToken,autorizarRoles(['Master']), TermoRoutes);
 
 // Rotas de Texto
-app.use('/api/import',autenticarToken, ImportRoute);
+app.use('/api/import',autenticarToken,autorizarRoles(['Master']), ImportRoute);
 
 // Rotas de login
 app.use('/api', loginRoutes);
@@ -123,7 +123,7 @@ app.use('/api', loginRoutes);
 app.use('/api/key',autenticarToken, apiKeyRoutes);
 
 // Rotas de cliente para admin
-app.use('/api/admin/cliente', ClienteRoute);
+app.use('/api/admin/cliente',autenticarToken, autorizarRoles(['Administrador']), ClienteRoute);
 
 
 app.get('*', (req, res) => {

@@ -21,6 +21,8 @@ function autenticarToken(request, response, next) {
                 return response.status(401).json({ mensagem: "Token inválido" });
             }
             request.usuario = decoded.usuario;
+            request.roles = decoded.roles;
+            console.log(request.roles)
             next();
         });
     } else if (apiKey) {
