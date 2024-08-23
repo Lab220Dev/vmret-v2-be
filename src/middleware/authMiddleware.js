@@ -22,7 +22,6 @@ function autenticarToken(request, response, next) {
             }
             request.usuario = decoded.usuario;
             request.roles = decoded.roles;
-            console.log(request.roles)
             next();
         });
     } else if (apiKey) {
