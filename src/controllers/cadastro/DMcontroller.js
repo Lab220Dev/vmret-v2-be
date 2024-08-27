@@ -102,7 +102,7 @@ async function adicionar(request, response) {
   const {
     IDcliente, Ativo, Chave, ClienteID, Integracao, ClienteNome, Created, Deleted, Devolucao, Enviada,
     Identificacao, Numero, OP_Biometria, OP_Facial, OP_Senha, URL, Updated, UserID, Versao, id_usuario,
-    controladoras
+    Controladoras
   } = request.body;
 
   const queryDM = `INSERT INTO DMs (
@@ -150,8 +150,8 @@ async function adicionar(request, response) {
     if (resultDM && resultDM.recordset && resultDM.recordset.length > 0) {
       const dmId = resultDM.recordset[0].ID_DM;
 
-      if (controladoras && controladoras.length > 0) {
-        for (const controladora of controladoras) {
+      if (Controladoras && controladoras.length > 0) {
+        for (const Controladoras of controladoras) {
           const queryControladora = `
                   INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
                   VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
