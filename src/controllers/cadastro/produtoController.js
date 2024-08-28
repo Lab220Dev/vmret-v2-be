@@ -81,9 +81,9 @@ async function adicionarProdutos(request, response) {
         };
 
         // Diretórios de upload com id_cliente antes da pasta principal
-        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
-        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
-        const uploadPathInfoAdicional = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'info');
+        const uploadPathPrincipal = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathInfoAdicional = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'info');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });

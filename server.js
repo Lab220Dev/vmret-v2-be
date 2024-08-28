@@ -123,7 +123,7 @@ app.use('/api', loginRoutes);
 app.use('/api/key',autenticarToken, apiKeyRoutes);
 
 // Rotas de cliente para admin
-app.use('/api/admin/cliente',autenticarToken, autorizarRoles(['Administrador']), ClienteRoute);
+app.use('/api/admin/cliente',autenticarToken, autorizarRoles(['Administrador','Master','Operador' ]), ClienteRoute);
 
 
 app.get('*', (req, res) => {
