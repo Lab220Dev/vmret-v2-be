@@ -26,6 +26,7 @@ const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealiza
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
+const ItensNaoAlocadosRoutes = require('./src/routes/cadastros/ItensNaoAlocadosRoutes');
 const { autenticarToken, autorizarRoles } = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
@@ -86,22 +87,24 @@ app.use('/api/plantas', autenticarToken, planasRoutes);
 app.use('/api/DM', autenticarToken, DMRoute);
 
 // Rotas de Usuarios DMs
-app.use('/api/UDM', autenticarToken, UDMRoute);
+app.use('/api/UDM', autenticarToken,autorizarRoles(['Master', 'Operador']), UDMRoute);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/SDM', autenticarToken, SDMRoutes);
+app.use('/api/SDM', autenticarToken,autorizarRoles(['Master', 'Operador']), SDMRoutes);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/Log', autenticarToken,autorizarRoles(['Master']), LogRoutes);
+app.use('/api/Log', autenticarToken,autorizarRoles(['Master', 'Operador']), LogRoutes);
 
 //Rotas de Relatorio Retirada
-app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master']), retiradaRealizadaRoute);
+app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master', 'Operador']), retiradaRealizadaRoute);
 
 //Rotas de Relatorio Items mais Retirados Itens
-app.use('/api/relatorioItems',autenticarToken,autorizarRoles(['Master']), itemsMaisRetiradosRoutes);
+app.use('/api/relatorioItems',autenticarToken,autorizarRoles(['Master', 'Operador']), itemsMaisRetiradosRoutes);
 
 //Rotas de Relatório para Fichas Retiradas
-app.use('/api/fichasretiradas',autenticarToken,autorizarRoles(['Master']), FichasRoutes);
+app.use('/api/fichasretiradas',autenticarToken,autorizarRoles(['Master', 'Operador']), FichasRoutes);
+//Rotas de Relatório para Fichas Retiradas
+app.use('/api/naoalocados',autenticarToken,autorizarRoles(['Master', 'Operador']), ItensNaoAlocadosRoutes);
 
 // //Rotas de Relatório para Fichas Retiradas
 // app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);

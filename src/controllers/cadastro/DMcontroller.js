@@ -1,6 +1,7 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
 const { logQuery } = require('../../utils/logUtils');
+const crypto = require('crypto');
 const convertToBoolean = (value) => {
   return value === 'true';
 };
@@ -100,112 +101,116 @@ async function listarDM(request, response) {
 
 async function adicionar(request, response) {
   const {
-    IDcliente, Ativo, Chave, ClienteID, Integracao, ClienteNome, Created, Deleted, Devolucao, Enviada,
-    Identificacao, Numero, OP_Biometria, OP_Facial, OP_Senha, URL, Updated, UserID, Versao, id_usuario,
-    Controladoras
+      IDcliente, Ativo, Chave, ClienteID, Integracao, ClienteNome, Created, Deleted, Devolucao, Enviada,
+      Identificacao, Numero, OP_Biometria, OP_Facial, OP_Senha, URL, Updated, UserID, Versao, id_usuario,
+      Controladoras,senha
   } = request.body;
 
   const queryDM = `INSERT INTO DMs (
-    IDcliente, Numero, Devolucao, Identificacao, Ativo, Deleted, Created, Updated, Versao, Enviada, OP_Senha, OP_Biometria, 
-    OP_Facial, Integracao, ClienteID, ClienteNome, UserID, Chave, ID_CR_Usuario)
-    OUTPUT INSERTED.ID_DM
-    VALUES (
-    @IDcliente, @Numero, @Devolucao, @Identificacao, @Ativo, @Deleted, @Created, @Updated, @Versao, @Enviada, @OP_Senha, 
-    @OP_Biometria, @OP_Facial, @Integracao, @ClienteID, @ClienteNome, @UserID, @Chave, @ID_CR_Usuario)`;
+      IDcliente, Numero, Devolucao, Identificacao, Ativo, Deleted, Created, Updated, Versao, Enviada, OP_Senha, OP_Biometria, 
+      OP_Facial, Integracao, ClienteID, ClienteNome, UserID, Chave, ID_CR_Usuario, URL)
+      OUTPUT INSERTED.ID_DM
+      VALUES (
+      @IDcliente, @Numero, @Devolucao, @Identificacao, @Ativo, @Deleted, @Created, @Updated, @Versao, @Enviada, @OP_Senha, 
+      @OP_Biometria, @OP_Facial, @Integracao, @ClienteID, @ClienteNome, @UserID, @Chave, @ID_CR_Usuario, @URL)`;
 
   let transaction;
 
   try {
-    if (!IDcliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
-    }
-
-    transaction = new sql.Transaction();
-    await transaction.begin();
-
-    const sqlRequest = new sql.Request(transaction);
-    sqlRequest.input('IDcliente', sql.Int, IDcliente);
-    sqlRequest.input('Numero', sql.VarChar, Numero);
-    sqlRequest.input('Devolucao', sql.Bit, Devolucao);
-    sqlRequest.input('Identificacao', sql.NVarChar, Identificacao);
-    sqlRequest.input('Ativo', sql.Bit, Ativo);
-    sqlRequest.input('Deleted', sql.Bit, false);
-    sqlRequest.input('Created', sql.DateTime, new Date());
-    sqlRequest.input('Updated', sql.DateTime, '1900-01-01 00:00:00.000');
-    sqlRequest.input('Versao', sql.Int, Versao || 1);
-    sqlRequest.input('Enviada', sql.Bit, Enviada);
-    sqlRequest.input('OP_Senha', sql.Bit, OP_Senha);
-    sqlRequest.input('OP_Biometria', sql.Bit, OP_Biometria);
-    sqlRequest.input('OP_Facial', sql.Bit, OP_Facial);
-    sqlRequest.input('Integracao', sql.Bit, Integracao);
-    sqlRequest.input('ClienteID', sql.VarChar, ClienteID);
-    sqlRequest.input('ClienteNome', sql.NVarChar, ClienteNome);
-    sqlRequest.input('UserID', sql.VarChar, UserID);
-    sqlRequest.input('Chave', sql.NVarChar, Chave);
-    sqlRequest.input('ID_CR_Usuario', sql.Int, id_usuario);
-
-    const resultDM = await sqlRequest.query(queryDM);
-
-    if (resultDM && resultDM.recordset && resultDM.recordset.length > 0) {
-      const dmId = resultDM.recordset[0].ID_DM;
-
-      if (Controladoras && Controladoras.length > 0) {
-        for (const controladora  of Controladoras) {
-          const queryControladora = `
-                  INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
-                  VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
-
-          const sqlRequestControladora = new sql.Request(transaction);
-          sqlRequestControladora.input('ID_Cliente', sql.Int, IDcliente);
-          sqlRequestControladora.input('ID_DM', sql.Int, dmId);
-          sqlRequestControladora.input('Tipo_Controladora', sql.NVarChar, controladora.tipo);
-
-          // Preencher os valores específicos para cada tipo de controladora
-          if (controladora.tipo === '2018') {
-            sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
-            sqlRequestControladora.input('DIP', sql.Int, null);
-            sqlRequestControladora.input('Andar', sql.VarChar, null);
-            sqlRequestControladora.input('Posicao', sql.VarChar, null);
-            sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.checkboxes.join(','));
-            sqlRequestControladora.input('Mola2', sql.VarChar, null);
-          } else if (controladora.tipo === '2023') {
-            sqlRequestControladora.input('Placa', sql.Int, null);
-            sqlRequestControladora.input('DIP', sql.Int, controladora.dados.dip);
-            sqlRequestControladora.input('Andar', sql.VarChar, controladora.dados.andar.join(','));
-            sqlRequestControladora.input('Posicao', sql.VarChar, controladora.dados.posicao.join(','));
-            sqlRequestControladora.input('Mola1', sql.VarChar, null);
-            sqlRequestControladora.input('Mola2', sql.VarChar, null);
-          } else if (controladora.tipo === '2024') {
-            sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
-            sqlRequestControladora.input('DIP', sql.Int, null);
-            sqlRequestControladora.input('Andar', sql.VarChar, null);
-            sqlRequestControladora.input('Posicao', sql.VarChar, null);
-            sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.mola1.join(','));
-            sqlRequestControladora.input('Mola2', sql.VarChar, controladora.dados.mola2.join(','));
-          }
-
-          await sqlRequestControladora.query(queryControladora);
-        }
+      if (!IDcliente) {
+          response.status(401).json("ID do cliente não enviado");
+          return;
       }
 
-      // Commita a transação se tudo deu certo
-      await transaction.commit();
-      response.status(201).send('DM e Controladoras criadas com sucesso!');
-    } else {
-      // Rollback em caso de falha na inserção da DM
-      await transaction.rollback();
-      response.status(400).send('Falha ao criar DM');
-    }
-  } catch (error) {
-    // Rollback em caso de qualquer erro
-    if (transaction) await transaction.rollback();
+      transaction = new sql.Transaction();
+      await transaction.begin();
+      const encodedData = Buffer.from(data).toString('base64');
+      const sqlRequest = new sql.Request(transaction);
+      sqlRequest.input('IDcliente', sql.Int, IDcliente);
+      sqlRequest.input('Numero', sql.VarChar, Numero);
+      sqlRequest.input('Devolucao', sql.Bit, Devolucao);
+      sqlRequest.input('Identificacao', sql.NVarChar, Identificacao);
+      sqlRequest.input('Ativo', sql.Bit, Ativo);
+      sqlRequest.input('Deleted', sql.Bit, false);
+      sqlRequest.input('Created', sql.DateTime, new Date());
+      sqlRequest.input('Updated', sql.DateTime, '1900-01-01 00:00:00.000');
+      sqlRequest.input('Versao', sql.Int, Versao || 1);
+      sqlRequest.input('Enviada', sql.Bit, Enviada);
+      sqlRequest.input('OP_Senha', sql.Bit, OP_Senha);
+      sqlRequest.input('OP_Biometria', sql.Bit, OP_Biometria);
+      sqlRequest.input('OP_Facial', sql.Bit, OP_Facial);
+      sqlRequest.input('Integracao', sql.Bit, Integracao);
+      sqlRequest.input('ClienteID', sql.VarChar, ClienteID);
+      sqlRequest.input('ClienteNome', sql.NVarChar, ClienteNome);
+      sqlRequest.input('UserID', sql.VarChar, UserID);
+      sqlRequest.input('Chave', sql.NVarChar, senha);
+      sqlRequest.input('ID_CR_Usuario', sql.Int, id_usuario);
 
-    const errorMessage = error.message.includes('Query não fornecida para logging')
-      ? 'Erro crítico: Falha na operação'
-      : `${error.message}`;
-    console.error('Erro ao adicionar registro:', error.message);
-    response.status(500).send('Erro ao adicionar DM');
+      // Define a URL caso Integracao seja true
+      const urlToInsert = Integracao ? 'https://api.mobsolucoesdigitais.com.br' : URL;
+      sqlRequest.input('URL', sql.NVarChar, urlToInsert);
+
+      const resultDM = await sqlRequest.query(queryDM);
+
+      if (resultDM && resultDM.recordset && resultDM.recordset.length > 0) {
+          const dmId = resultDM.recordset[0].ID_DM;
+
+          if (Controladoras && Controladoras.length > 0) {
+              for (const controladora of Controladoras) {
+                  const queryControladora = `
+                      INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
+                      VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
+
+                  const sqlRequestControladora = new sql.Request(transaction);
+                  sqlRequestControladora.input('ID_Cliente', sql.Int, IDcliente);
+                  sqlRequestControladora.input('ID_DM', sql.Int, dmId);
+                  sqlRequestControladora.input('Tipo_Controladora', sql.NVarChar, controladora.tipo);
+
+                  // Preencher os valores específicos para cada tipo de controladora
+                  if (controladora.tipo === '2018') {
+                      sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
+                      sqlRequestControladora.input('DIP', sql.Int, null);
+                      sqlRequestControladora.input('Andar', sql.VarChar, null);
+                      sqlRequestControladora.input('Posicao', sql.VarChar, null);
+                      sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.checkboxes.join(','));
+                      sqlRequestControladora.input('Mola2', sql.VarChar, null);
+                  } else if (controladora.tipo === '2023') {
+                      sqlRequestControladora.input('Placa', sql.Int, null);
+                      sqlRequestControladora.input('DIP', sql.Int, controladora.dados.dip);
+                      sqlRequestControladora.input('Andar', sql.VarChar, controladora.dados.andar.join(','));
+                      sqlRequestControladora.input('Posicao', sql.VarChar, controladora.dados.posicao.join(','));
+                      sqlRequestControladora.input('Mola1', sql.VarChar, null);
+                      sqlRequestControladora.input('Mola2', sql.VarChar, null);
+                  } else if (controladora.tipo === '2024') {
+                      sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
+                      sqlRequestControladora.input('DIP', sql.Int, null);
+                      sqlRequestControladora.input('Andar', sql.VarChar, null);
+                      sqlRequestControladora.input('Posicao', sql.VarChar, null);
+                      sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.mola1.join(','));
+                      sqlRequestControladora.input('Mola2', sql.VarChar, controladora.dados.mola2.join(','));
+                  }
+
+                  await sqlRequestControladora.query(queryControladora);
+              }
+          }
+
+          // Commit a transação se tudo deu certo
+          await transaction.commit();
+          response.status(201).send('DM e Controladoras criadas com sucesso!');
+      } else {
+          // Rollback em caso de falha na inserção da DM
+          await transaction.rollback();
+          response.status(400).send('Falha ao criar DM');
+      }
+  } catch (error) {
+      // Rollback em caso de qualquer erro
+      if (transaction) await transaction.rollback();
+
+      const errorMessage = error.message.includes('Query não fornecida para logging')
+          ? 'Erro crítico: Falha na operação'
+          : `${error.message}`;
+      console.error('Erro ao adicionar registro:', error.message);
+      response.status(500).send('Erro ao adicionar DM');
   }
 }
 
@@ -231,7 +236,8 @@ async function atualizar(request, response) {
     ClienteID,
     Chave,
     Devolucao,
-    Controladoras
+    Controladoras,
+    senha
   } = request.body;
 
   let transaction;
@@ -281,7 +287,7 @@ async function atualizar(request, response) {
     requestDM.input('Integracao', sql.Bit, Integracao);
     requestDM.input('ClienteID', sql.VarChar, ClienteID);
     requestDM.input('ClienteNome', sql.NVarChar, ClienteNome);
-    requestDM.input('Chave', sql.NVarChar, Chave);
+    requestDM.input('Chave', sql.NVarChar, senha);
     requestDM.input('Devolucao', sql.Bit, Devolucao);
 
     await requestDM.query(updateDMQuery);
