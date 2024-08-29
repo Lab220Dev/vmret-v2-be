@@ -150,8 +150,8 @@ async function adicionar(request, response) {
     if (resultDM && resultDM.recordset && resultDM.recordset.length > 0) {
       const dmId = resultDM.recordset[0].ID_DM;
 
-      if (Controladoras && controladoras.length > 0) {
-        for (const Controladoras of controladoras) {
+      if (Controladoras && Controladoras.length > 0) {
+        for (const controladora  of Controladoras) {
           const queryControladora = `
                   INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, DIP, Andar, Posicao, Mola1, Mola2)
                   VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @DIP, @Andar, @Posicao, @Mola1, @Mola2)`;
@@ -165,24 +165,24 @@ async function adicionar(request, response) {
           if (controladora.tipo === '2018') {
             sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
             sqlRequestControladora.input('DIP', sql.Int, null);
-            sqlRequestControladora.input('Andar', sql.Int, null);
-            sqlRequestControladora.input('Posicao', sql.Int, null);
-            sqlRequestControladora.input('Mola1', sql.Int, controladora.dados.checkboxes.join(','));
-            sqlRequestControladora.input('Mola2', sql.Int, null);
+            sqlRequestControladora.input('Andar', sql.VarChar, null);
+            sqlRequestControladora.input('Posicao', sql.VarChar, null);
+            sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.checkboxes.join(','));
+            sqlRequestControladora.input('Mola2', sql.VarChar, null);
           } else if (controladora.tipo === '2023') {
             sqlRequestControladora.input('Placa', sql.Int, null);
             sqlRequestControladora.input('DIP', sql.Int, controladora.dados.dip);
-            sqlRequestControladora.input('Andar', sql.Int, controladora.dados.andar);
-            sqlRequestControladora.input('Posicao', sql.Int, controladora.dados.posicao);
-            sqlRequestControladora.input('Mola1', sql.Int, null);
-            sqlRequestControladora.input('Mola2', sql.Int, null);
+            sqlRequestControladora.input('Andar', sql.VarChar, controladora.dados.andar.join(','));
+            sqlRequestControladora.input('Posicao', sql.VarChar, controladora.dados.posicao.join(','));
+            sqlRequestControladora.input('Mola1', sql.VarChar, null);
+            sqlRequestControladora.input('Mola2', sql.VarChar, null);
           } else if (controladora.tipo === '2024') {
             sqlRequestControladora.input('Placa', sql.Int, controladora.dados.placa);
             sqlRequestControladora.input('DIP', sql.Int, null);
-            sqlRequestControladora.input('Andar', sql.Int, null);
-            sqlRequestControladora.input('Posicao', sql.Int, null);
-            sqlRequestControladora.input('Mola1', sql.Int, controladora.dados.mola1);
-            sqlRequestControladora.input('Mola2', sql.Int, controladora.dados.mola2);
+            sqlRequestControladora.input('Andar', sql.VarChar, null);
+            sqlRequestControladora.input('Posicao', sql.VarChar, null);
+            sqlRequestControladora.input('Mola1', sql.VarChar, controladora.dados.mola1.join(','));
+            sqlRequestControladora.input('Mola2', sql.VarChar, controladora.dados.mola2.join(','));
           }
 
           await sqlRequestControladora.query(queryControladora);
