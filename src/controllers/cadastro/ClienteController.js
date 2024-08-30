@@ -7,6 +7,117 @@ const convertToBoolean = (value) => {
 function generateApiKey() {
     return crypto.randomBytes(32).toString('hex');
 }
+function getMenuOrderByProfile(perfil) {
+    const menuOrderMaster = {
+        'Dashboard': { id_item: 1, icone: 'pi pi-fw pi-chart-pie' },
+        'Relatórios': { id_item: 2, icone: 'pi pi-fw pi-list' },
+        'Configurações': { id_item: 3, icone: 'pi pi-fw pi-cog' },
+        'Importações': { id_item: 4, icone: 'pi pi-fw pi-upload' },
+        'EndPoints': { id_item: 5, icone: 'pi pi-fw pi-cloud' },
+        'Cadastros': { id_item: 6, icone: 'pi pi-fw pi-user-plus' }
+    };
+
+    const menuOrderOperador = {
+        'Dashboard': { id_item: 1, icone: 'pi pi-fw pi-chart-pie' },
+        'Dispenser Machines': { id_item: 3, icone: 'pi pi-fw pi-box' },
+        'Produtos': { id_item: 4, icone: 'pi pi-fw pi-tags' },
+        'Relatórios': { id_item: 2, icone: 'pi pi-fw pi-list' }
+    };
+
+    const menuOrderAvulso = {
+        'Dashboard': { id_item: 1, icone: 'pi pi-fw pi-chart-pie' },
+        'Liberação Avulsa': { id_item: 2, icone: 'pi pi-fw pi-key' },
+        'Consulta Status de Liberação Avulsa': { id_item: 3, icone: 'pi pi-fw pi-search' }
+    };
+
+    switch (perfil) {
+        case 1: // Master
+            return menuOrderMaster;
+        case 3: // Operador
+            return menuOrderOperador;
+        case 4: // Avulso
+            return menuOrderAvulso;
+        default:
+            throw new Error('Perfil não reconhecido');
+    }
+}
+async function inserirMenuPrincipal(transaction, id_cliente, perfil, nome, order) {
+    let sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('Cod_Cli', sql.Int, id_cliente)
+        .input('Nome', sql.VarChar, nome)
+        .input('Perfil', sql.Int, perfil)
+        .input('Icone', sql.VarChar, order.icone)
+        .input('ID_item', sql.Int, order.id_item);
+
+    console.log(`Inserindo menu: ${nome}`);
+    await sqlRequest.query(`
+        INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
+        VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
+    `);
+    console.log(`Menu ${nome} inserido com sucesso`);
+}
+
+// Função para inserir o submenu
+async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu, referenciaCliente) {
+    let sqlRequest = new sql.Request(transaction);
+    let submenuTo = null;
+
+    if (!submenu.subsubmenus || submenu.subsubmenus.length === 0) {
+        const result = await sqlRequest.query(`
+            SELECT [to] FROM Menu_Itens WHERE Nome = '${submenu.name}' AND Cod_Cli = ${referenciaCliente}
+        `);
+        submenuTo = result.recordset[0]?.to || '';
+    }
+
+    sqlRequest.input('ID_Item', sql.Int, id_item)
+        .input('Cod_Cli', sql.Int, id_cliente)
+        .input('Nome', sql.VarChar, submenu.name)
+        .input('Perfil', sql.Int, perfil)
+        .input('to', sql.VarChar, submenuTo);
+
+    console.log(`Inserindo submenu: ${submenu.name}`);
+
+    if (submenu.subsubmenus && submenu.subsubmenus.length > 0) {
+        const resultSubmenu = await sqlRequest.query(`
+            INSERT INTO Menu_Itens (ID_Item, Cod_Cli, Nome, Perfil, [to], ID_Sub_Item)
+            OUTPUT INSERTED.ID
+            VALUES (@ID_Item, @Cod_Cli, @Nome, @Perfil, NULL, 0)
+        `);
+        const submenuId = resultSubmenu.recordset[0].ID;
+        console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item: ${submenuId}`);
+        return submenuId;
+    } else {
+        await sqlRequest.query(`
+            INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
+            VALUES (@ID_Item, 0, @Cod_Cli, @Nome, @Perfil, @to)
+        `);
+        console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item 0`);
+        return 0;
+    }
+}
+
+// Função para inserir o subsubmenu
+async function inserirSubsubmenu(transaction, id_cliente, perfil, id_item, id_sub_item, subsubmenu, referenciaCliente) {
+    let sqlRequest = new sql.Request(transaction);
+    const result = await sqlRequest.query(`
+        SELECT [to] FROM Menu_Itens WHERE Nome = '${subsubmenu.name}' AND Cod_Cli = ${referenciaCliente}
+    `);
+    const subsubmenuTo = result.recordset[0]?.to || '';
+
+    console.log(`Inserindo subsubmenu: ${subsubmenu.name}`);
+    sqlRequest.input('ID_Item', sql.Int, id_item)
+        .input('ID_Sub_Item', sql.Int, id_sub_item)
+        .input('Cod_Cli', sql.Int, id_cliente)
+        .input('Nome', sql.VarChar, subsubmenu.name)
+        .input('Perfil', sql.Int, perfil)
+        .input('to', sql.VarChar, subsubmenuTo);
+
+    await sqlRequest.query(`
+        INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
+        VALUES (@ID_Item, @ID_Sub_Item, @Cod_Cli, @Nome, @Perfil, @to)
+    `);
+    console.log(`Subsubmenu ${subsubmenu.name} inserido com sucesso`);
+}
 async function listar(request, response) {
     try {
         const query = 'SELECT * FROM clientes WHERE deleted = 0';
@@ -159,117 +270,36 @@ async function deletar(request, response) {
 
 async function salvarMenus(request, response) {
     const { id_cliente, perfil, menus } = request.body;
-
-    const referenciaCliente = 57; // O cliente de referência que já tem os valores 'to' definidos
-
-    const menuOrder = {
-        'Dashboard': { id_item: 1, icone: 'pi pi-fw pi-chart-pie' },
-        'Relatórios': { id_item: 2, icone: 'pi pi-fw pi-list' },
-        'Configurações': { id_item: 3, icone: 'pi pi-fw pi-cog' },
-        'Importações': { id_item: 4, icone: 'pi pi-fw pi-upload' },
-        'Endpoints': { id_item: 5, icone: 'pi pi-fw pi-cloud' },
-        'Cadastros': { id_item: 6, icone: 'pi pi-fw pi-user-plus' }
-    };
-
-    const transaction = new sql.Transaction();
+    const referenciaCliente = 57;
+    let transaction;
     try {
+        console.log("Perfil recebido:", perfil);
+        const menuOrder = getMenuOrderByProfile(perfil); // Obter o menuOrder com base no perfil
+        console.log("Menu Order selecionado:", menuOrder);
+
+        transaction = new sql.Transaction();
         await transaction.begin();
         console.log("Transação iniciada");
+        if (!menuOrder['Dashboard']) {
+            throw new Error('Menu "Dashboard" não encontrado no menuOrder para o perfil especificado');
+        }
+        await inserirMenuPrincipal(transaction, id_cliente, perfil, 'Dashboard', menuOrder['Dashboard']);
 
-        // Inserção do menu Dashboard, que sempre deve estar presente
-        let sqlRequest = new sql.Request(transaction);
-        sqlRequest.input('Cod_Cli', sql.Int, id_cliente)
-                  .input('Nome', sql.VarChar, 'Dashboard')
-                  .input('Perfil', sql.Int, perfil)
-                  .input('Icone', sql.VarChar, menuOrder['Dashboard'].icone)
-                  .input('ID_item', sql.Int, menuOrder['Dashboard'].id_item);
-
-        console.log("Inserindo Dashboard");
-        await sqlRequest.query(`
-            INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
-            VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
-        `);
-        console.log("Dashboard inserido com sucesso");
-
-        // Inserção dos outros menus principais na tabela `Menu`
         for (let menu of menus) {
             const order = menuOrder[menu.name];
-            if (!order) continue; // Ignorar se o menu não está na lista de ordem
+            if (!order) {
+                console.log(`Menu ${menu.name} não encontrado no menuOrder para o perfil ${perfil}`);
+                continue;
+            }
 
-            sqlRequest = new sql.Request(transaction);
-            sqlRequest.input('Cod_Cli', sql.Int, id_cliente)
-                      .input('Nome', sql.VarChar, menu.name)
-                      .input('Perfil', sql.Int, perfil)
-                      .input('Icone', sql.VarChar, order.icone)
-                      .input('ID_item', sql.Int, order.id_item);
+            await inserirMenuPrincipal(transaction, id_cliente, perfil, menu.name, order);
 
-            console.log(`Inserindo menu: ${menu.name}`);
-            await sqlRequest.query(`
-                INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
-                VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
-            `);
-            console.log(`Menu ${menu.name} inserido com sucesso`);
-
-            // Inserção dos submenus
             for (let submenu of menu.submenus) {
-                let submenuTo = null;
+                const submenuId = await inserirSubmenu(transaction, id_cliente, perfil, order.id_item, submenu, referenciaCliente);
 
-                if (!submenu.subsubmenus || submenu.subsubmenus.length === 0) {
-                    // Se o submenu não tem subsubmenus, obtenha o valor de 'to'
-                    let result = await sqlRequest.query(`
-                        SELECT [to] FROM Menu_Itens WHERE Nome = '${submenu.name}' AND Cod_Cli = ${referenciaCliente}
-                    `);
-                    submenuTo = result.recordset[0]?.to || '';
-                }
-
-                console.log(`Inserindo submenu: ${submenu.name}`);
-                sqlRequest = new sql.Request(transaction);
-                sqlRequest.input('ID_Item', sql.Int, order.id_item)
-                          .input('Cod_Cli', sql.Int, id_cliente)
-                          .input('Nome', sql.VarChar, submenu.name)
-                          .input('Perfil', sql.Int, perfil)
-                          .input('to', sql.VarChar, submenuTo);
-
-                let submenuId = 0;
-
-                if (submenu.subsubmenus && submenu.subsubmenus.length > 0) {
-                    const resultSubmenu = await sqlRequest.query(`
-                        INSERT INTO Menu_Itens (ID_Item, Cod_Cli, Nome, Perfil, [to], ID_Sub_Item)
-                        OUTPUT INSERTED.ID
-                        VALUES (@ID_Item, @Cod_Cli, @Nome, @Perfil, NULL, 0)
-                    `);
-                    submenuId = resultSubmenu.recordset[0].ID;
-                    console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item: ${submenuId}`);
-                } else {
-                    await sqlRequest.query(`
-                        INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
-                        VALUES (@ID_Item, 0, @Cod_Cli, @Nome, @Perfil, @to)
-                    `);
-                    console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item 0`);
-                }
-
-                // Inserção dos subsubmenus
-                if (submenuId > 0) {
+                if (submenuId > 0 && submenu.subsubmenus) {
                     for (let subsubmenu of submenu.subsubmenus) {
-                        let result = await sqlRequest.query(`
-                            SELECT [to] FROM Menu_Itens WHERE Nome = '${subsubmenu.name}' AND Cod_Cli = ${referenciaCliente}
-                        `);
-                        const subsubmenuTo = result.recordset[0]?.to || '';
-
-                        console.log(`Inserindo subsubmenu: ${subsubmenu.name}`);
-                        sqlRequest = new sql.Request(transaction);
-                        sqlRequest.input('ID_Item', sql.Int, order.id_item)
-                                  .input('ID_Sub_Item', sql.Int, submenuId)
-                                  .input('Cod_Cli', sql.Int, id_cliente)
-                                  .input('Nome', sql.VarChar, subsubmenu.name)
-                                  .input('Perfil', sql.Int, perfil)
-                                  .input('to', sql.VarChar, subsubmenuTo);
-
-                        await sqlRequest.query(`
-                            INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
-                            VALUES (@ID_Item, @ID_Sub_Item, @Cod_Cli, @Nome, @Perfil, @to)
-                        `);
-                        console.log(`Subsubmenu ${subsubmenu.name} inserido com sucesso`);
+                        await inserirSubsubmenu(transaction, id_cliente, perfil, order.id_item, submenuId, subsubmenu, referenciaCliente);
                     }
                 }
             }

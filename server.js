@@ -87,7 +87,7 @@ app.use('/api/plantas', autenticarToken, planasRoutes);
 app.use('/api/DM', autenticarToken, DMRoute);
 
 // Rotas de Usuarios DMs
-app.use('/api/UDM', autenticarToken,autorizarRoles(['Master', 'Operador']), UDMRoute);
+app.use('/api/UDM', autenticarToken,autorizarRoles(['Master', 'Operador','Administrador']), UDMRoute);
 
 // Rotas de Relatorio Status DMs
 app.use('/api/SDM', autenticarToken,autorizarRoles(['Master', 'Operador']), SDMRoutes);

@@ -124,7 +124,7 @@ async function adicionar(request, response) {
 
       transaction = new sql.Transaction();
       await transaction.begin();
-      const encodedData = Buffer.from(data).toString('base64');
+      //const encodedData = Buffer.from(data).toString('base64');
       const sqlRequest = new sql.Request(transaction);
       sqlRequest.input('IDcliente', sql.Int, IDcliente);
       sqlRequest.input('Numero', sql.VarChar, Numero);
