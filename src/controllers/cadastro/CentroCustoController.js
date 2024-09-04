@@ -25,28 +25,38 @@ async function listar(request, response) {
 
 async function adicionar(request, response) {
   const { id_cliente, Codigo, Nome, id_usuario } = request.body;
+
+  // Query SQL para inserir um novo Centro de Custo
   const query = `INSERT INTO Centro_Custos
-              (ID_Cliente, Codigo, Nome, Deleted)
-              VALUES (@ID_Cliente, @codigo, @nome, @deleted);`;
+                (ID_Cliente, Codigo, Nome, Deleted)
+                VALUES (@ID_Cliente, @codigo, @nome, @deleted);`;
+  
+  // Parâmetros que serão usados na query
   const params = {
     ID_Cliente: id_cliente,
     Codigo: Codigo,
     Nome: Nome,
     Deleted: false
   };
+
   try {
+    // Verificação básica se o ID do cliente foi enviado
     if (!id_cliente) {
       response.status(401).json("ID do cliente não enviado");
       return;
     }
-    request = new sql.Request();
-    request.input('ID_Cliente', sql.Int, id_cliente);
-    request.input('codigo', sql.Int, Codigo);
-    request.input('nome', sql.VarChar, Nome);
-    request.input('Deleted', sql.Bit, false);
 
-    const result = await request.query(query);
+    // Preparação da query com os parâmetros
+    const sqlRequest = new sql.Request();
+    sqlRequest.input('ID_Cliente', sql.Int, id_cliente);
+    sqlRequest.input('codigo', sql.Int, Codigo);
+    sqlRequest.input('nome', sql.VarChar, Nome);
+    sqlRequest.input('Deleted', sql.Bit, false);
 
+    // Execução da query
+    const result = await sqlRequest.query(query);
+
+    // Verificação se a query foi bem-sucedida
     if (result.rowsAffected[0] > 0) {
       //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
       response.status(201).send('Centro de Custo criado com sucesso!');
@@ -64,26 +74,33 @@ async function adicionar(request, response) {
   }
 }
 
+
 async function deleteCentro(request, response) {
   const { id_usuario, id_cliente, ID_CentroCusto } = request.body;
-  
+
   try {
+    // Verifica se o ID do Centro de Custo foi enviado
     if (!ID_CentroCusto) {
       response.status(401).json("ID do centro não foi enviado");
       return;
     }
 
+    // Query para marcar o Centro de Custo como deletado
     const query = "UPDATE Centro_Custos SET deleted = 1 WHERE ID_CentroCusto = @ID_CentroCusto";
 
+    // Parâmetros para a query
     const params = {
       ID_CentroCusto: ID_CentroCusto
     };
 
+    // Cria um novo sql.Request e prepara a query
     const sqlRequest = new sql.Request();
     sqlRequest.input('ID_CentroCusto', sql.Int, ID_CentroCusto);
 
+    // Executa a query
     const result = await sqlRequest.query(query);
 
+    // Verifica se a query afetou alguma linha
     if (result.rowsAffected[0] > 0) {
       //logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
       response.status(200).json(result.recordset);

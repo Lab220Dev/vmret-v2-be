@@ -12,125 +12,124 @@ const convertToBoolean = (value) => {
 };
 async function listarFuncionarios(request, response) {
     try {
-        let query = 'SELECT * FROM funcionarios WHERE 1 = 1';
-
-        if (request.body.id_cliente) {
-            query += ` AND id_cliente = '${request.body.id_cliente}'`;
-        } else {
-            response.status(401).json("id do cliente não enviado");
-            return;
+        // Verifica se o id_cliente foi enviado
+        if (!request.body.id_cliente) {
+            return response.status(401).json({ error: "ID do cliente não enviado" });
         }
 
-        query += ' AND deleted = 0';
+        const id_cliente = request.body.id_cliente;
 
-        const result = await new sql.Request().query(query);
-        response.status(200).json(result.recordset);
+        // Consulta SQL para listar os funcionários
+        const query = `
+            SELECT id_funcionario, nome, id_setor, id_cliente 
+            FROM funcionarios 
+            WHERE id_cliente = @id_cliente 
+            AND deleted = 0
+        `;
+
+        // Cria a requisição SQL com o parâmetro de id_cliente
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_cliente', sql.Int, id_cliente);
+
+        // Executa a query para listar os funcionários
+        const funcionariosResult = await sqlRequest.query(query);
+        const funcionarios = funcionariosResult.recordset;
+
+
+
+        response.status(200).json(funcionarios);
+
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
 }
 
+
 async function adicionarFuncionarios(request, response) {
-    const { id_setor, id_funcao,
-        nome, matricula, biometria,
-        RG, CPF, CTPS, id_planta,
-        data_admissao, hora_inicial, hora_final,
-        segunda, terca, quarta, quinta, sexta,
-        sabado, domingo, ordem,
-        id_centro_custo, status, senha, biometria2,
-        email, face, foto, id_usuario } = request.body;
-    let nomeFuncionario = '';
+    const {
+        id_setor, id_funcao, nome, matricula, biometria,
+        RG, CPF, CTPS, id_planta, data_admissao, hora_inicial, hora_final,
+        segunda, terca, quarta, quinta, sexta, sabado, domingo, ordem,
+        id_centro_custo, status, senha, biometria2, email, face, id_usuario
+    } = request.body;
+
     const id_cliente = request.body.id_cliente;
+    let nomeFuncionario = '';
+
     const query = `INSERT INTO funcionarios
-        ( id_cliente, id_setor, id_funcao, nome, matricula, 
+        (id_cliente, id_setor, id_funcao, nome, matricula, 
          biometria, RG, CPF, CTPS, id_planta, foto, data_admissao, 
          hora_inicial, hora_final,
          segunda, terca, quarta, quinta, sexta, sabado, domingo, 
          deleted, ordem, id_centro_custo, status, senha, biometria2, email, face)
-        VALUES ( @id_cliente, @id_setor, 
+        VALUES (@id_cliente, @id_setor, 
         @id_funcao, @nome, @matricula, @biometria, @RG,
         @CPF, @CTPS, @id_planta, @foto, @data_admissao, 
         @hora_inicial, @hora_final,
         @segunda, @terca, @quarta, @quinta, @sexta, @sabado, @domingo,
         @deleted, @ordem, @id_centro_custo, @status, @senha, 
         @biometria2, @email, @face)`;
+
     const params = {
-        id_cliente: id_cliente,
-        id_setor: id_setor,
-        id_funcao: id_funcao,
-        nome: nome,
-        matricula: matricula,
-        biometria: biometria,
-        RG: RG,
-        CPF: CPF,
-        CTPS: CTPS,
-        id_planta: id_planta,
-        foto: nomeFuncionario,
-        data_admissao: data_admissao,
-        hora_inicial: hora_inicial,
-        hora_final: hora_final,
-        segunda: convertToBoolean(segunda),
-        terca: convertToBoolean(terca),
-        quarta: convertToBoolean(quarta),
-        quinta: convertToBoolean(quinta),
-        sexta: convertToBoolean(sexta),
-        sabado: convertToBoolean(sabado),
-        deleted: false,
-        ordem: '',
-        id_centro_custo: id_centro_custo,
-        status: status,
-        biometria2: biometria2,
-        email: email,
-        face: face
+        id_cliente, id_setor, id_funcao, nome, matricula, biometria,
+        RG, CPF, CTPS, id_planta, foto: nomeFuncionario, data_admissao,
+        hora_inicial, hora_final, segunda: convertToBoolean(segunda), terca: convertToBoolean(terca),
+        quarta: convertToBoolean(quarta), quinta: convertToBoolean(quinta),
+        sexta: convertToBoolean(sexta), sabado: convertToBoolean(sabado),
+        domingo: convertToBoolean(domingo), deleted: false, ordem, id_centro_custo,
+        status, senha, biometria2, email, face
     };
+
     try {
+        // Gerenciamento de arquivos
         const files = request.files;
         const uploadPath = path.join(__dirname, '../../uploads/funcionarios', id_cliente.toString());
         await fs.mkdir(uploadPath, { recursive: true });
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const fileExtension = path.extname(file.originalname);
-            nomeFuncionario = `${foto}${fileExtension}`;
+            nomeFuncionario = `${nome}${fileExtension}`;
             const filePath = path.join(uploadPath, nomeFuncionario);
             await fs.writeFile(filePath, file.buffer);
         }
-        request = new sql.Request();
-        request.input('id_cliente', sql.Int, id_cliente);
-        request.input('id_setor', sql.Int, id_setor);
-        request.input('id_funcao', sql.Int, id_funcao);
-        request.input('nome', sql.VarChar, nome);
-        request.input('matricula', sql.VarChar, matricula);
-        request.input('biometria', sql.NVarChar, biometria);
-        request.input('RG', sql.VarChar, RG);
-        request.input('CPF', sql.VarChar, CPF);
-        request.input('CTPS', sql.VarChar, CTPS);
-        request.input('id_planta', sql.Int, id_planta);
-        request.input('foto', sql.VarChar, nomeFuncionario);
-        request.input('data_admissao', sql.DateTime, data_admissao);
-        request.input('hora_inicial', sql.Time, hora_inicial);
-        request.input('hora_final', sql.Time, hora_final);
-        request.input('segunda', sql.Bit, convertToBoolean(segunda));
-        request.input('terca', sql.Bit, convertToBoolean(terca));
-        request.input('quarta', sql.Bit, convertToBoolean(quarta));
-        request.input('quinta', sql.Bit, convertToBoolean(quinta));
-        request.input('sexta', sql.Bit, convertToBoolean(sexta));
-        request.input('sabado', sql.Bit, convertToBoolean(sabado));
-        request.input('domingo', sql.Bit, convertToBoolean(domingo));
-        request.input('deleted', sql.Bit, false);
-        request.input('ordem', sql.Int, '');
-        request.input('id_centro_custo', sql.Int, id_centro_custo);
-        request.input('status', sql.NVarChar, status);
-        request.input('senha', sql.NVarChar, senha);
-        request.input('biometria2', sql.NVarChar, biometria2);
-        request.input('email', sql.VarChar, email);
-        request.input('face', sql.VarChar, face);
 
-        const result = await request.query(query);
+        // Inserção no banco de dados
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_cliente', sql.Int, id_cliente);
+        sqlRequest.input('id_setor', sql.Int, id_setor);
+        sqlRequest.input('id_funcao', sql.Int, id_funcao);
+        sqlRequest.input('nome', sql.VarChar, nome);
+        sqlRequest.input('matricula', sql.VarChar, matricula);
+        sqlRequest.input('biometria', sql.NVarChar, biometria);
+        sqlRequest.input('RG', sql.VarChar, RG);
+        sqlRequest.input('CPF', sql.VarChar, CPF);
+        sqlRequest.input('CTPS', sql.VarChar, CTPS);
+        sqlRequest.input('id_planta', sql.Int, id_planta);
+        sqlRequest.input('foto', sql.VarChar, nomeFuncionario);
+        sqlRequest.input('data_admissao', sql.DateTime, data_admissao);
+        sqlRequest.input('hora_inicial', sql.Time, hora_inicial);
+        sqlRequest.input('hora_final', sql.Time, hora_final);
+        sqlRequest.input('segunda', sql.Bit, convertToBoolean(segunda));
+        sqlRequest.input('terca', sql.Bit, convertToBoolean(terca));
+        sqlRequest.input('quarta', sql.Bit, convertToBoolean(quarta));
+        sqlRequest.input('quinta', sql.Bit, convertToBoolean(quinta));
+        sqlRequest.input('sexta', sql.Bit, convertToBoolean(sexta));
+        sqlRequest.input('sabado', sql.Bit, convertToBoolean(sabado));
+        sqlRequest.input('domingo', sql.Bit, convertToBoolean(domingo));
+        sqlRequest.input('deleted', sql.Bit, false);
+        sqlRequest.input('ordem', sql.Int, ordem);
+        sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
+        sqlRequest.input('status', sql.NVarChar, status);
+        sqlRequest.input('senha', sql.NVarChar, senha);
+        sqlRequest.input('biometria2', sql.NVarChar, biometria2);
+        sqlRequest.input('email', sql.VarChar, email);
+        sqlRequest.input('face', sql.VarChar, face);
+
+        const result = await sqlRequest.query(query);
         if (result.rowsAffected[0] > 0) {
             //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send('Funcionário criado com sucesso!');
-            return;
         } else {
             //logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).send('Falha ao criar o funcionario');
@@ -142,7 +141,6 @@ async function adicionarFuncionarios(request, response) {
        // logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao inserir funcionário:', error.message);
         response.status(500).send('Erro ao inserir funcionário');
-        return;
     }
 }
 async function foto(request, response) {
@@ -224,131 +222,106 @@ async function listarPlanta(request, response) {
 }
 
 async function deleteFuncionario(request, response) {
-    let query = "UPDATE funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario";
     const { id_usuario, id_cliente, id_funcionario } = request.body;
-    const params = {
-        id_funcionario: id_funcionario
-    };
+
+    if (!id_funcionario) {
+        return response.status(401).json("ID do funcionário não foi enviado");
+    }
+
+    const query = "UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario";
+    const params =  id_funcionario ;
+
     try {
-        if (id_funcionario) {
-            const sqlRequest = new sql.Request();
-            sqlRequest.input('id_funcionario', sql.Int, id_funcionario);
-            const result = await sqlRequest.query(query);
-            if (result.rowsAffected[0] > 0) {
-               // logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
-                response.status(200).json(result.recordset);
-                return
-            } else {
-               // logQuery('error', `Erro ao excluir: ${id_funcionario} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
-            }
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_funcionario', sql.Int, id_funcionario);
+        const result = await sqlRequest.query(query);
+
+        if (result.rowsAffected[0] > 0) {
+            return response.status(200).json({ message: "Funcionário deletado com sucesso!" });
+        } else {
+            return response.status(400).send('Nenhuma alteração foi feita no funcionário.');
         }
-        response.status(401).json("id do funcionario não foi enviado");
     } catch (error) {
-       //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
         console.error('Erro ao excluir:', error.message);
-        response.status(500).send('Erro ao excluir');
+        return response.status(500).send(`Erro ao excluir funcionário: ${error.message}`);
     }
 }
 
+
+
 async function atualizarFuncionario(request, response) {
     const query = `
-            UPDATE funcionarios
-            SET id_setor = @id_setor, id_funcao = @id_funcao,
-                nome = @nome, matricula = @matricula, biometria = @biometria,
-                RG = @RG, CPF = @CPF, CTPS = @CTPS, id_planta = @id_planta,
-                foto = @foto, data_admissao = @data_admissao, hora_inicial = @hora_inicial,
-                hora_final = @hora_final, segunda = @segunda, terca = @terca,
-                quarta = @quarta, quinta = @quinta, sexta = @sexta, sabado = @sabado,
-                domingo = @domingo, ordem = @ordem, id_centro_custo = @id_centro_custo,
-                status = @status, senha = @senha, biometria2 = @biometria2,
-                email = @email, face = @face
-            WHERE id_funcionario = @id_funcionario`;
+        UPDATE funcionarios
+        SET id_setor = @id_setor, id_funcao = @id_funcao,
+            nome = @nome, matricula = @matricula, biometria = @biometria,
+            RG = @RG, CPF = @CPF, CTPS = @CTPS, id_planta = @id_planta,
+            foto = @foto, data_admissao = @data_admissao, hora_inicial = @hora_inicial,
+            hora_final = @hora_final, segunda = @segunda, terca = @terca,
+            quarta = @quarta, quinta = @quinta, sexta = @sexta, sabado = @sabado,
+            domingo = @domingo, id_centro_custo = @id_centro_custo,
+            status = @status, senha = @senha, biometria2 = @biometria2,
+            email = @email, face = @face
+        WHERE id_funcionario = @id_funcionario`;
+
     const {
-        id_funcionario,
-        id_setor, id_funcao,
-        nome, matricula, biometria,
-        RG, CPF, CTPS, id_planta,
-        data_admissao, hora_inicial, hora_final,
-        segunda, terca, quarta, quinta, sexta,
-        sabado, domingo, ordem,
-        id_centro_custo, status, senha, biometria2,
-        email, face, foto, id_usuario
+        id_funcionario, id_setor, id_funcao, nome, matricula, biometria,
+        RG, CPF, CTPS, id_planta, data_admissao, hora_inicial, hora_final,
+        segunda, terca, quarta, quinta, sexta, sabado, domingo,
+        id_centro_custo, status, senha, biometria2, email, face, foto, id_usuario
     } = request.body;
     let nomeFuncionario = foto;
     const id_cliente = request.body.id_cliente;
     const files = request.files;
+
     const params = {
-        id_setor: id_setor,
-        id_funcao: id_funcao,
-        nome: nome,
-        matricula: matricula,
-        biometria: biometria,
-        RG: RG,
-        CPF: CPF,
-        CTPS: CTPS,
-        id_planta: id_planta,
-        foto: nomeFuncionario,
-        hora_inicial: hora_inicial,
-        data_admissao: data_admissao,
-        hora_final: hora_final,
-        segunda: segunda,
-        terca: terca,
-        quarta: quarta,
-        quinta: quinta,
-        sexta: sexta,
-        sabado: sabado,
-        domingo: domingo,
-        ordem: '',
-        id_centro_custo: id_centro_custo,
-        status: status,
-        senha: senha,
-        biometria2: biometria2,
-        email: email,
-        face: face,
-        id_funcionario: id_funcionario
+        id_funcionario, id_setor, id_funcao, nome, matricula, biometria,
+        RG, CPF, CTPS, id_planta, foto: nomeFuncionario, data_admissao, hora_inicial,
+        hora_final, segunda, terca, quarta, quinta, sexta, sabado, domingo,
+        id_centro_custo, status, senha, biometria2, email, face
     };
+
     try {
+        // Gerenciamento de arquivos (atualiza a foto se necessário)
         if (files && files.length > 0) {
             const file = files[0];
-            //const fileExtension = path.extname(file.originalname);
-            //nomeFuncionario = `${foto}${fileExtension}`;
             const uploadPath = path.join(process.cwd(), 'src', 'uploads', 'funcionarios', id_cliente.toString());
             await fs.mkdir(uploadPath, { recursive: true });
             const filePath = path.join(uploadPath, foto);
             await fs.writeFile(filePath, file.buffer);
         }
-        request = new sql.Request();
-        request.input('id_setor', sql.Int, id_setor);
-        request.input('id_funcao', sql.Int, id_funcao);
-        request.input('nome', sql.VarChar, nome);
-        request.input('matricula', sql.VarChar, matricula);
-        request.input('biometria', sql.NVarChar, biometria);
-        request.input('RG', sql.VarChar, RG);
-        request.input('CPF', sql.VarChar, CPF);
-        request.input('CTPS', sql.VarChar, CTPS);
-        request.input('id_planta', sql.Int, id_planta);
-        request.input('foto', sql.VarChar, foto);
-        request.input('data_admissao', sql.DateTime, data_admissao);
-        request.input('hora_inicial', sql.Time, hora_inicial);
-        request.input('hora_final', sql.Time, hora_final);
-        request.input('segunda', sql.Bit, segunda);
-        request.input('terca', sql.Bit, terca);
-        request.input('quarta', sql.Bit, quarta);
-        request.input('quinta', sql.Bit, quinta);
-        request.input('sexta', sql.Bit, sexta);
-        request.input('sabado', sql.Bit, sabado);
-        request.input('domingo', sql.Bit, domingo);
-        request.input('ordem', sql.Int, '');
-        request.input('id_centro_custo', sql.Int, id_centro_custo);
-        request.input('status', sql.NVarChar, status);
-        request.input('senha', sql.NVarChar, senha);
-        request.input('biometria2', sql.NVarChar, biometria2);
-        request.input('email', sql.VarChar, email);
-        request.input('face', sql.VarChar, face);
-        request.input('id_funcionario', sql.Int, id_funcionario);
 
-        const result = await request.query(query);
+        // Preparando a query para atualizar o funcionário
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_funcionario', sql.Int, id_funcionario);
+        sqlRequest.input('id_setor', sql.Int, id_setor);
+        sqlRequest.input('id_funcao', sql.Int, id_funcao);
+        sqlRequest.input('nome', sql.VarChar, nome);
+        sqlRequest.input('matricula', sql.VarChar, matricula);
+        sqlRequest.input('biometria', sql.NVarChar, biometria);
+        sqlRequest.input('RG', sql.VarChar, RG);
+        sqlRequest.input('CPF', sql.VarChar, CPF);
+        sqlRequest.input('CTPS', sql.VarChar, CTPS);
+        sqlRequest.input('id_planta', sql.Int, id_planta);
+        sqlRequest.input('foto', sql.VarChar, foto);
+        sqlRequest.input('data_admissao', sql.DateTime, data_admissao);
+        sqlRequest.input('hora_inicial', sql.Time, hora_inicial);
+        sqlRequest.input('hora_final', sql.Time, hora_final);
+        sqlRequest.input('segunda', sql.Bit, segunda);
+        sqlRequest.input('terca', sql.Bit, terca);
+        sqlRequest.input('quarta', sql.Bit, quarta);
+        sqlRequest.input('quinta', sql.Bit, quinta);
+        sqlRequest.input('sexta', sql.Bit, sexta);
+        sqlRequest.input('sabado', sql.Bit, sabado);
+        sqlRequest.input('domingo', sql.Bit, domingo);
+        sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
+        sqlRequest.input('status', sql.NVarChar, status);
+        sqlRequest.input('senha', sql.NVarChar, senha);
+        sqlRequest.input('biometria2', sql.NVarChar, biometria2);
+        sqlRequest.input('email', sql.VarChar, email);
+        sqlRequest.input('face', sql.VarChar, face);
+
+        const result = await sqlRequest.query(query);
+
         if (result.rowsAffected[0] > 0) {
           //  logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
             response.status(200).json(result.recordset);

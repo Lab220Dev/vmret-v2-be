@@ -69,7 +69,7 @@ app.use('/api/funcionarios', autenticarToken, funcionarioRoutes);
 app.use('/api/produtos', autenticarToken, produtoRoutes);
 
 // Rotas de recuperação de Imagem
-app.use('/api/image', autenticarToken,imageRoutes);
+app.use('/api/image',imageRoutes);
 
 // Rotas de Centro de Custo
 app.use('/api/cdc', autenticarToken, CentroCustoRoutes);

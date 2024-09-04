@@ -192,6 +192,7 @@ async function adicionar(request, response) {
     }
 }
 
+
 async function atualizar(request, response) {
     const { id_cliente, nome, cpfcnpj, ativo, usarapi, id_usuario } = request.body;
     const params = {
@@ -269,9 +270,12 @@ async function deletar(request, response) {
 
 
 async function salvarMenus(request, response) {
-    const { id_cliente, perfil, menus } = request.body;
+    const { id_cliente, perfil, menus, id_usuario } = request.body; // Certifique-se de que `id_usuario` é passado no body
     const referenciaCliente = 57;
     let transaction;
+    const query = "Operação de salvar menus"; // Descrição genérica, já que há múltiplas operações
+    const params = { id_cliente, perfil, menus };
+
     try {
         console.log("Perfil recebido:", perfil);
         const menuOrder = getMenuOrderByProfile(perfil); // Obter o menuOrder com base no perfil
@@ -280,9 +284,11 @@ async function salvarMenus(request, response) {
         transaction = new sql.Transaction();
         await transaction.begin();
         console.log("Transação iniciada");
+
         if (!menuOrder['Dashboard']) {
             throw new Error('Menu "Dashboard" não encontrado no menuOrder para o perfil especificado');
         }
+
         await inserirMenuPrincipal(transaction, id_cliente, perfil, 'Dashboard', menuOrder['Dashboard']);
 
         for (let menu of menus) {
@@ -309,7 +315,7 @@ async function salvarMenus(request, response) {
         console.log("Transação concluída com sucesso");
         response.status(200).send('Menus salvos com sucesso!');
     } catch (error) {
-        await transaction.rollback();
+        if (transaction) await transaction.rollback();
         console.error('Erro ao salvar menus:', error.message);
         response.status(500).send('Erro ao salvar menus');
     }

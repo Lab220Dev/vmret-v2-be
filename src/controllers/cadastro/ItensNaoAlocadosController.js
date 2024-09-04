@@ -1,5 +1,26 @@
 const sql = require("mssql");
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const { Console } = require("console");
+
+// Função para baixar e salvar uma imagem
+async function baixarImagem(url, localPath) {
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream',
+    });
+
+    return new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(localPath);
+
+        response.data.pipe(writer);
+
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
 
 async function recuperar(request, response) {
     const  id_cliente = request.body.id_cliente;
@@ -37,84 +58,38 @@ async function sincronizar(request, response) {
         transaction = new sql.Transaction();
         await transaction.begin();
 
-        // Recuperando ClienteID, UserID e Chave da tabela DM
-        const query = `SELECT ClienteID, UserID, Chave FROM DMs WHERE IDcliente = @id_cliente`;
-        let sqlRequest = new sql.Request(transaction);
-        sqlRequest.input('id_cliente', sql.Int, id_cliente);
-        const result = await sqlRequest.query(query);
+        // Recuperar informações do cliente
+        const clienteInfo = await recuperarClienteInfo(transaction, id_cliente);
 
-        if (result.recordset.length === 0) {
+        if (!clienteInfo) {
             await transaction.rollback();
             return response.status(404).json({ mensagem: "Nenhum dado encontrado para o cliente especificado" });
         }
 
-        const { ClienteID, UserID, Chave } = result.recordset[0];
+        const { ClienteID, UserID, Chave } = clienteInfo;
 
-        // Fazendo chamada para a API de Login
-        const loginResponse = await axios.post('https://api.mobsolucoesdigitais.com.br/api/Login', {
-            UserID: UserID,
-            AccessKey: Chave,
-            IdCliente: ClienteID,
-            tpReadFtp: 0
-        });
+        // Obter token de acesso da API externa
+        const accessToken = await obterAccessToken(ClienteID, UserID, Chave);
 
-        if (loginResponse.status !== 200) {
+        if (!accessToken) {
             await transaction.rollback();
-            return response.status(loginResponse.status).json({ mensagem: 'Erro ao fazer login na API externa' });
+            return response.status(500).json({ mensagem: 'Erro ao fazer login na API externa' });
         }
 
-        const { accessToken } = loginResponse.data;
-
-        // Fazendo chamada para obter os EPIs usando o access token no header
-        const episResponse = await axios.get('https://api.mobsolucoesdigitais.com.br/api/VendingMachine/obterEpis', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        });
-
-        const produtosExternos = episResponse.data;
+        // Obter produtos externos
+        const produtosExternos = await obterProdutosExternos(accessToken);
 
         if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
             await transaction.rollback();
             return response.status(404).json("Nenhum produto registrado");
         }
 
-        // Inserindo os produtos na tabela Produtos
-        for (let produto of produtosExternos) {
-            // Extraindo apenas a parte necessária da URL
-            const baseUrl = "https://mobsolucoesdigitais.blob.core.windows.net/mobcontrole/";
-            const imagem1 = produto.foto ? produto.foto.replace(baseUrl, "") : '';
-
-            const produtoRequest = new sql.Request(transaction); // Nova instância para cada inserção
-            produtoRequest.input('id_cliente', sql.Int, id_cliente)
-                .input('codigo', sql.Int, produto.codigo)
-                .input('id_categoria', sql.Int, 1)
-                .input('nome', sql.VarChar, produto.nome)
-                .input('descricao', sql.VarChar, produto.descricao || '')
-                .input('ca', sql.VarChar, produto.ca || '')
-                .input('validadeDias', sql.Int, produto.diasUsoMinimo || 0)
-                .input('imagem1', sql.VarChar, imagem1)
-                .input('quantidadeMinima', sql.Int, produto.estoqueMinimo || 0)                
-                .input('id_planta', sql.Int, produto.codigoPlantaEpi || null)
-                .input('unidade_medida', sql.VarChar, produto.unidademedida || '')
-                .input('deleted', sql.Bit, 0);
-
-            await produtoRequest.query(`
-                INSERT INTO Produtos (
-                    id_cliente, codigo, nome, descricao, ca, validadeDias, imagem1, 
-                    quantidadeMinima,id_categoria,  id_planta, unidade_medida, deleted
-                ) 
-                VALUES (
-                    @id_cliente, @codigo, @nome, @descricao, @ca, @validadeDias, @imagem1, 
-                    @quantidadeMinima,@id_categoria, @id_planta, @unidade_medida, @deleted
-                )
-            `);
-        }
-
+        // Inserir ou atualizar produtos no banco de dados
+        const produtosComStatus = await inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente);
         await transaction.commit();
 
         // Retornando os produtos inseridos
-        response.status(200).json(produtosExternos);
+        response.status(200).json(produtosComStatus);
 
     } catch (error) {
         console.error('Erro ao sincronizar:', error.message);
@@ -122,6 +97,206 @@ async function sincronizar(request, response) {
         response.status(500).json({ mensagem: 'Erro ao sincronizar', detalhes: error.message });
     }
 }
+
+// Função para recuperar informações do cliente
+async function recuperarClienteInfo(transaction, id_cliente) {
+    const query = `SELECT ClienteID, UserID, Chave FROM DMs WHERE IDcliente = @id_cliente`;
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    const result = await sqlRequest.query(query);
+
+    return result.recordset.length > 0 ? result.recordset[0] : null;
+}
+
+// Função para obter o token de acesso da API externa
+async function obterAccessToken(ClienteID, UserID, Chave) {
+    try {
+        const response = await axios.post('https://api.mobsolucoesdigitais.com.br/api/Login', {
+            UserID: UserID,
+            AccessKey: Chave,
+            IdCliente: ClienteID,
+            tpReadFtp: 0
+        });
+
+        return response.status === 200 ? response.data.accessToken : null;
+    } catch (error) {
+        console.error('Erro ao obter token de acesso:', error.message);
+        return null;
+    }
+}
+
+// Função para obter produtos externos da API
+async function obterProdutosExternos(accessToken) {
+    try {
+        const response = await axios.get('https://api.mobsolucoesdigitais.com.br/api/VendingMachine/obterEpis', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao obter produtos externos:', error.message);
+        return null;
+    }
+}
+
+// Função para determinar o tipo e ajustar o nome da imagem
+function determinarTipoENomeImagem(imagemNome) {
+    const prefixo = "Princ_";
+    const extensao = path.extname(imagemNome); // Obtém a extensão do arquivo (.jpg, .png, etc.)
+    const novoNome = `${prefixo}${path.basename(imagemNome, extensao)}${extensao}`; // Concatena o prefixo com o nome base e a extensão
+    return novoNome;
+}
+
+// Função para inserir ou atualizar produtos no banco de dados
+async function inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente) {
+    const baseUrl = "https://mobsolucoesdigitais.blob.core.windows.net/mobcontrole/";
+    const uploadPathPrincipal = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'principal');
+    const produtosComStatus = [];
+
+    // Cria o diretório se não existir
+    if (!fs.existsSync(uploadPathPrincipal)) {
+        fs.mkdirSync(uploadPathPrincipal, { recursive: true });
+    }
+
+    for (let produto of produtosExternos) {
+        const imagemNova = produto.foto ? produto.foto.replace(baseUrl, "") : '';
+
+        // Verifica se o produto já existe no banco de dados
+        const checkProductRequest = new sql.Request(transaction);
+        checkProductRequest.input('id_cliente', sql.Int, id_cliente);
+        checkProductRequest.input('codigo', sql.Int, produto.codigo);
+
+        const existingProduct = await checkProductRequest.query(`
+            SELECT codigo, imagem1 FROM Produtos WHERE id_cliente = @id_cliente AND codigo = @codigo
+        `);
+
+        let status;
+
+        if (existingProduct.recordset.length > 0) {
+            const imagemAtual = existingProduct.recordset[0].imagem1;
+
+            // Verifica se a imagem nova é diferente da imagem atual
+            if (imagemNova !== imagemAtual) {
+                const caminhoImagemLocal = path.join(uploadPathPrincipal, path.basename(imagemNova));
+
+                // Baixa a imagem se for diferente
+                if (produto.foto) {
+                    try {
+                        await baixarImagem(produto.foto, caminhoImagemLocal);
+                        console.log(`Imagem atualizada e salva em: ${caminhoImagemLocal}`);
+                    } catch (error) {
+                        console.error(`Erro ao baixar a imagem: ${error.message}`);
+                    }
+                }
+
+                const produtoRequest = new sql.Request(transaction);
+                produtoRequest.input('id_cliente', sql.Int, id_cliente)
+                    .input('codigo', sql.Int, produto.codigo)
+                    .input('id_categoria', sql.Int, 1)
+                    .input('nome', sql.VarChar, produto.nome)
+                    .input('descricao', sql.VarChar, produto.descricao || '')
+                    .input('ca', sql.VarChar, produto.ca || '')
+                    .input('validadeDias', sql.Int, produto.diasUsoMinimo || 0)
+                    .input('imagem1', sql.VarChar, path.basename(imagemNova)) // Atualiza para a nova imagem
+                    .input('quantidadeMinima', sql.Int, produto.estoqueMinimo || 0)
+                    .input('id_planta', sql.Int, produto.codigoPlantaEpi || null)
+                    .input('unidade_medida', sql.VarChar, produto.unidademedida || '')
+                    .input('deleted', sql.Bit, 0);
+
+                await produtoRequest.query(`
+                    UPDATE Produtos
+                    SET nome = @nome,
+                        descricao = @descricao,
+                        ca = @ca,
+                        validadeDias = @validadeDias,
+                        imagem1 = @imagem1,
+                        quantidadeMinima = @quantidadeMinima,
+                        id_categoria = @id_categoria,
+                        id_planta = @id_planta,
+                        unidade_medida = @unidade_medida,
+                        deleted = @deleted
+                    WHERE id_cliente = @id_cliente AND codigo = @codigo
+                `);
+                status = 'atualizado';
+            } else {
+                // Se a imagem é a mesma, apenas atualiza outros campos
+                const produtoRequest = new sql.Request(transaction);
+                produtoRequest.input('id_cliente', sql.Int, id_cliente)
+                    .input('codigo', sql.Int, produto.codigo)
+                    .input('id_categoria', sql.Int, 1)
+                    .input('nome', sql.VarChar, produto.nome)
+                    .input('descricao', sql.VarChar, produto.descricao || '')
+                    .input('ca', sql.VarChar, produto.ca || '')
+                    .input('validadeDias', sql.Int, produto.diasUsoMinimo || 0)
+                    .input('quantidadeMinima', sql.Int, produto.estoqueMinimo || 0)
+                    .input('id_planta', sql.Int, produto.codigoPlantaEpi || null)
+                    .input('unidade_medida', sql.VarChar, produto.unidademedida || '')
+                    .input('deleted', sql.Bit, 0);
+
+                await produtoRequest.query(`
+                    UPDATE Produtos
+                    SET nome = @nome,
+                        descricao = @descricao,
+                        ca = @ca,
+                        validadeDias = @validadeDias,
+                        quantidadeMinima = @quantidadeMinima,
+                        id_categoria = @id_categoria,
+                        id_planta = @id_planta,
+                        unidade_medida = @unidade_medida,
+                        deleted = @deleted
+                    WHERE id_cliente = @id_cliente AND codigo = @codigo
+                `);
+                status = 'atualizado';
+            }
+        } else {
+            // Inserção de novo produto
+            const caminhoImagemLocal = path.join(uploadPathPrincipal, path.basename(imagemNova));
+
+            if (produto.foto) {
+                try {
+                    await baixarImagem(produto.foto, caminhoImagemLocal);
+                    console.log(`Imagem baixada e salva em: ${caminhoImagemLocal}`);
+                } catch (error) {
+                    console.error(`Erro ao baixar a imagem: ${error.message}`);
+                }
+            }
+
+            const produtoRequest = new sql.Request(transaction);
+            produtoRequest.input('id_cliente', sql.Int, id_cliente)
+                .input('codigo', sql.Int, produto.codigo)
+                .input('id_categoria', sql.Int, 1)
+                .input('nome', sql.VarChar, produto.nome)
+                .input('descricao', sql.VarChar, produto.descricao || '')
+                .input('ca', sql.VarChar, produto.ca || '')
+                .input('validadeDias', sql.Int, produto.diasUsoMinimo || 0)
+                .input('imagem1', sql.VarChar, path.basename(imagemNova))
+                .input('quantidadeMinima', sql.Int, produto.estoqueMinimo || 0)
+                .input('id_planta', sql.Int, produto.codigoPlantaEpi || null)
+                .input('unidade_medida', sql.VarChar, produto.unidademedida || '')
+                .input('deleted', sql.Bit, 0);
+
+            await produtoRequest.query(`
+                INSERT INTO Produtos (
+                    id_cliente, codigo, nome, descricao, ca, validadeDias, imagem1, 
+                    quantidadeMinima, id_categoria, id_planta, unidade_medida, deleted
+                ) 
+                VALUES (
+                    @id_cliente, @codigo, @nome, @descricao, @ca, @validadeDias, @imagem1, 
+                    @quantidadeMinima, @id_categoria, @id_planta, @unidade_medida, @deleted
+                )
+            `);
+            status = 'adicionado';
+        }
+
+        // Adiciona o produto e seu status à lista
+        produtosComStatus.push({ produto, status });
+    }
+
+    return produtosComStatus;
+}
+
 
 module.exports = {
     recuperar, sincronizar

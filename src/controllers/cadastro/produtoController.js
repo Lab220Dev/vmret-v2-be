@@ -200,26 +200,30 @@ async function deleteProduto(request, response) {
     const params = {
         id_produto: id_produto
     };
+    
     try {
         if (id_produto) {
             const sqlRequest = new sql.Request();
             sqlRequest.input('id_produto', sql.Int, id_produto);
             const result = await sqlRequest.query(query);
+
             if (result.rowsAffected[0] > 0) {
                 //logWithOperation('info', `Produto ${id_produto} Deletado com sucesso`, `sucesso`, 'Delete Produto', id_cliente, id_usuario);
-                response.status(200).json(result.recordset);
+                return response.status(200).json(result.recordset);
             } else {
-               // logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+                // logQuery('error', `Erro ao excluir: ${id_produto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+                return response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
             }
+        } else {
+            return response.status(401).json("ID do produto não foi enviado");
         }
-        response.status(401).json("ID do produto não foi enviado");
     } catch (error) {
         console.error('Erro ao excluir:', error.message);
-       // logQuery('error', err.message, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-        response.status(500).send('Erro ao excluir');
+        // logQuery('error', err.message, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+        return response.status(500).send('Erro ao excluir');
     }
 }
+
 async function atualizarProduto(request, response) {
     const { id_usuario, id_produto, id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe } = request.body;
     const query = `
