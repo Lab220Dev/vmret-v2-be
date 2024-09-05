@@ -6,7 +6,7 @@ async function listarDM(request, response) {
             return response.status(401).json("ID do cliente não enviado");
         }
 
-        let query = 'SELECT ID_DM, Numero FROM DMs WHERE deleted = 0 AND IDcliente = @IDcliente';
+        let query = 'SELECT ID_DM, Numero FROM DMs WHERE deleted = 0 AND ID_cliente = @IDcliente';
         const dbRequest = new sql.Request();
         dbRequest.input('IDcliente', sql.Int, request.body.id_cliente);
         

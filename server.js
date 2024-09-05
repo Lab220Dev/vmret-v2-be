@@ -19,7 +19,7 @@ const TermoRoutes = require('./src/routes/cadastros/TermoRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const ImportRoute = require('./src/routes/cadastros/ImportRoute');
 // const ConsultaStatusRoutes = require('./src/routes/cadastros/ConsultaStatusRoutes');
-// const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
+const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
 const LogRoutes = require('./src/routes/relatorios/LogRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
@@ -110,8 +110,8 @@ app.use('/api/fichasretiradas',autenticarToken,autorizarRoles(['Master', 'Operad
 //Rotas de Relatório para Fichas Retiradas
 app.use('/api/naoalocados',autenticarToken,autorizarRoles(['Master', 'Operador']), ItensNaoAlocadosRoutes);
 
-// //Rotas de Relatório para Fichas Retiradas
-// app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
+// //Rotas de Relatório para Fichas Avulsas
+app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
 
 // app.use('/api/consultastatus',autenticarToken, ConsultaStatusRoutes);
 
