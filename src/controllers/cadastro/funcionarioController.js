@@ -12,31 +12,42 @@ const convertToBoolean = (value) => {
 };
 async function listarFuncionarios(request, response) {
     try {
-        // Verifica se o id_cliente foi enviado
         if (!request.body.id_cliente) {
             return response.status(401).json({ error: "ID do cliente não enviado" });
         }
 
         const id_cliente = request.body.id_cliente;
 
-        // Consulta SQL para listar os funcionários
-        const query = `
-            SELECT id_funcionario, nome, id_setor, id_cliente 
+        const queryFuncionarios  = `
+            SELECT *
             FROM funcionarios 
             WHERE id_cliente = @id_cliente 
             AND deleted = 0
         `;
 
-        // Cria a requisição SQL com o parâmetro de id_cliente
         const sqlRequest = new sql.Request();
         sqlRequest.input('id_cliente', sql.Int, id_cliente);
 
-        // Executa a query para listar os funcionários
-        const funcionariosResult = await sqlRequest.query(query);
+        const funcionariosResult = await sqlRequest.query(queryFuncionarios);
         const funcionarios = funcionariosResult.recordset;
 
+        if (!funcionarios.length) {
+            return response.status(200).json([]);
+        }
+        const queryItensFuncionario = `
+        SELECT *
+        FROM Ret_Item_Funcionario 
+        WHERE id_funcionario = @id_funcionario 
+        AND deleted = 0
+    `;
+    for (let funcionario of funcionarios) {
+        const sqlRequestItens = new sql.Request();
+        sqlRequestItens.input('id_funcionario', sql.Int, funcionario.id_funcionario);
 
-
+        const itensResult = await sqlRequestItens.query(queryItensFuncionario);
+        const itens = itensResult.recordset;
+        funcionario.itens = itens;
+    }
         response.status(200).json(funcionarios);
 
     } catch (error) {
@@ -269,6 +280,15 @@ async function atualizarFuncionario(request, response) {
         segunda, terca, quarta, quinta, sexta, sabado, domingo,
         id_centro_custo, status, senha, biometria2, email, face, foto, id_usuario
     } = request.body;
+    let itens = request.body.itens;
+    if (typeof itens === 'string') {
+        try {
+            itens = JSON.parse(itens);
+        } catch (error) {
+            console.error('Erro ao fazer parse de itens:', error);
+            return response.status(400).json({ error: 'Formato inválido de itens' });
+        }
+    }
     let nomeFuncionario = foto;
     const id_cliente = request.body.id_cliente;
     const files = request.files;
@@ -281,7 +301,7 @@ async function atualizarFuncionario(request, response) {
     };
 
     try {
-        // Gerenciamento de arquivos (atualiza a foto se necessário)
+        // Atualização de arquivos, se necessário
         if (files && files.length > 0) {
             const file = files[0];
             const uploadPath = path.join(process.cwd(), 'src', 'uploads', 'funcionarios', id_cliente.toString());
@@ -290,7 +310,7 @@ async function atualizarFuncionario(request, response) {
             await fs.writeFile(filePath, file.buffer);
         }
 
-        // Preparando a query para atualizar o funcionário
+        // Atualização do funcionário
         const sqlRequest = new sql.Request();
         sqlRequest.input('id_funcionario', sql.Int, id_funcionario);
         sqlRequest.input('id_setor', sql.Int, id_setor);
@@ -306,13 +326,13 @@ async function atualizarFuncionario(request, response) {
         sqlRequest.input('data_admissao', sql.DateTime, data_admissao);
         sqlRequest.input('hora_inicial', sql.Time, hora_inicial);
         sqlRequest.input('hora_final', sql.Time, hora_final);
-        sqlRequest.input('segunda', sql.Bit, segunda);
-        sqlRequest.input('terca', sql.Bit, terca);
-        sqlRequest.input('quarta', sql.Bit, quarta);
-        sqlRequest.input('quinta', sql.Bit, quinta);
-        sqlRequest.input('sexta', sql.Bit, sexta);
-        sqlRequest.input('sabado', sql.Bit, sabado);
-        sqlRequest.input('domingo', sql.Bit, domingo);
+        sqlRequest.input('segunda', sql.Bit, convertToBoolean(segunda));
+        sqlRequest.input('terca', sql.Bit, convertToBoolean(terca));
+        sqlRequest.input('quarta', sql.Bit, convertToBoolean(quarta));
+        sqlRequest.input('quinta', sql.Bit, convertToBoolean(quinta));
+        sqlRequest.input('sexta', sql.Bit, convertToBoolean(sexta));
+        sqlRequest.input('sabado', sql.Bit, convertToBoolean(sabado));
+        sqlRequest.input('domingo', sql.Bit, convertToBoolean(domingo));
         sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
         sqlRequest.input('status', sql.NVarChar, status);
         sqlRequest.input('senha', sql.NVarChar, senha);
@@ -322,20 +342,66 @@ async function atualizarFuncionario(request, response) {
 
         const result = await sqlRequest.query(query);
 
+        // Verifica se a atualização do funcionário foi bem-sucedida
         if (result.rowsAffected[0] > 0) {
-          //  logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
-            response.status(200).json(result.recordset);
-            return;
+            let itensAlterados = false; // Verifica se algum item foi alterado
+            if (itens && itens.length > 0) {
+                for (const item of itens) {
+                    console.log("Processando item:", item);
+                    if (item.action === 'new') {
+                        const insertQuery = `
+                            INSERT INTO Ret_Item_Funcionario (id_funcionario, id_produto, nome_produto, sku, quantidade)
+                            VALUES (@id_funcionario, @id_produto, @nome_produto, @sku, @quantidade)
+                        `;
+                        console.log("Inserindo item:", item);
+                        const insertRequest = new sql.Request();
+                        insertRequest.input('id_funcionario', sql.Int, id_funcionario);
+                        insertRequest.input('id_produto', sql.Int, item.id_produto);
+                        insertRequest.input('nome_produto', sql.VarChar, item.nome_produto);
+                        insertRequest.input('sku', sql.VarChar, item.sku);
+                        insertRequest.input('quantidade', sql.Int, item.quantidade);
+                        await insertRequest.query(insertQuery);
+                        itensAlterados = true;
+                    } else if (item.action === 'update') {
+                        const updateQuery = `
+                            UPDATE Ret_Item_Funcionario
+                            SET quantidade = @quantidade
+                            WHERE id_item_funcionario = @id_item_funcionario
+                        `;
+                        const updateRequest = new sql.Request();
+                        updateRequest.input('id_item_funcionario', sql.Int, item.id_item_funcionario);  // Usa o id_item_funcionario
+                        updateRequest.input('quantidade', sql.Int, item.quantidade);
+                        await updateRequest.query(updateQuery);
+                        itensAlterados = true;
+                    } else if (item.action === 'delete') {
+                        const deleteQuery = `
+                            UPDATE Ret_Item_Funcionario
+                            SET deleted = 1
+                            WHERE id_item_funcionario = @id_item_funcionario
+                        `;
+                        const deleteRequest = new sql.Request();
+                        deleteRequest.input('id_item_funcionario', sql.Int, item.id_item_funcionario);  // Usa o id_item_funcionario
+                        await deleteRequest.query(deleteQuery);
+                        itensAlterados = true;
+                    }
+                }
+            }
+
+            // Retorna a resposta dependendo se os itens foram alterados ou não
+            if (itensAlterados) {
+                response.status(200).json({ message: 'Funcionário e itens atualizados com sucesso!' });
+            } else {
+                response.status(200).json({ message: 'Funcionário atualizado, sem alterações nos itens.' });
+            }
         } else {
-            //logQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-            response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+            response.status(400).send('Nenhuma alteração foi feita no funcionário.');
         }
     } catch (error) {
-        //logWithOperation('error', `O usuario ${id_usuario} Falhou ao atuaizar o cadastro do Funcionario ${id_funcionario}: ${err.message}`, 'Falha', 'Atualização Funcionario', id_cliente, id_usuario);
         console.error('Erro ao atualizar funcionário:', error.message);
         response.status(500).send('Erro ao atualizar funcionário');
     }
 }
+
 async function listarOperadores(request, response) {
     const { id_cliente } = request.body;
     try {

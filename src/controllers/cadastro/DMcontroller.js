@@ -321,7 +321,7 @@ async function atualizar(request, response) {
               ClienteNome = @ClienteNome,
               Chave = @Chave,
               Devolucao = @Devolucao
-          WHERE ID_DM = @ID_DM AND IDcliente = @IDcliente`;
+          WHERE ID_DM = @ID_DM AND ID_Cliente = @IDcliente`;
 
       const requestDM = new sql.Request(transaction);
       requestDM.input('ID_DM', sql.Int, ID_DM);

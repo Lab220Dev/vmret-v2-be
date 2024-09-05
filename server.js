@@ -23,6 +23,7 @@ const ImportRoute = require('./src/routes/cadastros/ImportRoute');
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
 const LogRoutes = require('./src/routes/relatorios/LogRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
+const DevolucaoRoutes = require('./src/routes/relatorios/DevolucaoRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
@@ -97,6 +98,9 @@ app.use('/api/Log', autenticarToken,autorizarRoles(['Master', 'Operador']), LogR
 
 //Rotas de Relatorio Retirada
 app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master', 'Operador']), retiradaRealizadaRoute);
+
+//Rotas de Relatorio Retirada
+app.use('/api/devolucoes',autenticarToken,autorizarRoles(['Master', 'Operador']), DevolucaoRoutes);
 
 //Rotas de Relatorio Items mais Retirados Itens
 app.use('/api/relatorioItems',autenticarToken,autorizarRoles(['Master', 'Operador']), itemsMaisRetiradosRoutes);

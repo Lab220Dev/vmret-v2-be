@@ -123,7 +123,7 @@ async function listarDM(request, response) {
       return;
     }
     const query =
-      "SELECT *  FROM DMS WHERE IDcliente = @id_cliente AND Deleted = 0";
+      "SELECT *  FROM DMS WHERE ID_Cliente = @id_cliente AND Deleted = 0";
 
     request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
