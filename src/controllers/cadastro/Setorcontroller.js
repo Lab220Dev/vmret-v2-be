@@ -42,6 +42,7 @@ async function listarItensSetor(request, response) {
   }
 }
 
+
 async function listarItensDisponiveisSetor(request, response) {
   try {
     const id_cliente = request.body.id_cliente;
@@ -67,7 +68,9 @@ async function listarItensDisponiveisSetor(request, response) {
 }
 
 async function adicionarItem(request, response) {
-  try {
+    
+  try { 
+    //mudar eu vou receber uma lista de itens com um id_funcionario //mudar eu vou receber uma lista de itens com um id_funcionario
     const { id_produto, deleted, id_centro_custo, id_cliente, id_setor, id_usuario, ordem, quantidade } = request.body;
 
     if (id_cliente && id_produto) {
@@ -167,6 +170,7 @@ async function adicionar(request, response) {
   }
 }
 async function atualizar(request, response) {
+
   const { id_cliente, id_centro_custo, nome, id_setor, codigo, id_usuario } = request.body;
   const query = `UPDATE Setores
   SET 

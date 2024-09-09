@@ -4,7 +4,7 @@ const { logQuery } = require('../../utils/logUtils');
 
 async function listar(request, response) {
     try {
-        let query = 'SELECT * FROM Usuarios_VM WHERE deleted = 0';
+        let query = 'SELECT * FROM Usuarios_DM WHERE deleted = 0';
         if (request.body.id_cliente) {
             query += ` AND id_cliente = '${request.body.id_cliente}'`;
             request = new sql.Request();
@@ -38,7 +38,7 @@ async function listar(request, response) {
 async function adicionar(request, response) {
     const { nome, login, senha, ativo, admin, admin_cliente, id_usuario } = request.body;
     const id_cliente = request.body.id_cliente;
-    const query = `INSERT INTO Usuarios_VM (id_cliente, nome, login,
+    const query = `INSERT INTO Usuarios_DM (id_cliente, nome, login,
          senha, ativo, admin, admin_cliente,deleted )
          VALUES (@id_cliente, @nome, @login, @senha, @ativo,
           @admin, @admin_cliente,@deleted)`;
@@ -78,7 +78,7 @@ async function adicionar(request, response) {
 }
 async function atualizar(request, response) {
     const { id_cliente, id, nome, login, senha, ativo, admin, admin_cliente } = request.body;
-    const query = `UPDATE Usuarios_VM 
+    const query = `UPDATE Usuarios_DM 
     SET id_cliente = @id_cliente,
     login = @login,
     senha = @senha,
@@ -121,7 +121,7 @@ async function atualizar(request, response) {
 }
 async function deletar(request, response) {
     const { id, id_cliente, id_usuario } = request.body;
-    const query = "UPDATE Usuarios_VM SET deleted = 1 WHERE id = @id";
+    const query = "UPDATE Usuarios_DM SET deleted = 1 WHERE id = @id";
     const params = {
         id: id
       }; 

@@ -15,18 +15,9 @@ async function relatorio(request, response) {
             ID_Cliente = @id_cliente
     `;
         let params = { id_cliente };
-        if (id_dm) {
-            query += " AND ID_DM = @id_dm";
-            params.id_dm = id_dm;
-          }
           if (id_usuario) {
             query += " AND ID_Usuario = @id_usuario";
             params.id_usuario = id_usuario;
-          }
-      
-          if (id_funcionario) {
-            query += " AND ID_Funcionario = @id_funcionario";
-            params.id_funcionario = id_funcionario;
           }
           if (operacao) {
             query += " AND Operacao = @operacao";
@@ -50,8 +41,6 @@ async function relatorio(request, response) {
           }
         const dbRequest = new sql.Request();
         dbRequest.input("id_cliente", sql.Int, params.id_cliente);
-        if (params.id_dm) dbRequest.input("id_dm", sql.Int, id_dm);
-        if (params.id_funcionario) dbRequest.input("id_funcionario", sql.Int, params.id_funcionario);
          if (params.id_usuario)  dbRequest.input("id_usuario", sql.Int, params.id_usuario);
          if (params.operacao) dbRequest.input("operacao", sql.VarChar, params.operacao);   
         if (params.data_inicio) dbRequest.input("data_inicio", sql.DateTime, params.data_inicio);

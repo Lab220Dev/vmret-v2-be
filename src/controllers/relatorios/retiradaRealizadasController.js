@@ -44,7 +44,7 @@ async function relatorio(request, response) {
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
             WHERE
-                r.ID_Cliente = @id_cliente
+                r.ID_Cliente = @id_cliente AND r.Sincronizado = 1
         `;
 
         let params = { id_cliente };
@@ -81,10 +81,10 @@ async function relatorio(request, response) {
 
         request = new sql.Request();
         request.input('id_cliente', sql.Int, params.id_cliente);
-        if (params.id_dm) request.input('id_dm', sql.VarChar, id_dm.toString());
-        if (params.id_setor) request.input('id_setor', sql.VarChar, params.id_setor);
-        if (params.id_planta) request.input('id_planta', sql.VarChar, params.id_planta);
-        if (params.id_funcionario) request.input('id_funcionario', sql.VarChar, params.id_funcionario);
+        if (params.id_dm) request.input('id_dm', sql.Int, id_dm.toString());
+        if (params.id_setor) request.input('id_setor', sql.Int, params.id_setor);
+        if (params.id_planta) request.input('id_planta', sql.Int, params.id_planta);
+        if (params.id_funcionario) request.input('id_funcionario', sql.Int, params.id_funcionario);
         if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicio);
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
         const result = await request.query(query);
@@ -121,7 +121,7 @@ async function listarDM(request, response) {
         return;
       }
       const query =
-        "SELECT  *  FROM DMS WHERE IDcliente = @id_cliente AND Deleted = 0";
+        "SELECT  *  FROM DMS WHERE ID_Cliente = @id_cliente AND Deleted = 0";
   
       request = new sql.Request();
       request.input("id_cliente", sql.Int, id_cliente);

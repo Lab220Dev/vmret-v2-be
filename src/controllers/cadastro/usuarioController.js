@@ -3,6 +3,11 @@ const CryptoJS = require('crypto-js');
 const { logQuery } = require('../../utils/logUtils');
 
 async function adicionar(request, response) {
+    const sqlRequest = new sql.Request();
+    // Recupera o maior valor de id_cliente na tabela
+    const resultId = await sqlRequest.query(`SELECT ISNULL(MAX(id_usuario), 0) AS lastId FROM usuarios`);
+    const lastId = resultId.recordset[0].lastId;
+    const newIdCliente = lastId + 1;
     const { nome, email, senha, ativo, id_planta, id_cliente, role, id_usuario } = request.body;
     const query = `INSERT INTO usuarios (nome, email, senha, ativo, deleted, id_planta, id_cliente, role)
     Values (@nome, @email, @senha, @ativo, @deleted, @id_planta, @id_cliente, @role)`
@@ -19,7 +24,6 @@ async function adicionar(request, response) {
     };
     try {
         request = new sql.Request();
-
         request.input('nome', sql.VarChar, nome);
         request.input('email', sql.VarChar, email);
         request.input('senha', sql.VarChar, hashMD5);
@@ -30,19 +34,16 @@ async function adicionar(request, response) {
         request.input('role', sql.NVarChar, role);
         const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
-            //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+            logQuery('info', `Usuário ${id_usuario} criou um novo usuario web ${newIdCliente}`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send("Usuário criado com sucesso!");
             return
         } else {
-            //logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+            logQuery('error', `Usuário ${id_usuario} não criou um novo usuario web`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(400).send('Falha ao criar o Centro de Custo');
         }
         response.status(400).send("Falha ao criar o usuário!");
     } catch (error) {
-        const errorMessage = error.message.includes('Query não fornecida para logging')
-            ? 'Erro crítico: Falha na operação'
-            : `Erro ao adicionar Centro de Custo: ${error.message}`;
-        //logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+        logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao inserir o usuário:', error.message);
         response.status(500).send('Erro ao inserir o usuário');
     }
@@ -110,12 +111,13 @@ async function deleteUsuario(request, response) {
             sqlRequest.input('id_usuario', sql.Int, id_usuario_delete);
             const result = await sqlRequest.query(query);
             if (result.rowsAffected[0] > 0) {
+                logQuery('info', `Usuário ${id_usuario} deletou o o usuario${id_usuario_delete}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
                 response.status(200).json(result.recordset);
                 return
             } else {
                 //throw new Error(`Erro ao excluir: ${ID_CentroCusto} não encontrado.`);
-                //ogQuery('error', `Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-                response.status(400).send('Nenhuma alteração foi feita no centro de custo.');
+                logQuery('erro', `Usuário ${id_usuario} deletou o o usuario${id_usuario_delete}`, 'falha', 'DELETE', id_cliente, id_usuario, query, params);
+                response.status(400).send('Não foi possivel deletar o usuario');
             }
         }
         response.status(401).json("id do usuario não foi enviado");
@@ -126,65 +128,73 @@ async function deleteUsuario(request, response) {
 }
 
 async function atualizarUsuario(request, response) {
-    const { id_usuario, nome, email, senha, ativo, id_planta, id_cliente, role } = request.body;
-    
+    const {id_usuario_pedinte, ativo,celular,deleted,email,id_cliente,id_planta,id_usuario,last_login,nome,role,telefone,senha} = request.body;
+
+    let query = `
+        UPDATE usuarios
+        SET 
+            nome = @nome,
+            celular = @celular,
+            deleted = @deleted,
+            last_login = @last_login,
+            telefone = @telefone,
+            ativo = @ativo,
+            id_planta = @id_planta,
+            role = @role`;
+
+    const params = {
+        nome: nome,
+        email: email,
+        celular:celular,
+        deleted:deleted,
+        id_cliente:id_cliente,
+        last_login:last_login,
+        telefone:telefone,
+        ativo: ativo,
+        id_planta: id_planta,
+        role: role
+    };
+
+    if (senha) {
+        const hashMD5 = CryptoJS.MD5(senha).toString();
+        query += `, senha = @senha`; 
+        params.senha = hashMD5;
+    }
+
+    query += ` WHERE id_usuario = @id_usuario and id_cliente=@id_cliente`;
+    params.id_usuario = id_usuario;
+    params.id_cliente = id_cliente;
+
     try {
+        const sqlRequest = new sql.Request();
 
-        // Construindo a query dinamicamente
-        let query = `UPDATE usuarios SET `;
-        let params = [];
+        sqlRequest.input('id_usuario', sql.Int, params.id_usuario);
+        sqlRequest.input('nome', sql.VarChar, params.nome);
+        sqlRequest.input('email', sql.VarChar, params.email);
+        sqlRequest.input('celular', sql.VarChar, params.celular);
+        sqlRequest.input('deleted', sql.Int, params.deleted);
+        sqlRequest.input('id_cliente', sql.Int, params.id_cliente);
+        sqlRequest.input('last_login', sql.DateTime, params.last_login);
+        sqlRequest.input('telefone', sql.Int, params.telefone);
+        sqlRequest.input('ativo', sql.Bit,ativo);
+        if (params.senha) sqlRequest.input('senha', sql.VarChar, params.senha);
+        sqlRequest.input('id_planta', sql.Int, params.id_planta);
+        sqlRequest.input('role', sql.VarChar, params.role);
 
-        if (nome) {
-            query += `nome = @nome, `;
-            params.push({ name: 'nome', type: sql.VarChar, value: nome });
-        }
-        if (email) {
-            query += `email = @email, `;
-            params.push({ name: 'email', type: sql.VarChar, value: email });
-        }
-        if (senha) {
-            const hashMD5 = CryptoJS.MD5(senha).toString();
-            query += `senha = @senha, `;
-            params.push({ name: 'senha', type: sql.VarChar, value: hashMD5 });
-        }
-        if (ativo !== undefined) {
-            query += `ativo = @ativo, `;
-            params.push({ name: 'ativo', type: sql.Bit, value: ativo });
-        }
-        if (id_planta) {
-            query += `id_planta = @id_planta, `;
-            params.push({ name: 'id_planta', type: sql.Int, value: id_planta });
-        }
-        if (id_cliente) {
-            query += `id_cliente = @id_cliente, `;
-            params.push({ name: 'id_cliente', type: sql.Int, value: id_cliente });
-        }
-        if (role) {
-            query += `role = @role, `;
-            params.push({ name: 'role', type: sql.NVarChar, value: role });
-        }
+        const result = await sqlRequest.query(query);
 
-        // Remover a última vírgula e espaço da query
-        query = query.slice(0, -2);
-
-        query += ` WHERE id_usuario = @id_usuario;`;
-        params.push({ name: 'id_usuario', type: sql.Int, value: id_usuario });
-
-        // Criando a request e adicionando os parâmetros
-        request = new sql.Request();
-        params.forEach(param => {
-            request.input(param.name, param.type, param.value);
-        });
-        console.log
-        const result = await request.query(query);
         if (result.rowsAffected[0] > 0) {
+            logQuery('info', `Usuário ${id_usuario_pedinte} atualizou o usuário web ${id_usuario}.`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(200).send("Usuário atualizado com sucesso!");
         } else {
+            logQuery('Erro', `Usuário ${id_usuario_pedinte} falhou ao atualizar o usuário web ${id_usuario}.`, 'erro', 'UPDATE', id_cliente, id_usuario, query, params);
             response.status(400).send("Falha ao atualizar o usuário!");
         }
     } catch (error) {
         console.error('Erro ao atualizar usuário:', error.message);
-        response.status(500).send('Erro ao atualizar usuario');
+        logQuery('Erro', error.message, 'erro', 'UPDATE', id_cliente, id_usuario, query, params);
+
+        response.status(500).send('Erro ao atualizar usuário');
     }
 }
 

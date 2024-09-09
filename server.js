@@ -7,6 +7,7 @@ const usuariosRoutes = require('./src/routes/cadastros/usuarioRoutes');
 const funcionarioRoutes = require('./src/routes/cadastros/funcionarioRoutes');
 const produtoRoutes = require('./src/routes/cadastros/produtoRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
+const apiKeyRoutes = require('./src/routes/apiKeyRoutes');
 const imageRoutes = require('./src/routes/imageRoutes');
 const CentroCustoRoutes = require('./src/routes/cadastros/CentroCustoRoutes');
 const SetorRoutes = require('./src/routes/cadastros/SetorRoutes');
@@ -16,15 +17,18 @@ const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
 const DMRoute = require('./src/routes/cadastros/DMRoutes');
 const TermoRoutes = require('./src/routes/cadastros/TermoRoutes');
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
+const ImportRoute = require('./src/routes/cadastros/ImportRoute');
 // const ConsultaStatusRoutes = require('./src/routes/cadastros/ConsultaStatusRoutes');
-// const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
+const LiberacaoAvulsaRoutes = require ('./src/routes/relatorios/LiberacaoAvulsaRoutes')
 const SDMRoutes = require('./src/routes/relatorios/SDMRoutes');
 const LogRoutes = require('./src/routes/relatorios/LogRoutes');
 const retiradaRealizadaRoute = require('./src/routes/relatorios/RetiradasRealizadasRoutes');
+const DevolucaoRoutes = require('./src/routes/relatorios/DevolucaoRoutes');
 const itemsMaisRetiradosRoutes = require('./src/routes/relatorios/itemsMaisRetiradosRoutes');
 const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
-const autenticarToken = require('./src/middleware/authMiddleware');
+const ItensNaoAlocadosRoutes = require('./src/routes/cadastros/ItensNaoAlocadosRoutes');
+const { autenticarToken, autorizarRoles } = require('./src/middleware/authMiddleware');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
@@ -66,7 +70,7 @@ app.use('/api/funcionarios', autenticarToken, funcionarioRoutes);
 app.use('/api/produtos', autenticarToken, produtoRoutes);
 
 // Rotas de recuperação de Imagem
-app.use('/api/image', autenticarToken,imageRoutes);
+app.use('/api/image',imageRoutes);
 
 // Rotas de Centro de Custo
 app.use('/api/cdc', autenticarToken, CentroCustoRoutes);
@@ -84,39 +88,49 @@ app.use('/api/plantas', autenticarToken, planasRoutes);
 app.use('/api/DM', autenticarToken, DMRoute);
 
 // Rotas de Usuarios DMs
-app.use('/api/UDM', autenticarToken, UDMRoute);
+app.use('/api/UDM', autenticarToken,autorizarRoles(['Master', 'Operador','Administrador']), UDMRoute);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/SDM', autenticarToken, SDMRoutes);
+app.use('/api/SDM', autenticarToken,autorizarRoles(['Master', 'Operador']), SDMRoutes);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/Log', autenticarToken, LogRoutes);
+app.use('/api/Log', autenticarToken,autorizarRoles(['Master', 'Operador']), LogRoutes);
 
 //Rotas de Relatorio Retirada
-app.use('/api/relatorioRetiRe',autenticarToken, retiradaRealizadaRoute);
+app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master', 'Operador']), retiradaRealizadaRoute);
+
+//Rotas de Relatorio Retirada
+app.use('/api/devolucoes',autenticarToken,autorizarRoles(['Master', 'Operador']), DevolucaoRoutes);
 
 //Rotas de Relatorio Items mais Retirados Itens
-app.use('/api/relatorioItems',autenticarToken, itemsMaisRetiradosRoutes);
+app.use('/api/relatorioItems',autenticarToken,autorizarRoles(['Master', 'Operador']), itemsMaisRetiradosRoutes);
 
 //Rotas de Relatório para Fichas Retiradas
-app.use('/api/fichasretiradas',autenticarToken, FichasRoutes);
+app.use('/api/fichasretiradas',autenticarToken,autorizarRoles(['Master', 'Operador']), FichasRoutes);
+//Rotas de Relatório para Fichas Retiradas
+app.use('/api/naoalocados',autenticarToken,autorizarRoles(['Master', 'Operador']), ItensNaoAlocadosRoutes);
 
-// //Rotas de Relatório para Fichas Retiradas
-// app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
+// //Rotas de Relatório para Fichas Avulsas
+app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
 
 // app.use('/api/consultastatus',autenticarToken, ConsultaStatusRoutes);
 
 //Rotas de Relatorio Items mais Retirados
-app.use('/api/Estoque',autenticarToken, EstoqueDMRoutes);
+app.use('/api/Estoque', autenticarToken, autorizarRoles(['Master', 'Operador']), EstoqueDMRoutes);
 
 // Rotas de Texto
-app.use('/api/termo',autenticarToken, TermoRoutes);
+app.use('/api/termo',autenticarToken,autorizarRoles(['Master']), TermoRoutes);
+
+// Rotas de Texto
+app.use('/api/import',autenticarToken,autorizarRoles(['Master']), ImportRoute);
 
 // Rotas de login
 app.use('/api', loginRoutes);
 
+app.use('/api/key',autenticarToken, apiKeyRoutes);
+
 // Rotas de cliente para admin
-app.use('/api/admin/cliente', ClienteRoute);
+app.use('/api/admin/cliente',autenticarToken, autorizarRoles(['Administrador','Master','Operador' ]), ClienteRoute);
 
 
 app.get('*', (req, res) => {

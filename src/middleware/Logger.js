@@ -1,7 +1,6 @@
 const { createLogger, format, transports } = require('winston');
 const Transport = require('winston-transport');
-const sql = require('mssql'); // Inclua o módulo SQL se ainda não estiver incluído
-
+const sql = require('mssql'); 
 const logFormat = format.printf(({ level, message, timestamp, query }) => {
     return `${timestamp} [${level.toUpperCase()}]: ${message} ${query ? `Query: ${query}` : ''}`;
 });
@@ -21,34 +20,57 @@ class SQLTransport extends Transport {
             resultado,
             idCliente = this.defaultIdCliente,
             idUsuario = this.defaultIdUsuario,
-            query // Inclui a query
+            query
         } = info;
 
         if (!query) {
             console.error('Erro: Query não fornecida para logging.');
-            callback(); // Finaliza o callback, mas não prossegue com o logging se a query não estiver presente
+            callback();
             return;
         }
 
+        const transaction = new sql.Transaction();
+        let transactionStarted = false;
+
         try {
-            const request = new sql.Request();
-            await request.input('idCliente', sql.Int, idCliente);
-            await request.input('idUsuario', sql.Int, idUsuario);
-            await request.input('operacao', sql.NVarChar, operacao);
-            await request.input('resultado', sql.NVarChar, resultado);
-            await request.input('Log_Web', sql.NVarChar, message);
-            await request.input('timestamp', sql.DateTime, timestamp);
-            await request.input('Log_String', sql.NVarChar, query); // Adiciona a query como input
+            // Inicia a transação
+            await transaction.begin();
+            transactionStarted = true;
+
+            // Cria um novo request a partir da transação
+            const request = new sql.Request(transaction);
+
+            // Define os parâmetros
+            request.input('idCliente', sql.Int, idCliente);
+            request.input('idUsuario', sql.Int, idUsuario);
+            request.input('operacao', sql.NVarChar, operacao);
+            request.input('resultado', sql.NVarChar, resultado);
+            request.input('Log_Web', sql.NVarChar, message);
+            request.input('timestamp', sql.DateTime, timestamp);
+            request.input('Log_String', sql.NVarChar, query);
+
+            // Executa a inserção
             await request.query(`
                 INSERT INTO Log_Web (ID_Cliente, ID_Usuario, Operacao, Log_Web, Resultado, Dia, Log_String)
                 VALUES (@idCliente, @idUsuario, @operacao, @Log_Web, @resultado, @timestamp, @Log_String)
             `);
+
+            // Confirma a transação
+            await transaction.commit();  // Corrigido: usando transaction.commit()
+
         } catch (err) {
-            console.error('Erro ao gravar log no banco de dados:', err);
+            if (transactionStarted) {
+                // Reverte a transação em caso de erro
+                await transaction.rollback();  // Corrigido: usando transaction.rollback()
+            }
+            console.error('Erro ao gravar log no banco de dados:', err.message);
+            console.error('Stack trace:', err.stack);
+        } finally {
+            callback();
         }
-        callback(); // Finaliza o callback após o logging
     }
 }
+
 
 const logger = createLogger({
     level: 'info',

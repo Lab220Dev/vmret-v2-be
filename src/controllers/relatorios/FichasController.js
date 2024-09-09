@@ -62,12 +62,6 @@ async function relatorio(request, response) {
         r.ID_Cliente = @id_cliente
     `;
 
-    let query2 = `
-      SELECT nome, data_admissao, id_setor, id_funcao, matricula
-      FROM Funcionarios
-      WHERE id_cliente = @id_cliente
-    `;
-
     const params = { id_cliente };
 
     if (id_dm) {
@@ -100,8 +94,8 @@ async function relatorio(request, response) {
 
     const requestSql = await criarRequest();
     requestSql.input("id_cliente", sql.Int, params.id_cliente);
-    if (params.id_dm) requestSql.input("id_dm", sql.VarChar, params.id_dm);
-    if (params.id_funcionario) requestSql.input("id_funcionario", sql.VarChar, params.id_funcionario);
+    if (params.id_dm) requestSql.input("id_dm", sql.Int, params.id_dm);
+    if (params.id_funcionario) requestSql.input("id_funcionario", sql.Int, params.id_funcionario);
     if (params.data_inicio) requestSql.input("data_inicio", sql.DateTime, params.data_inicio);
     if (params.data_final) requestSql.input("data_final", sql.DateTime, params.data_final);
 
