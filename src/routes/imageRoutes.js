@@ -9,7 +9,7 @@ function determinarTipo(texto) {
     } else if (texto.includes("info")) {
         return "info";
     } else {
-        return null;
+        return "Secundario";
     }
 }
 
@@ -32,6 +32,27 @@ router.get('/produto/:id/:imageName', (req, res) => {
 
 
 
+});
+
+router.get('/produtoExt/:id/:imageName', (req, res) => {
+    const imageName = req.params.imageName;
+    const idCliente = req.params.id;
+
+    // Função para sanitizar o nome do arquivo, removendo caracteres inválidos
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
+    // Caminho completo para a imagem
+    const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), sanitizeFileName(imageName.toString()));
+
+    // Verifica se o arquivo existe antes de tentar enviá-lo
+    fs.access(imagePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            return res.status(404).json({ error: 'Imagem não encontrada' });
+        }
+
+        // Envia a imagem diretamente
+        res.sendFile(imagePath);
+    });
 });
 
 router.post('/produtos/imagesAdicionais', (req, res) => {
@@ -58,9 +79,10 @@ router.post('/produtos/imagesAdicionais', (req, res) => {
 });
 
 router.get('/funcionario/:id/:imageName', (req, res) => {
-    const imageName = decodeURIComponent(req.params.imageName);
+    const imageName = req.params.imageName;
     const idCliente = req.params.id;
-    const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(), imageName);
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+    const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(),  sanitizeFileName(imageName.toString()));
     fs.readFile(imagePath, (err, data) => {
         if (err) {
             console.error('Error reading image file:', err);

@@ -26,9 +26,21 @@ async function login(request, response) {
         const Usuario = result.recordset[0];
 
         if (Usuario) {
-            delete Usuario.senha;
             const id_cliente = Usuario.id_cliente;
+            delete Usuario.senha;
             const role = Usuario.role;
+            const updateQuery = `
+                UPDATE Usuarios
+                SET last_login = @LastLogin
+                WHERE id_usuario = @id_usuario`;
+            const currentDate = new Date();
+
+            await new sql.Request()
+                .input('LastLogin', sql.DateTime, currentDate)
+                .input('id_usuario', sql.Int, Usuario.id_usuario)
+                .query(updateQuery);
+
+
             const perfil = roleToProfile[role];
             if (!perfil) {
                 response.status(401).json("Perfil de usuário inválido");
@@ -53,7 +65,7 @@ async function login(request, response) {
             const MenuItem = MenuItemR.recordset;
             const menuTree = buildMenuTree(Menu, MenuItem);
             menuTree.forEach(cleanItems);
-            const token = jwt.sign({ Usuario }, segredo, opcoes);
+            const token = jwt.sign({ usuario: Usuario, roles: [role] }, segredo, opcoes);
             response.status(200).json({ token, Usuario, items: menuTree });
         } else {
             response.status(401).json("E-mail ou senha inválidos");
