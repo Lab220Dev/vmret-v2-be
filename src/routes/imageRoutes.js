@@ -32,7 +32,7 @@ router.get('/produto/:id/:imageName', (req, res) => {
     const idCliente = req.params.id;
     const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
     const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), sanitizeFileName(imageName.toString()));
-
+    console.log(imagePath)
     fs.readFile(imagePath, (err, data) => {
         if (err) {
             return res.status(404).json({ error: 'Imagem não encontrada' });

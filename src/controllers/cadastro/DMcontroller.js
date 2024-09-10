@@ -250,7 +250,6 @@ async function adicionar(request, response) {
                   }
               }
           }
-
           await transaction.commit();
           response.status(201).send('DM e Controladoras criadas com sucesso!');
       } else {
@@ -464,7 +463,9 @@ async function atualizar(request, response) {
     }
   }
   async function adicionarItensDM(request, response) {
-    const { id_produto, Porta, Motor1, Motor2, id_cliente, id_dm, Controladora, id_usuario } = request.body;
+    const { id_produto, Porta, Motor1, Motor2, id_cliente, id_dm, Controladora, id_usuario ,Dip
+      ,Posicao,Andar
+    } = request.body;
 
     const insertQuery = `INSERT INTO DM_itens (id_item,id_cliente, ID_DM, id_produto,Controladora, Placa, Motor1, Motor2, 
   DIP, Andar, Posicao, quantidade,quantidademinima, capacidade, deleted,nome, ProdutoCodigo, sku, 
@@ -505,7 +506,7 @@ async function atualizar(request, response) {
         Placa: Porta,
         Motor1: Motor1,
         Motor2: Motor2,
-        DIP: null,
+        DIP: Dip,
         Andar: null,
         Posicao: null,
         quantidade: 0,
@@ -527,9 +528,9 @@ async function atualizar(request, response) {
       sqlRequest2.input('Placa', sql.Int, Porta);
       sqlRequest2.input('Motor1', sql.Int, Motor1);
       sqlRequest2.input('Motor2', sql.Int, Motor2);
-      sqlRequest2.input('DIP', sql.Int, null);
-      sqlRequest2.input('Andar', sql.Int, null);
-      sqlRequest2.input('Posicao', sql.Int, null);
+      sqlRequest2.input('DIP', sql.Int, Dip);
+      sqlRequest2.input('Andar', sql.Int, Andar);
+      sqlRequest2.input('Posicao', sql.Int, Posicao);
       sqlRequest2.input('quantidade', sql.Int, 0);
       sqlRequest2.input('capacidade', sql.Int, capacidade);
       sqlRequest2.input('deleted', sql.Bit, false);
