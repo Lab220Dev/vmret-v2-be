@@ -32,7 +32,7 @@ router.get('/produto/:id/:imageName', (req, res) => {
     const idCliente = req.params.id;
     const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
     const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), sanitizeFileName(imageName.toString()));
-    console.log(imagePath)
+    //console.log(imagePath)
     fs.readFile(imagePath, (err, data) => {
         if (err) {
             return res.status(404).json({ error: 'Imagem não encontrada' });
@@ -60,8 +60,10 @@ router.get('/produtoExt/:id/:imageName', (req, res) => {
     // Verifica se o arquivo existe antes de tentar enviá-lo
     fs.access(imagePath, fs.constants.F_OK, (err) => {
         if (err) {
+            logQuery('error', `Erro ao acessar a imagem ${imageName} para o cliente ${idCliente}`, 'Falha', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
             return res.status(404).json({ error: 'Imagem não encontrada' });
         }
+        logQuery('info', `Imagem ${imageName} acessada com sucesso para o cliente ${idCliente}`, 'Sucesso', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
 
         // Envia a imagem diretamente
         res.sendFile(imagePath);
@@ -95,7 +97,7 @@ router.get('/funcionario/:id/:imageName', (req, res) => {
     const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(),  sanitizeFileName(imageName.toString()));
     fs.readFile(imagePath, (err, data) => {
         if (err) {
-            console.error('Error reading image file:', err);
+            //console.error('Error reading image file:', err);
             return res.status(404).json({ error: 'Imagem não encontrada' });
         }
 

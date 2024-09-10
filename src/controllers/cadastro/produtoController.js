@@ -71,12 +71,24 @@ async function adicionarProdutos(request, response) {
             return;
         }
 
+
         const sanitizeFileName = (filename) => {
             if (typeof filename === 'string') {
-                return filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+                // Divide o nome do arquivo e a extensão
+                const parts = filename.split('.');
+                const extension = parts.length > 1 ? `.${parts.pop()}` : '';  // Pega a extensão do arquivo
+        
+                // Reconstroi o nome do arquivo sem a extensão
+                const nameWithoutExtension = parts.join('.').normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')  // Remove acentos
+                    .replace(/[^a-zA-Z0-9 _]/g, '-')  // Substitui caracteres especiais por '-'
+                    .replace(/ /g, '_');  // Substitui espaços por '_'
+        
+                // Retorna o nome sanitizado com a extensão preservada
+                return `${nameWithoutExtension}${extension}`;
             } else {
                 console.error('Filename is not a string:', filename);
-                return 'unknown_filename'; // Retorna um nome padrão ou lança um erro, dependendo do que você deseja
+                return 'unknown_filename';  // Retorna um nome padrão se não for string
             }
         };
 
@@ -123,9 +135,11 @@ async function adicionarProdutos(request, response) {
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2); // Imagem secundária única
-        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
+        console.log('image1:', sanitizeFileName(imagem1))
+        requestSql.input('imagem1', sql.VarChar, sanitizeFileName(imagem1));
+        console.log('image2:', sanitizeFileName(imagem2))
+        requestSql.input('imagem2', sql.VarChar, sanitizeFileName(imagem2)); // Imagem secundária única
+        requestSql.input('imagemdetalhe', sql.VarChar,sanitizeFileName(imagemdetalhe));
         requestSql.input('deleted', sql.Bit, false);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
@@ -265,12 +279,31 @@ async function atualizarProduto(request, response) {
         }
 
         // Função para sanitizar nomes de arquivos
-        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
+        const sanitizeFileName = (filename) => {
+            if (typeof filename === 'string') {
+                // Divide o nome do arquivo e a extensão
+                const parts = filename.split('.');
+                const extension = parts.length > 1 ? `.${parts.pop()}` : '';  // Pega a extensão do arquivo
+        
+                // Reconstroi o nome do arquivo sem a extensão
+                const nameWithoutExtension = parts.join('.').normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')  // Remove acentos
+                    .replace(/[^a-zA-Z0-9 _]/g, '-')  // Substitui caracteres especiais por '-'
+                    .replace(/ /g, '_');  // Substitui espaços por '_'
+        
+                // Retorna o nome sanitizado com a extensão preservada
+                return `${nameWithoutExtension}${extension}`;
+            } else {
+                console.error('Filename is not a string:', filename);
+                return 'unknown_filename';  // Retorna um nome padrão se não for string
+            }
+        };
 
         // Diretórios de upload com id_cliente antes da pasta principal
-        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
-        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
-        const uploadPathInfoAdicional = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'info');
+        const uploadPathPrincipal = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathInfoAdicional = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'info');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });
@@ -311,9 +344,9 @@ async function atualizarProduto(request, response) {
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, imagem1Path);
-        requestSql.input('imagem2', sql.VarChar, imagem2Path);
-        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhePath);
+        requestSql.input('imagem1', sql.VarChar, sanitizeFileName(imagem1));
+        requestSql.input('imagem2', sql.VarChar, sanitizeFileName(imagem2));
+        requestSql.input('imagemdetalhe', sql.VarChar, sanitizeFileName(imagemdetalhe));
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('id_planta', sql.Int, id_planta);
         requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
