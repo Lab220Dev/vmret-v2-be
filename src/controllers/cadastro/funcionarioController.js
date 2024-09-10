@@ -108,15 +108,15 @@ async function adicionarFuncionarios(request, response) {
         // Inserção no banco de dados
         const sqlRequest = new sql.Request();
         sqlRequest.input('id_cliente', sql.Int, id_cliente);
-        sqlRequest.input('id_setor', sql.Int, id_setor);
-        sqlRequest.input('id_funcao', sql.Int, id_funcao);
+        sqlRequest.input('id_setor', sql.Int,Number(id_setor) || 0);
+        sqlRequest.input('id_funcao', sql.Int, Number(id_funcao) || 0);
         sqlRequest.input('nome', sql.VarChar, nome);
         sqlRequest.input('matricula', sql.VarChar, matricula);
         sqlRequest.input('biometria', sql.NVarChar, biometria);
         sqlRequest.input('RG', sql.VarChar, RG);
         sqlRequest.input('CPF', sql.VarChar, CPF);
         sqlRequest.input('CTPS', sql.VarChar, CTPS);
-        sqlRequest.input('id_planta', sql.Int, id_planta);
+        sqlRequest.input('id_planta', sql.Int, Number(id_planta) || 0);
         sqlRequest.input('foto', sql.VarChar, nomeFuncionario);
         sqlRequest.input('data_admissao', sql.DateTime, data_admissao);
         sqlRequest.input('hora_inicial', sql.Time, hora_inicial);
@@ -130,7 +130,7 @@ async function adicionarFuncionarios(request, response) {
         sqlRequest.input('domingo', sql.Bit, convertToBoolean(domingo));
         sqlRequest.input('deleted', sql.Bit, false);
         sqlRequest.input('ordem', sql.Int, ordem);
-        sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
+        sqlRequest.input('id_centro_custo', sql.Int,   Number(id_centro_custo) || 0);
         sqlRequest.input('status', sql.NVarChar, status);
         sqlRequest.input('senha', sql.NVarChar, senha);
         sqlRequest.input('biometria2', sql.NVarChar, biometria2);
@@ -313,15 +313,15 @@ async function atualizarFuncionario(request, response) {
         // Atualização do funcionário
         const sqlRequest = new sql.Request();
         sqlRequest.input('id_funcionario', sql.Int, id_funcionario);
-        sqlRequest.input('id_setor', sql.Int, id_setor);
-        sqlRequest.input('id_funcao', sql.Int, id_funcao);
+        sqlRequest.input('id_setor', sql.Int, id_setor ? id_setor : 0);
+        sqlRequest.input('id_funcao', sql.Int, id_funcao ? id_funcao : 0);
         sqlRequest.input('nome', sql.VarChar, nome);
         sqlRequest.input('matricula', sql.VarChar, matricula);
         sqlRequest.input('biometria', sql.NVarChar, biometria);
         sqlRequest.input('RG', sql.VarChar, RG);
         sqlRequest.input('CPF', sql.VarChar, CPF);
         sqlRequest.input('CTPS', sql.VarChar, CTPS);
-        sqlRequest.input('id_planta', sql.Int, id_planta);
+        sqlRequest.input('id_planta', sql.Int, id_planta ? id_planta : 0);
         sqlRequest.input('foto', sql.VarChar, foto);
         sqlRequest.input('data_admissao', sql.DateTime, data_admissao);
         sqlRequest.input('hora_inicial', sql.Time, hora_inicial);
@@ -333,7 +333,7 @@ async function atualizarFuncionario(request, response) {
         sqlRequest.input('sexta', sql.Bit, convertToBoolean(sexta));
         sqlRequest.input('sabado', sql.Bit, convertToBoolean(sabado));
         sqlRequest.input('domingo', sql.Bit, convertToBoolean(domingo));
-        sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
+        sqlRequest.input('id_centro_custo', sql.Int,  id_centro_custo ? id_centro_custo : 0);
         sqlRequest.input('status', sql.NVarChar, status);
         sqlRequest.input('senha', sql.NVarChar, senha);
         sqlRequest.input('biometria2', sql.NVarChar, biometria2);
