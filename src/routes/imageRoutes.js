@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
+const { logQuery } = require('../utils/logUtils');
 
 // Função para determinar o tipo MIME com base na extensão do arquivo
 const getMimeType = (fileName) => {
@@ -10,6 +11,7 @@ const getMimeType = (fileName) => {
         case '.png':
             return 'image/png';
         case '.jpg':
+            return 'image/jpg';
         case '.jpeg':
             return 'image/jpeg';
         default:
@@ -30,16 +32,18 @@ const determinarTipo = (texto) => {
 router.get('/produto/:id/:imageName', (req, res) => {
     const imageName = req.params.imageName;
     const idCliente = req.params.id;
-    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
-    const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), sanitizeFileName(imageName.toString()));
+    //const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+    const imagePath = path.join(__dirname, '../uploads/produtos', idCliente.toString(), determinarTipo(imageName), imageName.toString());
     //console.log(imagePath)
     fs.readFile(imagePath, (err, data) => {
         if (err) {
+            logQuery('error', `Erro ao acessar a imagem ${imageName} para o cliente ${idCliente}`, 'Falha', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
             return res.status(404).json({ error: 'Imagem não encontrada' });
         }
 
         const base64Image = data.toString('base64');
         const mimeType = getMimeType(imageName); // Determina o tipo MIME com base na extensão do arquivo
+        logQuery('info', `Imagem ${imageName} acessada com sucesso para o cliente ${idCliente}`, 'Sucesso', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
 
         res.json({ image: base64Image, mimeType });
     });
