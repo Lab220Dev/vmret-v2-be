@@ -79,6 +79,7 @@ async function login(request, response) {
 }
 
 async function logout(request, response) {
+    
     response.status(200).json({ message: 'Logoff bem-sucedido' });
 }
 // async function recuperarSenha(req, res) {
