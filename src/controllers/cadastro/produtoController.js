@@ -39,11 +39,11 @@ async function adicionarProdutos(request, response) {
     INSERT INTO produtos
     (id_cliente, id_categoria, nome, descricao, validadedias,
     imagem1, imagem2, imagemdetalhe, deleted, codigo,
-    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
+    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida,Sincronizado)
     VALUES
     (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
     @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
-    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
+    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida,@Sincronizado)
 `;
     const params = {
         id_cliente: id_cliente,
@@ -84,7 +84,6 @@ async function adicionarProdutos(request, response) {
                     .replace(/[^a-zA-Z0-9 _]/g, '-')  // Substitui caracteres especiais por '-'
                     .replace(/ /g, '_');  // Substitui espaços por '_'
         
-                // Retorna o nome sanitizado com a extensão preservada
                 return `${nameWithoutExtension}${extension}`;
             } else {
                 console.error('Filename is not a string:', filename);
@@ -135,12 +134,11 @@ async function adicionarProdutos(request, response) {
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        console.log('image1:', sanitizeFileName(imagem1))
         requestSql.input('imagem1', sql.VarChar, sanitizeFileName(imagem1));
-        console.log('image2:', sanitizeFileName(imagem2))
         requestSql.input('imagem2', sql.VarChar, sanitizeFileName(imagem2)); // Imagem secundária única
         requestSql.input('imagemdetalhe', sql.VarChar,sanitizeFileName(imagemdetalhe));
         requestSql.input('deleted', sql.Bit, false);
+        requestSql.input('Sincronizado', sql.Bit, 0);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
         requestSql.input('capacidade', sql.Int, 0);

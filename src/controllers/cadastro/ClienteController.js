@@ -128,6 +128,78 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
+async function listarClienteComServicos(request, response) {
+    try {
+      const query = `
+            SELECT 
+                c.id_cliente, c.nome AS cliente_nome,
+                ns.id_servico, ns.nome AS servico_nome, 
+                ns.frequencia, ns.tipo_notificacao, 
+                ns.id_funcionario_responsavel, ns.hora_notificacao
+            FROM 
+                clientes c
+            LEFT JOIN 
+                Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
+            WHERE 
+                c.deleted = 0
+        `;
+
+        const result = await new sql.Request().query(query);
+
+       const clientesComServicos = result.recordset.reduce((acc, row) => {
+            const clienteIndex = acc.findIndex(c => c.id_cliente === row.id_cliente);
+
+            if (clienteIndex === -1) {
+                acc.push({
+                    id_cliente: row.id_cliente,
+                    nome: row.cliente_nome,
+                    servicos: row.id_servico ? [{
+                        id_servico: row.id_servico,
+                        nome: row.servico_nome,
+                        notificacoes: [{
+                            frequencia: row.frequencia,
+                            tipo_notificacoes: row.tipo_notificacoes,
+                            id_funcionario_responsavel: row.id_funcionario_responsavel,
+                            hora_notificacao: row.hora_notificacao
+                        }]
+                    }] : []
+                });
+            } else {
+                const serviceIndex = acc[clienteIndex].servicos.findIndex(s => s.id_servico === row.id_servico);
+
+                if (serviceIndex === -1) {
+                    acc[clienteIndex].servicos.push({
+                        id_servico: row.id_servico,
+                        nome: row.servico_nome,
+                        notificacoes: [{
+                            frequencia: row.frequencia,
+                            tipo_notificacoes: row.tipo_notificacoes,
+                            id_funcionario_responsavel: row.id_funcionario_responsavel,
+                            hora_notificacao: row.hora_notificacao
+                        }]
+                    });
+                } else {
+                   acc[clienteIndex].servicos[serviceIndex].notificacoes.push({
+                        frequencia: row.frequencia,
+                        tipo_notificacoes: row.tipo_notificacoes,
+                        id_funcionario_responsavel: row.id_funcionario_responsavel,
+                        hora_notificacao: row.hora_notificacao
+                    });
+                }
+            }
+
+            return acc;
+        }, []);
+
+        // Return the clients with their associated services and notifications
+        response.status(200).json(clientesComServicos);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+
 async function adicionar(request, response) {
     const { nome, cpfcnpj, ativo, usar_api, id_usuario } = request.body;
     const apiKey = generateApiKey();
@@ -436,5 +508,6 @@ module.exports = {
     deletar,
     adicionar,
     salvarMenus,
+    listarClienteComServicos,
     listarComMenu
 };

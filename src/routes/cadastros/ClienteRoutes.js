@@ -4,6 +4,7 @@ const clienteController = require('../../controllers/cadastro/ClienteController'
 
 
 router.post('/listar', clienteController.listar);
+router.get('/listarClienteServicos', clienteController.listarClienteComServicos);
 router.post('/salvarMenus', clienteController.salvarMenus);
 router.post('/listarComMenu', clienteController.listarComMenu);
 router.post('/atualizar', clienteController.atualizar);
