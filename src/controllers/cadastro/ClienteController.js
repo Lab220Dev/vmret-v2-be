@@ -1,6 +1,7 @@
 const sql = require('mssql');
 const { logQuery } = require('../../utils/logUtils');
 const crypto = require('crypto');
+const { Console } = require('console');
 const convertToBoolean = (value) => {
     return value === 'true';
 };
@@ -131,68 +132,46 @@ async function listar(request, response) {
 
 async function listarClienteComServicos(request, response) {
     try {
-      const query = `
-            SELECT 
-                c.id_cliente, c.nome AS cliente_nome,
-                ns.id_servico, ns.nome AS servico_nome, 
-                ns.frequencia, ns.tipo_notificacao, 
-                ns.id_funcionario_responsavel, ns.hora_notificacao
-            FROM 
-                clientes c
-            LEFT JOIN 
-                Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
-            WHERE 
-                c.deleted = 0
-        `;
+        let query;
+        const  id_cliente  = request.body.id_cliente;
+        const userRole  = request.roles;
+        if (userRole.includes('Administrador')) {
+            query = `
+                SELECT 
+                    c.id_cliente, c.nome AS cliente_nome,
+                    ns.id_servico, ns.nome AS servico_nome, 
+                    ns.frequencia, ns.tipo_notificacao, 
+                    ns.id_funcionario_responsavel, ns.hora_notificacao, ns.nome
+                FROM 
+                    clientes c
+                LEFT JOIN 
+                    Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
+                WHERE 
+                    c.deleted = 0
+                    AND (ns.deleted = 0 OR ns.deleted IS NULL)
+            `;
+        } else {
+            query = `
+                SELECT 
+                    c.id_cliente, c.nome AS cliente_nome,
+                    ns.id_servico, ns.nome AS servico_nome, 
+                    ns.frequencia, ns.tipo_notificacao, 
+                    ns.id_funcionario_responsavel, ns.hora_notificacao, ns.nome
+                FROM 
+                    clientes c
+                LEFT JOIN 
+                    Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
+                WHERE 
+                    c.id_cliente = @id_cliente AND c.deleted = 0
+            `;
+        }
+        // const result = await new sql.Request().query(query);
+        const result = await new sql.Request()
+            .input('id_cliente', sql.Int, id_cliente)
+            .query(query);
+            //console.log(result.recordset)
+        const clientesComServicos = mapClientesComServicos(result.recordset);
 
-        const result = await new sql.Request().query(query);
-
-       const clientesComServicos = result.recordset.reduce((acc, row) => {
-            const clienteIndex = acc.findIndex(c => c.id_cliente === row.id_cliente);
-
-            if (clienteIndex === -1) {
-                acc.push({
-                    id_cliente: row.id_cliente,
-                    nome: row.cliente_nome,
-                    servicos: row.id_servico ? [{
-                        id_servico: row.id_servico,
-                        nome: row.servico_nome,
-                        notificacoes: [{
-                            frequencia: row.frequencia,
-                            tipo_notificacoes: row.tipo_notificacoes,
-                            id_funcionario_responsavel: row.id_funcionario_responsavel,
-                            hora_notificacao: row.hora_notificacao
-                        }]
-                    }] : []
-                });
-            } else {
-                const serviceIndex = acc[clienteIndex].servicos.findIndex(s => s.id_servico === row.id_servico);
-
-                if (serviceIndex === -1) {
-                    acc[clienteIndex].servicos.push({
-                        id_servico: row.id_servico,
-                        nome: row.servico_nome,
-                        notificacoes: [{
-                            frequencia: row.frequencia,
-                            tipo_notificacoes: row.tipo_notificacoes,
-                            id_funcionario_responsavel: row.id_funcionario_responsavel,
-                            hora_notificacao: row.hora_notificacao
-                        }]
-                    });
-                } else {
-                   acc[clienteIndex].servicos[serviceIndex].notificacoes.push({
-                        frequencia: row.frequencia,
-                        tipo_notificacoes: row.tipo_notificacoes,
-                        id_funcionario_responsavel: row.id_funcionario_responsavel,
-                        hora_notificacao: row.hora_notificacao
-                    });
-                }
-            }
-
-            return acc;
-        }, []);
-
-        // Return the clients with their associated services and notifications
         response.status(200).json(clientesComServicos);
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
@@ -263,8 +242,182 @@ async function adicionar(request, response) {
         response.status(500).send('Erro ao inserir o usuário');
     }
 }
+async function adicionarServico(request, response) {
+    const { id_cliente, servicos } = request.body;
+    try {
+        let transaction = new sql.Transaction();
+        await transaction.begin();
+        for (const servico of servicos) {
+            for (const destinatario of servico.destinatarios) {
+                await inserirNovoServico(transaction, id_cliente, servico, destinatario);
+            }
+        }
+        await transaction.commit();
+        response.status(200).json({ message: 'Serviços adicionados com sucesso' })
+    } catch (error) {
+        console.error('Erro ao salvar configurações', error);
+        if (transaction) {
+            await transaction.rollback();
+        }
+        response.status(500).json({ message: 'Erro ao salvar configurações' })
 
+    }
+}
+async function atualizarServico(request, response) {
+    const { id_cliente, servicos } = request.body;
+    let transaction;
 
+    try {
+        transaction = new sql.Transaction();
+        await transaction.begin();
+
+        const existingServices = await buscarServicosExistentes(transaction, id_cliente);
+
+        await marcarServicosDeletados(transaction, id_cliente, existingServices, servicos);
+
+        for (const servico of servicos) {
+            for (const destinatario of servico.destinatarios) {
+                const serviceExists = await verificarServicoExistente(transaction, id_cliente, servico.id_servico, destinatario);
+                //console.log('Valor de deleted:', serviceExists.deleted);
+                if (serviceExists) {
+                    const { deleted } = serviceExists;
+                    if (deleted) {
+                        //console.log("reativou")
+                        await reativarServico(transaction, id_cliente, servico, destinatario);
+                    } else {
+                        //console.log("apenas atualizou")
+                        await atualizarServicoExistente(transaction, id_cliente, servico, destinatario);
+                    }
+                } else {
+                    await inserirNovoServico(transaction, id_cliente, servico, destinatario);
+                }
+            }
+        }
+
+        await transaction.commit();
+        response.status(200).json({ message: 'Serviços atualizados com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar serviços:', error);
+
+        if (transaction) {
+            await transaction.rollback();
+        }
+
+        response.status(500).json({ message: 'Erro ao atualizar serviços' });
+    }
+}
+async function buscarServicosExistentes(transaction, id_cliente) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+
+    const result = await sqlRequest.query(`
+        SELECT id_servico, id_funcionario_responsavel 
+        FROM Notificacoes_Servicos 
+        WHERE id_cliente = @id_cliente AND deleted = 0
+    `);
+
+    return result.recordset;
+}
+
+async function marcarServicosDeletados(transaction, id_cliente, existingServices, servicos) {
+    for (const existing of existingServices) {
+        const found = servicos.some(servico =>
+            servico.id_servico === existing.id_servico &&
+            servico.destinatarios.includes(existing.id_funcionario_responsavel)
+        );
+
+        if (!found) {
+            const sqlRequest = new sql.Request(transaction);
+            sqlRequest.input('id_cliente', sql.Int, id_cliente);
+            sqlRequest.input('id_servico', sql.Int, existing.id_servico);
+            sqlRequest.input('id_funcionario_responsavel', sql.Int, existing.id_funcionario_responsavel);
+
+            await sqlRequest.query(`
+                UPDATE Notificacoes_Servicos
+                SET deleted = 1
+                WHERE id_cliente = @id_cliente 
+                AND id_servico = @id_servico
+                AND id_funcionario_responsavel = @id_funcionario_responsavel
+            `);
+        }
+    }
+}
+
+async function verificarServicoExistente(transaction, id_cliente, id_servico, id_funcionario_responsavel) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, id_funcionario_responsavel);
+
+    const result = await sqlRequest.query(`
+        SELECT deleted 
+        FROM Notificacoes_Servicos 
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+    // console.log("resultado do verifica Serviço :",result.recordset)
+    return result.recordset.length > 0 ? result.recordset[0] : null;
+}
+
+async function reativarServico(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+
+    await sqlRequest.query(`
+        UPDATE Notificacoes_Servicos 
+        SET frequencia = @frequencia,
+            tipo_notificacao = @tipo_notificacao,
+            hora_notificacao = @hora_notificacao,
+            deleted = 0
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+}
+
+async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+
+    await sqlRequest.query(`
+        UPDATE Notificacoes_Servicos 
+        SET frequencia = @frequencia,
+            tipo_notificacao = @tipo_notificacao,
+            hora_notificacao = @hora_notificacao
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+}
+
+async function inserirNovoServico(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('nome', sql.VarChar, servico.nome_servico);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+    sqlRequest.input('deleted', sql.Bit, 0);
+
+    await sqlRequest.query(`
+        INSERT INTO Notificacoes_Servicos 
+        (nome, id_cliente, frequencia, tipo_notificacao, id_funcionario_responsavel, hora_notificacao, id_servico, deleted)
+        VALUES (@nome, @id_cliente, @frequencia, @tipo_notificacao, @id_funcionario_responsavel, @hora_notificacao, @id_servico, @deleted)
+    `);
+}
 async function atualizar(request, response) {
     const { id_cliente, nome, cpfcnpj, ativo, usarapi, id_usuario } = request.body;
     const params = {
@@ -491,8 +644,47 @@ function buildMenuTree(menus, menuItems) {
 
     return menuTree;
 }
+function mapClientesComServicos(recordset) {
+    return recordset.reduce((acc, row) => {
+        const clienteIndex = acc.findIndex(c => c.id_cliente === row.id_cliente);
 
+        if (clienteIndex === -1) {
+            acc.push({
+                id_cliente: row.id_cliente,
+                nome: row.cliente_nome,
+                servicos: row.id_servico ? [mapServico(row)] : []
+            });
+        } else {
+            const serviceIndex = acc[clienteIndex].servicos.findIndex(s => s.id_servico === row.id_servico);
 
+            if (serviceIndex === -1) {
+                acc[clienteIndex].servicos.push(mapServico(row));
+            } else {
+                acc[clienteIndex].servicos[serviceIndex].notificacoes.push(mapNotificacao(row));
+            }
+        }
+
+        return acc;
+    }, []);
+}
+
+function mapServico(row) {
+    return {
+        id_servico: row.id_servico,
+        nome: row.servico_nome,
+        notificacoes: [mapNotificacao(row)]
+    };
+}
+
+function mapNotificacao(row) {
+    return {
+        nome: row.nome,
+        frequencia: row.frequencia,
+        tipo_notificacao: row.tipo_notificacao,
+        id_funcionario_responsavel: row.id_funcionario_responsavel,
+        hora_notificacao: row.hora_notificacao
+    };
+}
 function cleanItems(menu) {
     if (menu.items) {
         if (menu.items.length === 0) {
@@ -509,5 +701,7 @@ module.exports = {
     adicionar,
     salvarMenus,
     listarClienteComServicos,
-    listarComMenu
+    listarComMenu,
+    adicionarServico,
+    atualizarServico
 };
