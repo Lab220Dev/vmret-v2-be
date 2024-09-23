@@ -46,7 +46,7 @@ async function adicionar(request, response) {
     sqlRequest.input('ID_Cliente', sql.Int, id_cliente);
     sqlRequest.input('codigo', sql.Int, codigo);
     sqlRequest.input('nome', sql.VarChar, nome);
-    sqlRequest.input('id_centro_custo', sql.VarChar, id_centro_custo);
+    sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
     sqlRequest.input('Deleted', sql.Bit, false);
 
     const result = await sqlRequest.query(query);
