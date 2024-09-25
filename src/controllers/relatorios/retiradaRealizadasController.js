@@ -1,10 +1,9 @@
 const sql = require('mssql');
 const { format } = require('date-fns');
-const { logWithOperation } = require('../../middleware/Logger');
 
 async function relatorio(request, response) {
     try {
-        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicio, data_final, id_cliente,id_usuario } = request.body;
+        const { id_dm = '', id_funcionario = '', data_inicio, data_final, id_cliente,id_usuario } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
@@ -52,14 +51,6 @@ async function relatorio(request, response) {
         if (id_dm) {
             query += ' AND r.ID_DM = @id_dm';
             params.id_dm = id_dm;
-        }
-        if (id_setor) {
-            query += ' AND r.ID_Setor = @id_setor';
-            params.id_setor = id_setor;
-        }
-        if (id_planta) {
-            query += ' AND r.ID_Planta = @id_planta';
-            params.id_planta = id_planta;
         }
         if (id_funcionario) {
             query += ' AND r.ID_Funcionario = @id_funcionario';
