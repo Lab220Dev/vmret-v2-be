@@ -1,7 +1,6 @@
 const sql = require('mssql');
 const { logQuery } = require('../../utils/logUtils');
 const crypto = require('crypto');
-const { Console } = require('console');
 const convertToBoolean = (value) => {
     return value === 'true';
 };
@@ -278,14 +277,11 @@ async function atualizarServico(request, response) {
         for (const servico of servicos) {
             for (const destinatario of servico.destinatarios) {
                 const serviceExists = await verificarServicoExistente(transaction, id_cliente, servico.id_servico, destinatario);
-                //console.log('Valor de deleted:', serviceExists.deleted);
                 if (serviceExists) {
                     const { deleted } = serviceExists;
                     if (deleted) {
-                        //console.log("reativou")
                         await reativarServico(transaction, id_cliente, servico, destinatario);
                     } else {
-                        //console.log("apenas atualizou")
                         await atualizarServicoExistente(transaction, id_cliente, servico, destinatario);
                     }
                 } else {
@@ -380,12 +376,35 @@ async function reativarServico(transaction, id_cliente, servico, destinatario) {
         AND id_funcionario_responsavel = @id_funcionario_responsavel
     `);
 }
+function validarHoraNotificacao(hora) {
+    if (!hora) {
+        return null;  // Se a hora for null, retorna null para o banco de dados
+    }
+
+    // Verifica se a string está no formato HH:MM
+    const timeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
+    if (timeFormat.test(hora)) {
+        // Adiciona ":00" para completar no formato HH:MM:SS
+        return `${hora}:00`;
+    }
+
+    // Se a string já estiver no formato HH:MM:SS, não faz modificações
+    const fullTimeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
+    if (fullTimeFormat.test(hora)) {
+        return hora;
+    }
+
+    throw new Error("Invalid time format");  // Se não estiver em nenhum formato válido, lança erro
+}
 
 async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
     const sqlRequest = new sql.Request(transaction);
+    const horaNotificacao = validarHoraNotificacao(servico.horario_notificacao);
     sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
     sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
-    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    //validarHoraNotificacao(servico.horario_notificacao)
+    console.log(horaNotificacao)
+    sqlRequest.input('hora_notificacao', sql.VarChar, horaNotificacao); 
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
     sqlRequest.input('id_servico', sql.Int, servico.id_servico);
     sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
@@ -400,7 +419,6 @@ async function atualizarServicoExistente(transaction, id_cliente, servico, desti
         AND id_funcionario_responsavel = @id_funcionario_responsavel
     `);
 }
-
 async function inserirNovoServico(transaction, id_cliente, servico, destinatario) {
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('nome', sql.VarChar, servico.nome_servico);
