@@ -20,11 +20,11 @@ const getMimeType = (fileName) => {
 };
 
 const determinarTipo = (texto) => {
-    if (texto.includes("Princ")) {
+    if (texto.includes("Princ")||texto.includes("_FotoEpi")) {
         return "principal";
     } else if (texto.includes("info")) {
         return "info";
-    } else {
+    }else{
         return "Secundario";
     }
 };

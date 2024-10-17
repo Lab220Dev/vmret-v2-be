@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const { logQuery } = require('../../utils/logUtils');
 const multer = require('multer');
+const { sendEmail, generateEmailHTML2 } = require('../../utils/emailService');
+const CryptoJS = require('crypto-js');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -55,7 +57,58 @@ async function listarFuncionarios(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
+async function adiconarFuncionarioExt(request, response){
+    let transaction;
 
+    try {
+        // Resgatando os campos relevantes do form-data
+        const name = req.body['form_fields[name]'];
+        const email = req.body['form_fields[email]'];
+        const telefone = req.body['form_fields[Telefone]'];
+        const empresa = req.body['form_fields[Empresa]'];
+        const cargo = req.body['form_fields[Cargo]'];
+
+        transaction = new sql.Transaction();
+        await transaction.begin();
+
+        const request = new sql.Request(transaction);
+        
+        const query = `
+        INSERT INTO funcionarios (id_cliente, id_usuario, nome, matricula, email, senha, empresa, cargo, sincronizado) 
+        VALUES (@id_cliente, @id_usuario, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
+    `;
+        const hashMD5 = CryptoJS.MD5(telefone.toString().slice(-4)).toString();
+        const result = await request
+            .input('id_cliente', sql.Int, 79)
+            .input('id_usuario', sql.Int, 0)
+            .input('nome', sql.VarChar, name)
+            .input('matricula', sql.VarChar, telefone.toString())
+            .input('email', sql.VarChar, email)
+            .input('senha', sql.VarChar, hashMD5)
+            .input('Empresa', sql.VarChar, empresa)
+            .input('Cargo', sql.VarChar, cargo)
+            .input('Sincronizado', sql.Bit, 0)
+            .query(query);
+
+        await transaction.commit();
+        if(result.recordset.length > 0 ){
+            let Email= generateEmailHTML2(telefone.toString().slice(-4))
+            await sendEmail(Email);
+            //chamada wapp 
+            //fim
+            res.status(200).json({ message: 'Funcionário adicionado com sucesso.' });
+
+        }
+
+
+    } catch (error) {
+        if (transaction) {
+            await transaction.rollback();
+        }
+        console.error('Erro ao adicionar funcionário:', error);
+        res.status(500).json({ error: 'Erro ao adicionar funcionário.' });
+    }
+}
 
 async function adicionarFuncionarios(request, response) {
     const {
@@ -432,5 +485,6 @@ module.exports = {
     listarPlanta,
     atualizarFuncionario,
     deleteFuncionario,
-    listarOperadores
+    listarOperadores,
+    adiconarFuncionarioExt
 };

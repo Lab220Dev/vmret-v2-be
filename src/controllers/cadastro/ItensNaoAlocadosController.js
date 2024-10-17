@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { Console } = require("console");
+const { console } = require("inspector");
 
 // Função para baixar e salvar uma imagem
 async function baixarImagem(url, localPath) {
@@ -65,11 +66,11 @@ async function sincronizar(request, response) {
             await transaction.rollback();
             return response.status(404).json({ mensagem: "Nenhum dado encontrado para o cliente especificado" });
         }
-
-        const { ClienteID, UserID, Chave } = clienteInfo;
+        console.log(clienteInfo)
+        const { ClienteID, UserID, Chave ,URL} = clienteInfo;
 
         // Obter token de acesso da API externa
-        const accessToken = await obterAccessToken(ClienteID, UserID, Chave);
+        const accessToken = await obterAccessToken(ClienteID, UserID, Chave,URL);
 
         if (!accessToken) {
             await transaction.rollback();
@@ -77,7 +78,7 @@ async function sincronizar(request, response) {
         }
 
         // Obter produtos externos
-        const produtosExternos = await obterProdutosExternos(accessToken);
+        const produtosExternos = await obterProdutosExternos(accessToken,URL);
 
         if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
             await transaction.rollback();
@@ -100,18 +101,19 @@ async function sincronizar(request, response) {
 
 // Função para recuperar informações do cliente
 async function recuperarClienteInfo(transaction, id_cliente) {
-    const query = `SELECT ClienteID, UserID, Chave FROM DMs WHERE IDcliente = @id_cliente`;
+    const query = `SELECT ClienteID, UserID, Chave,URL FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0`;
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
     const result = await sqlRequest.query(query);
-
+    console.log(result)
     return result.recordset.length > 0 ? result.recordset[0] : null;
 }
 
 // Função para obter o token de acesso da API externa
-async function obterAccessToken(ClienteID, UserID, Chave) {
+async function obterAccessToken(ClienteID, UserID, Chave,URL) {
     try {
-        const response = await axios.post('https://api.mobsolucoesdigitais.com.br/api/Login', {
+        console.log(`${URL}/api/Login`)
+        const response = await axios.post(`${URL}/api/Login`, {
             UserID: UserID,
             AccessKey: Chave,
             IdCliente: ClienteID,
@@ -126,9 +128,9 @@ async function obterAccessToken(ClienteID, UserID, Chave) {
 }
 
 // Função para obter produtos externos da API
-async function obterProdutosExternos(accessToken) {
+async function obterProdutosExternos(accessToken,URL) {
     try {
-        const response = await axios.get('https://api.mobsolucoesdigitais.com.br/api/VendingMachine/obterEpis', {
+        const response = await axios.get(`${URL}/api/VendingMachine/obterEpis`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`
             }
