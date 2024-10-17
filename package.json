@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --inspect server.js", 
+    "start": "node --inspect server.js",
     "debug": "nodemon --exec \"npm start\""
   },
   "keywords": [],
@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@api/chatpro": "file:.api/apis/chatpro",
     "@types/mssql": "^9.1.5",
     "axios": "^1.7.5",
     "connect-history-api-fallback": "^2.0.0",
