@@ -5,7 +5,9 @@ const { logQuery } = require("../../utils/logUtils");
 const multer = require("multer");
 const { sendEmail, generateEmailHTML2 } = require("../../utils/emailService");
 const CryptoJS = require("crypto-js");
-//const chatpro = require("@api/chatpro");
+//const chatpro = require("../../../.api/chatpro");
+const axios = require('axios');
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -61,59 +63,126 @@ async function listarFuncionarios(request, response) {
   }
 }
 async function adiconarFuncionarioExt(request, response) {
-  let transaction;
-  try {
-    // Resgatando os campos relevantes do form-data
-    const name = request.body['form_fields[name]'];
-    const email = request.body['form_fields[email]'];
-    const telefone = request.body['form_fields[Telefone]'];
-    const empresa = request.body['form_fields[Empresa]'];
-    const cargo = request.body['form_fields[Cargo]'];
-    console.log(telefone)
-    transaction = new sql.Transaction();
-    await transaction.begin();
+    let transaction;
+          // Resgatando os campos relevantes do form-data
+          const name = request.body['form_fields[name]'];
+          const email = request.body['form_fields[email]'];
+          const telefone = request.body['form_fields[Telefone]'];
+          const empresa = request.body['form_fields[Empresa]'];
+          const cargo = request.body['form_fields[Cargo]'];
+          const id_usuario =request.body.id_usuario;
+          const query = `
+          INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
+          VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
+      `;
+    try {
+      
+      transaction = new sql.Transaction();
+      await transaction.begin();
+  
 
-
-    const query = `
-        INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
-        VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
-    `;
-    const hashMD5 = CryptoJS.MD5(telefone.slice(-4)).toString();
-    const sqlrequest = new sql.Request(transaction);
-    sqlrequest.input("id_cliente", sql.Int, 79)
-      .input("nome", sql.VarChar, name)
-      .input("matricula", sql.VarChar, telefone)
-      .input("email", sql.VarChar, email)
-      .input("senha", sql.VarChar, hashMD5)
-      .input("Empresa", sql.VarChar, empresa)
-      .input("Cargo", sql.VarChar, cargo)
-      .input("Sincronizado", sql.Bit, 0);
-    const result = await sqlrequest.query(query);
-    if (result.rowsAffected.length > 0) {
-      let Email = generateEmailHTML2(telefone.slice(-4));
-      await sendEmail(email, 'Sua senha', Email);
-      //chamada wapp
-      /*chatpro.send_message({
-        number: telefone,
-        message: Email,
-        quoted_message_id: 'string'
-      }, {instance_id: 'chatpro-w2u3pnxtci'})
-        .then(({ data }) => console.log('ok',data))
-        .catch(err => console.error('erro api',err));*/
-      //fim
-      await transaction.commit();
-      response.status(200).json({ message: "Funcionário adicionado com sucesso." });
-    
+      
+      const hashMD5 = CryptoJS.MD5(telefone.slice(-4)).toString();
+      const sqlrequest = new sql.Request(transaction);
+      sqlrequest.input("id_cliente", sql.Int, 79)
+        .input("nome", sql.VarChar, name)
+        .input("matricula", sql.VarChar, telefone)
+        .input("email", sql.VarChar, email)
+        .input("senha", sql.VarChar, hashMD5)
+        .input("Empresa", sql.VarChar, empresa)
+        .input("Cargo", sql.VarChar, cargo)
+        .input("Sincronizado", sql.Bit, 0);
+  
+      const result = await sqlrequest.query(query);
+  
+      if (result.rowsAffected.length > 0) {
+        const params = {
+          id_cliente: 79,
+          nome: name,
+          matricula: telefone,
+          email: email,
+          senha: hashMD5,
+          empresa: empresa,
+          cargo: cargo,
+          sincronizado: 0
+        };
+  
+        // Log da inserção no banco de dados
+        logQuery('info', `Funcionário ${name} inserido com sucesso pelo usuário ${id_usuario}`, 'sucesso', 'INSERT', null,id_usuario, query, params);
+  
+        let Email = generateEmailHTML2(telefone.slice(-4));
+        await sendEmail(email, 'Sua senha', Email);
+  
+        // Log do envio de e-mail
+        logQuery('info', `E-mail enviado para ${email} com a senha de retirada`, 'sucesso', 'EMAIL', null, id_usuario, 'sendEmail', { email });
+  
+        // Envio da mensagem via ChatPro
+        await enviarMensagem(telefone,id_usuario);
+        
+        await transaction.commit();
+        response.status(200).json({ message: "Funcionário adicionado com sucesso." });
+      }
+    } catch (error) {
+      if (transaction) {
+        await transaction.rollback();
+      }
+  
+      const errorParams = {
+        id_cliente: 79,
+        nome: name,
+        matricula: telefone,
+        email: email,
+        empresa: empresa,
+        cargo: cargo
+      };
+  
+      // Log do erro
+      logQuery('error', `Erro ao adicionar funcionário ${name}: ${error.message}`, 'falha', 'ERROR', null, id_usuario, query, errorParams);
+  
+      // Log adicional do stack trace
+      logQuery('error', `Stack trace: ${error.stack}`, 'falha', 'ERROR_STACK', null,id_usuario, query, {});
+  
+      console.error("Erro ao adicionar funcionário:", error);
+      response.status(500).json({ error: "Erro ao adicionar funcionário." });
     }
-  } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
-    console.error("Erro ao adicionar funcionário:", error);
-    response.status(500).json({ error: "Erro ao adicionar funcionário." });
   }
-}
 
+  const enviarMensagem = async (telefone, id_usuario) => {
+    const options = {
+      method: 'POST',
+      url: 'https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        Authorization: 'ac9de8b5b1f8f8cd344c8e9057e365e7'
+      },
+      data: {
+        number: `${telefone}`,
+        message: `Sua senha para retirada é: ${telefone.slice(-4)}`
+      }
+    };
+  
+    try {
+      const response = await axios.request(options);
+      if (response.status === 201) {
+        console.log('Mensagem enviada com sucesso:', response.data);
+  
+        // Log de sucesso
+        logQuery('info', `Mensagem enviada para o telefone ${telefone}`, 'sucesso', 'CHATPRO', null, id_usuario, 'send_message', { telefone });
+  
+      } else {
+        console.error('Falha ao enviar a mensagem:', response.status, response.statusText);
+  
+        // Log de falha
+        logQuery('error', `Falha ao enviar a mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, id_usuario, 'send_message', { telefone, status: response.status, statusText: response.statusText });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar a mensagem:', error.message);
+  
+      // Log do erro completo com stack trace
+      logQuery('error', `Erro ao enviar mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, id_usuario, 'send_message', { telefone, error: error.message, stack: error.stack });
+    }
+  };
 async function adicionarFuncionarios(request, response) {
   const {
     id_setor,

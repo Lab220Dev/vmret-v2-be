@@ -7,7 +7,8 @@ const config = {
     server: process.env.DB_SERVER,
     database: process.env.DB_DATABASE,
     options: {
-        encrypt: false 
+        encrypt: false ,
+        useUTC: false,
     }
 };
 

@@ -84,7 +84,20 @@ const logger = createLogger({
         new SQLTransport({ idCliente: 1, idUsuario: 1 })
     ]
 });
+function getSaoPauloTime() {
+    // Obter a data atual em UTC
+    const now = new Date();
 
+    // Converter para o fuso horário de São Paulo (UTC-3)
+    const saoPauloOffset = -3 * 60;  // São Paulo é UTC-3
+    const localOffset = now.getTimezoneOffset();  // Obter o offset do servidor em minutos
+
+    // Ajustar a diferença de fuso horário
+    const saoPauloTime = new Date(now.getTime() + (saoPauloOffset - localOffset) * 60000);
+
+    // Formatar como ISO 8601 (sem milissegundos)
+    return saoPauloTime.toISOString().slice(0, 19);  // Retira a parte dos milissegundos
+}
 function logWithOperation(level, message, resultado, operacao, id_cliente, id_usuario, query) {
     if (!query) {
         console.error('Erro: Query não fornecida para logging.');
@@ -95,7 +108,7 @@ function logWithOperation(level, message, resultado, operacao, id_cliente, id_us
         level,
         message,
         resultado,
-        timestamp: new Date().toISOString(),
+        timestamp: getSaoPauloTime(),
         operacao,
         idCliente: id_cliente,
         idUsuario: id_usuario,

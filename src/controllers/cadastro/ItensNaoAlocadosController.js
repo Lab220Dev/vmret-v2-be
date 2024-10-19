@@ -59,38 +59,43 @@ async function sincronizar(request, response) {
         transaction = new sql.Transaction();
         await transaction.begin();
 
-        // Recuperar informações do cliente
-        const clienteInfo = await recuperarClienteInfo(transaction, id_cliente);
+        // Recuperar informações do cliente (lista de resultados)
+        const clienteInfos = await recuperarClienteInfo(transaction, id_cliente);
 
-        if (!clienteInfo) {
+        if (!Array.isArray(clienteInfos) || clienteInfos.length === 0) {
             await transaction.rollback();
             return response.status(404).json({ mensagem: "Nenhum dado encontrado para o cliente especificado" });
         }
-        console.log(clienteInfo)
-        const { ClienteID, UserID, Chave ,URL} = clienteInfo;
 
-        // Obter token de acesso da API externa
-        const accessToken = await obterAccessToken(ClienteID, UserID, Chave,URL);
+        const produtosComStatusPorCliente = [];
 
-        if (!accessToken) {
-            await transaction.rollback();
-            return response.status(500).json({ mensagem: 'Erro ao fazer login na API externa' });
+        // Processar o fluxo para cada resultado da lista retornada por recuperarClienteInfo
+        for (const clienteInfo of clienteInfos) {
+            const { ClienteID, UserID, Chave, URL } = clienteInfo;
+
+            // Obter token de acesso da API externa para cada registro
+            const accessToken = await obterAccessToken(ClienteID, UserID, Chave, URL);
+            if (!accessToken) {
+                console.warn(`Erro ao fazer login na API externa para o ClienteID: ${ClienteID}`);
+                continue; // Pula para o próximo resultado se houver erro
+            }
+
+            // Obter produtos externos
+            const produtosExternos = await obterProdutosExternos(accessToken, URL);
+            if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
+                console.warn(`Nenhum produto registrado para o ClienteID: ${ClienteID}`);
+                continue; // Pula para o próximo resultado se não houver produtos
+            }
+
+            // Inserir ou atualizar produtos no banco de dados para cada item da lista
+            const produtosComStatus = await inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente);
+            produtosComStatusPorCliente.push({ ClienteID, produtosComStatus });
         }
 
-        // Obter produtos externos
-        const produtosExternos = await obterProdutosExternos(accessToken,URL);
-
-        if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
-            await transaction.rollback();
-            return response.status(404).json("Nenhum produto registrado");
-        }
-
-        // Inserir ou atualizar produtos no banco de dados
-        const produtosComStatus = await inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente);
         await transaction.commit();
 
-        // Retornando os produtos inseridos
-        response.status(200).json(produtosComStatus);
+        // Retornando os produtos inseridos/atualizados para todos os resultados da lista
+        response.status(200).json(produtosComStatusPorCliente);
 
     } catch (error) {
         console.error('Erro ao sincronizar:', error.message);
@@ -106,7 +111,7 @@ async function recuperarClienteInfo(transaction, id_cliente) {
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
     const result = await sqlRequest.query(query);
     console.log(result)
-    return result.recordset.length > 0 ? result.recordset[0] : null;
+    return result.recordset.length > 0 ? result.recordset : null;
 }
 
 // Função para obter o token de acesso da API externa
@@ -141,14 +146,6 @@ async function obterProdutosExternos(accessToken,URL) {
         console.error('Erro ao obter produtos externos:', error.message);
         return null;
     }
-}
-
-// Função para determinar o tipo e ajustar o nome da imagem
-function determinarTipoENomeImagem(imagemNome) {
-    const prefixo = "Princ_";
-    const extensao = path.extname(imagemNome); // Obtém a extensão do arquivo (.jpg, .png, etc.)
-    const novoNome = `${prefixo}${path.basename(imagemNome, extensao)}${extensao}`; // Concatena o prefixo com o nome base e a extensão
-    return novoNome;
 }
 
 // Função para inserir ou atualizar produtos no banco de dados
@@ -299,6 +296,13 @@ async function inserirOuAtualizarProdutos(transaction, produtosExternos, id_clie
     return produtosComStatus;
 }
 
+// Função para determinar o tipo e ajustar o nome da imagem
+function determinarTipoENomeImagem(imagemNome) {
+    const prefixo = "Princ_";
+    const extensao = path.extname(imagemNome); // Obtém a extensão do arquivo (.jpg, .png, etc.)
+    const novoNome = `${prefixo}${path.basename(imagemNome, extensao)}${extensao}`; // Concatena o prefixo com o nome base e a extensão
+    return novoNome;
+}
 
 module.exports = {
     recuperar, sincronizar
