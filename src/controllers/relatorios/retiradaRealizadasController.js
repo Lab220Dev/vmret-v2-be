@@ -1,10 +1,10 @@
 const sql = require('mssql');
 const { format } = require('date-fns');
-const { logWithOperation } = require('../../middleware/Logger');
+const { logQuery } = require("../../utils/logUtils");
 
 async function relatorio(request, response) {
     try {
-        const { id_dm = '', id_setor = '', id_planta = '', id_funcionario = '', data_inicio, data_final, id_cliente,id_usuario } = request.body;
+        const { id_dm = '', id_funcionario = '', data_inicio, data_final, id_cliente, id_usuario } = request.body;
 
         if (!id_cliente) {
             return response.status(401).json("ID do cliente não enviado");
@@ -36,30 +36,33 @@ async function relatorio(request, response) {
                 ri.Retorno,
                 f.matricula,
                 f.nome,
-                f.email
+                f.email,
+                dm.Identificacao AS DM_Identificacao
             FROM
                 Retiradas r
             INNER JOIN
                 retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
+            LEFT JOIN
+                DMs dm ON r.ID_DM = dm.ID_DM
             WHERE
                 r.ID_Cliente = @id_cliente AND r.Sincronizado = 1
         `;
+        const formatDate = (date) => {
+            const dia = date.getDate().toString().padStart(2, '0');
+            const mes = (date.getMonth() + 1).toString().padStart(2, '0'); 
+            const ano = date.getFullYear();
+            const horas = date.getHours().toString().padStart(2, '0');
+            const minutos = date.getMinutes().toString().padStart(2, '0');
+            return `${dia}/${mes}/${ano} - ${horas}:${minutos}`;
+        };
 
         let params = { id_cliente };
 
         if (id_dm) {
             query += ' AND r.ID_DM = @id_dm';
             params.id_dm = id_dm;
-        }
-        if (id_setor) {
-            query += ' AND r.ID_Setor = @id_setor';
-            params.id_setor = id_setor;
-        }
-        if (id_planta) {
-            query += ' AND r.ID_Planta = @id_planta';
-            params.id_planta = id_planta;
         }
         if (id_funcionario) {
             query += ' AND r.ID_Funcionario = @id_funcionario';
@@ -70,7 +73,6 @@ async function relatorio(request, response) {
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
             params.data_inicio = new Date(data_inicio).toISOString();
             params.data_final = new Date(data_final).toISOString();
-
         } else if (data_inicio) {
             query += ' AND r.Dia >= @data_inicio';
             params.data_inicio = new Date(data_inicio).toISOString();
@@ -79,6 +81,7 @@ async function relatorio(request, response) {
             params.data_final = new Date(data_final).toISOString();
         }
 
+       
         request = new sql.Request();
         request.input('id_cliente', sql.Int, params.id_cliente);
         if (params.id_dm) request.input('id_dm', sql.Int, id_dm.toString());
@@ -87,6 +90,7 @@ async function relatorio(request, response) {
         if (params.id_funcionario) request.input('id_funcionario', sql.Int, params.id_funcionario);
         if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicio);
         if (params.data_final) request.input('data_final', sql.DateTime, params.data_final);
+        
         const result = await request.query(query);
         const retiradasfiltradas = result.recordset.map(row => ({
             ID_Retirada: row.ID_Retirada,
@@ -97,21 +101,27 @@ async function relatorio(request, response) {
             Matricula: row.matricula,
             Nome: row.nome,
             Email: row.email,
-            Dia: format(new Date(row.Dia), 'dd/MM/yyyy - HH:mm'),
+            Dia: formatDate(new Date(row.Dia)),
             ProdutoID: row.ProdutoID,
             ProdutoNome: row.ProdutoNome,
             ProdutoSKU: row.ProdutoSKU,
             Quantidade: row.Quantidade,
+            Identificacao: row.DM_Identificacao
         }));
-       // logWithOperation('info', `O usuario ${id_usuario} Gerou um relatorio`, `sucesso`, 'Relatorio Retirada Realizada', id_cliente, id_usuario);
+
+        // Log de sucesso na geração do relatório
+        logQuery('info', `Usuário ${id_usuario} gerou um relatório de retiradas`, 'sucesso', 'Relatório', id_cliente, id_usuario, query, params);
+        
         return response.status(200).json(retiradasfiltradas);
 
     } catch (error) {
-       // logWithOperation('error', `O usuario ${id_usuario} Falhou em gerar um relatorio: ${err.message}`, 'Falha', 'Relatorio Retirada Realizada', id_cliente, id_usuario);
+        // Log de falha ao gerar o relatório
+        logQuery('error', `Erro ao gerar o relatório para o usuário ${id_usuario}: ${error.message}`, 'falha', 'Relatório', id_cliente, id_usuario, query, {});
         console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
+        return response.status(500).send('Erro ao executar consulta');
     }
 }
+
 async function listarDM(request, response) {
     try {
       const id_cliente = request.body.id_cliente;

@@ -29,6 +29,7 @@ const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
 const ItensNaoAlocadosRoutes = require('./src/routes/cadastros/ItensNaoAlocadosRoutes');
 const { autenticarToken, autorizarRoles } = require('./src/middleware/authMiddleware');
+const eventoRoutes = require('./src/routes/evento');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
 const path = require('path');
@@ -51,9 +52,12 @@ app.use(history({
     ]
 }));
 app.use(cors({
-    origin: '*'
-}));
+    origin: '*',  // Permite todas as origens
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Mantém todos os métodos possíveis
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']  // Permite os cabeçalhos que você usa
+  }));
 
+  app.options('*', cors());  
 // Conectar ao banco de dados
 dbConfig().catch(err => {
     console.error("Erro ao conectar ao banco de dados:", err.message);
@@ -71,7 +75,7 @@ app.use('/api/produtos', autenticarToken, produtoRoutes);
 
 // Rotas de recuperação de Imagem
 app.use('/api/image',imageRoutes);
-
+app.use('/api/evento',eventoRoutes);
 // Rotas de Centro de Custo
 app.use('/api/cdc', autenticarToken, CentroCustoRoutes);
 

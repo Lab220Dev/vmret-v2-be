@@ -1,5 +1,5 @@
 const sql = require('mssql');
-// const { sendEmail, generateEmailHTML } = require('../utils/emailService');
+ const { sendEmail, generateEmailHTML } = require('../utils/emailService');
 const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const segredo = '%$&*656$4#%$3@@@__';
@@ -82,27 +82,60 @@ async function logout(request, response) {
     
     response.status(200).json({ message: 'Logoff bem-sucedido' });
 }
-// async function recuperarSenha(req, res) {
-//     try {
-//         const email = req.body.email;
-//         if (!email) {
-//             return res.status(400).json({ message: 'e-mail não fornecido' });
-//         }
-//         const query = `
-//         SELECT senha FROM Usuarios
-//         WHERE email = @Email`;
-//         const result = await new sql.Request()
-//             .input('Email', sql.VarChar, email)
-//             .query(query)
-//         const senha = result.recordset[0];
-//         const htmlContent = generateEmailHTML(senha);
-//         await sendEmail(email, 'Sua senha', htmlContent);;
-//         res.status(200).json({ message: 'Senha enviada com sucesso!' });
-//     } catch (error) {
-//         console.error('Erro ao enviar e-mail:', error);
-//         res.status(500).json({ message: 'Erro ao enviar e-mail.' });
-//     }
-// }
+async function recuperarSenha(req, res) {
+    try {
+        const email = req.body.email;
+        if (!email) {
+            return res.status(400).json({ message: 'E-mail não fornecido' });
+        }
+
+        // Consulta para verificar se o e-mail existe
+        const query = `
+        SELECT * FROM Usuarios
+        WHERE email = @Email`;
+        
+        const result = await new sql.Request()
+            .input('Email', sql.VarChar, email)
+            .query(query);
+
+        // Verificando se o e-mail foi encontrado
+        if (result.recordset.length > 0) {
+            // Gerar uma nova senha
+            const senha = '123456';  // Exemplo de senha simples, idealmente você geraria uma senha segura
+            const hashMD5 = CryptoJS.MD5(senha).toString();
+
+            // Atualizar a senha no banco de dados
+            const queryUpdate = `
+            UPDATE Usuarios 
+            SET senha = @senha 
+            WHERE email = @Email`;
+
+            const updateResult = await new sql.Request()
+                .input('senha', sql.VarChar, hashMD5)
+                .input('Email', sql.VarChar, email)
+                .query(queryUpdate);
+
+            // Verificar se a atualização foi bem-sucedida
+            if (updateResult.rowsAffected[0] > 0) {
+                console.log("Senha atualizada com sucesso");
+
+                // Gerar o conteúdo do e-mail e enviar
+                const htmlContent = generateEmailHTML(senha);  // Função que gera o HTML do e-mail
+                await sendEmail(email, 'Sua senha', htmlContent);  // Função de envio de e-mail
+                return res.status(200).json({ message: 'Senha enviada com sucesso!' });
+            } else {
+                console.log("Erro ao atualizar a senha.");
+                return res.status(500).json({ message: 'Erro ao atualizar a senha.' });
+            }
+        } else {
+            console.log("E-mail não encontrado");
+            return res.status(404).json({ message: 'E-mail não encontrado.' });
+        }
+    } catch (error) {
+        console.error('Erro ao processar a recuperação de senha:', error);
+        return res.status(500).json({ message: 'Erro ao processar a recuperação de senha.' });
+    }
+}
 const roleToProfile = {
     'Master': 1,
     'Gestor': 2,
@@ -166,4 +199,5 @@ function cleanItems(menu) {
 module.exports = {
     login,
     logout,
+    recuperarSenha
 };

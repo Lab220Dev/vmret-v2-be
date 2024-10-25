@@ -4,6 +4,7 @@ const funcionarioController = require('../../controllers/cadastro/funcionarioCon
 
 router.post('/listar', funcionarioController.listarFuncionarios);
 router.post('/adicionar', funcionarioController.upload.any(),funcionarioController.adicionarFuncionarios);
+router.post('/adicionarExt', funcionarioController.adiconarFuncionarioExt);
 router.put('/atualizar', funcionarioController.upload.any(),funcionarioController.atualizarFuncionario);
 router.post('/listarcentrocusto', funcionarioController.listarCentroCusto);
 router.post('/listarhierarquia', funcionarioController.listarHierarquia);
