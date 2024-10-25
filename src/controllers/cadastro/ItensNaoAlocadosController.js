@@ -71,10 +71,10 @@ async function sincronizar(request, response) {
 
         // Processar o fluxo para cada resultado da lista retornada por recuperarClienteInfo
         for (const clienteInfo of clienteInfos) {
-            const { ClienteID, UserID, Chave, URL } = clienteInfo;
+            const { ClienteID, UserID, ChaveAPI, URL } = clienteInfo;
 
             // Obter token de acesso da API externa para cada registro
-            const accessToken = await obterAccessToken(ClienteID, UserID, Chave, URL);
+            const accessToken = await obterAccessToken(ClienteID, UserID, ChaveAPI, URL);
             if (!accessToken) {
                 console.warn(`Erro ao fazer login na API externa para o ClienteID: ${ClienteID}`);
                 continue; // Pula para o próximo resultado se houver erro
@@ -106,7 +106,7 @@ async function sincronizar(request, response) {
 
 // Função para recuperar informações do cliente
 async function recuperarClienteInfo(transaction, id_cliente) {
-    const query = `SELECT ClienteID, UserID, Chave,URL FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0`;
+    const query = `SELECT ClienteID, UserID, ChaveAPI,URL FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0`;
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
     const result = await sqlRequest.query(query);
@@ -115,12 +115,12 @@ async function recuperarClienteInfo(transaction, id_cliente) {
 }
 
 // Função para obter o token de acesso da API externa
-async function obterAccessToken(ClienteID, UserID, Chave,URL) {
+async function obterAccessToken(ClienteID, UserID, Chaveapi,URL) {
     try {
         console.log(`${URL}/api/Login`)
         const response = await axios.post(`${URL}/api/Login`, {
             UserID: UserID,
-            AccessKey: Chave,
+            AccessKey: Chaveapi,
             IdCliente: ClienteID,
             tpReadFtp: 0
         });

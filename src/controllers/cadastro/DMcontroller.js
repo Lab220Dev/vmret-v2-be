@@ -1,5 +1,4 @@
 const sql = require("mssql");
-
 async function obterProximoIdItem() {
   const sqlRequest = new sql.Request();
   const query = `SELECT ISNULL(MAX(id_item), 0) + 1 AS NextIdItem FROM DM_itens`;
@@ -143,7 +142,6 @@ async function inserirControladoraGenerica(
 ) {
   // Verifica o tipo da controladora e realiza a inserção adequada
   const tipoControladora = controladora.tipo;
-  const sqlRequest2 = new sql.Request(transaction);
 
   sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
   sqlRequest2.input("ID_DM", sql.Int, dmId);
@@ -153,6 +151,7 @@ async function inserirControladoraGenerica(
 
   if (tipoControladora === "2018") {
     for (const mola of controladora.dados.molas) {
+  const sqlRequest2 = new sql.Request(transaction);
       const queryControladora2018 = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, @Sincronizado, @Deleted)`;
@@ -260,7 +259,7 @@ async function adicionar(request, response) {
     sqlRequest.input("UserID", sql.VarChar, UserID);
     sqlRequest.input("Chave", sql.NVarChar, Chave);
     sqlRequest.input("ID_CR_Usuario", sql.Int, id_usuario);
-    sqlRequest.input("Sincronizado", sql.Int, 0); // Sincronizado como 0
+    sqlRequest.input("Sincronizado", sql.Int, 0); 
 
     const urlToInsert = Integracao
       ? "https://api.mobsolucoesdigitais.com.br"
@@ -346,7 +345,8 @@ async function atualizar(request, response) {
           ClienteNome = @ClienteNome,
           Chave = @Chave,
           ChaveAPI = @ChaveAPI,
-          Devolucao = @Devolucao
+          Devolucao = @Devolucao,
+          Sincronizado = 0
       WHERE ID_DM = @ID_DM AND ID_Cliente = @IDcliente`;
 
     const requestDM = new sql.Request(transaction);
@@ -400,46 +400,88 @@ async function atualizar(request, response) {
         const existingControladora = existingControladorasMap.get(
           controladora.dados.placa
         );
-        await atualizarControladora2018(
-          transaction,
-          controladora,
-          ID_DM,
-          IDcliente,
-          existingControladora
-        );
+
+        if (existingControladora) {
+          // Atualiza a controladora existente
+          await atualizarControladora2018(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente,
+            existingControladora
+          );
+        } else {
+          console.log(controladora);
+          await adicionarControladora2018(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        }
       } else if (controladora.tipo === "2023") {
         const existingControladora = existingControladorasMap.get(
           controladora.dados.dip
         );
-        await atualizarControladora2023(
-          transaction,
-          controladora,
-          ID_DM,
-          IDcliente,
-          existingControladora
-        );
+
+        if (existingControladora) {
+          await atualizarControladora2023(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente,
+            existingControladora
+          );
+        } else {
+          await adicionarControladora2023(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        }
       } else if (controladora.tipo === "Locker") {
         const existingControladora = existingControladorasMap.get(
           controladora.dados.dip
         );
-        await atualizarControladoraLocker(
-          transaction,
-          controladora,
-          ID_DM,
-          IDcliente,
-          existingControladora
-        );
+
+        if (existingControladora) {
+          await atualizarControladoraLocker(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente,
+            existingControladora
+          );
+        } else {
+          await adicionarControladoraLocker(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        }
       } else if (controladora.tipo === "2024") {
         const existingControladora = existingControladorasMap.get(
           controladora.dados.placa
         );
-        await atualizarControladora2024(
-          transaction,
-          controladora,
-          ID_DM,
-          IDcliente,
-          existingControladora
-        );
+
+        if (existingControladora) {
+          await atualizarControladora2024(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente,
+            existingControladora
+          );
+        } else {
+          await adicionarControladora2024(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        }
       }
     }
 
@@ -589,7 +631,7 @@ async function atualizarControladora2023(
   // Remove posições antigas
   for (const posicao of posicoesExistentes) {
     if (!novasPosicoes.has(posicao)) {
-      const sqlRequestUpdate = new sql.Request(transaction); // Criação de nova instância de sql.Request para cada iteração
+      const sqlRequestUpdate = new sql.Request(transaction);
       const updateQuery = `
         UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
 
@@ -603,7 +645,8 @@ async function atualizarControladora2023(
   // Remove andares antigos
   for (const andar of andaresExistentes) {
     if (!novasAndares.has(andar)) {
-      const sqlRequestUpdate = new sql.Request(transaction); // Criação de nova instância de sql.Request para cada iteração
+      const sqlRequestUpdate = new sql.Request(transaction); 
+
       const updateQuery = `
         UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar`;
 
@@ -645,6 +688,7 @@ async function atualizarControladora2018(
   clienteId,
   existingControladora
 ) {
+  console.log(existingControladora);
   const novasMolas = new Set(controladora.dados.molas);
   const molasExistentes = new Set(existingControladora.Mola1);
 
@@ -768,17 +812,16 @@ async function adicionarControladora2018(
   dmId,
   clienteId
 ) {
-  const sqlRequest = new sql.Request(transaction);
-
   for (const mola of controladora.dados.molas) {
     const query = `
       INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
       VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, 0, 0)`;
+    const sqlRequest = new sql.Request(transaction);
 
     sqlRequest.input("ID_Cliente", sql.Int, clienteId);
     sqlRequest.input("ID_DM", sql.Int, dmId);
     sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-    sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
+    sqlRequest.input("Placa", sql.NVarChar, controladora.dados.placa);
     sqlRequest.input("Mola1", sql.Int, mola);
 
     await sqlRequest.query(query);
@@ -845,6 +888,7 @@ async function adicionarItensDM(request, response) {
     id_usuario,
     Dip,
     Posicao,
+    Placa,
     Andar,
   } = request.body;
 
@@ -915,7 +959,7 @@ async function adicionarItensDM(request, response) {
     sqlRequest2.input("ID_DM", sql.Int, id_dm);
     sqlRequest2.input("id_produto", sql.Int, id_produto);
     sqlRequest2.input("Controladora", sql.VarChar, Controladora);
-    sqlRequest2.input("Placa", sql.Int, Porta);
+    sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
     sqlRequest2.input("Motor2", sql.Int, Motor2);
     sqlRequest2.input("DIP", sql.Int, Dip);
@@ -934,10 +978,10 @@ async function adicionarItensDM(request, response) {
 
     const insertResult = await sqlRequest2.query(insertQuery);
     if (insertResult.rowsAffected[0] > 0) {
-      //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, insertQuery, params);
+      //logQuery('info', `Usuário ${id_usuario} adicionou um novo item a dm ${id_dm}`, 'sucesso', 'INSERT', id_cliente, id_usuario, insertQuery, params);
       response.status(201).send("Item DM criado com sucesso!");
     } else {
-      //logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
+      //logQuery('error',  `Usuário ${id_usuario} falhou ao adicionar um novo item a dm ${id_dm}`, 'falha', 'INSERT', id_cliente, id_usuario, insertQuery, params);
       response.status(400).send("Falha ao criar o item DM!");
     }
   } catch (error) {
@@ -1154,5 +1198,6 @@ module.exports = {
   adicionarItensDM,
   deletarItensDM,
   atualizar,
+  atualizarItemDM,
   deletarDM,
 };
