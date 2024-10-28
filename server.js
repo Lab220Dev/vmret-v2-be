@@ -57,7 +57,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']  // Permite os cabeçalhos que você usa
   }));
 
-  app.options('*', cors());  
+app.options('*', cors());  
 // Conectar ao banco de dados
 dbConfig().catch(err => {
     console.error("Erro ao conectar ao banco de dados:", err.message);
@@ -75,6 +75,7 @@ app.use('/api/produtos', autenticarToken, produtoRoutes);
 
 // Rotas de recuperação de Imagem
 app.use('/api/image',imageRoutes);
+//Rotas de Evento
 app.use('/api/evento',eventoRoutes);
 // Rotas de Centro de Custo
 app.use('/api/cdc', autenticarToken, CentroCustoRoutes);
