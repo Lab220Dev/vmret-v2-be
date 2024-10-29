@@ -1,6 +1,6 @@
 const sql = require("mssql");
 const { logQuery } = require("../utils/logUtils");
-const { sendEmail, generateEmailHTML2 } = require("../utils/emailService");
+const { sendEmail, generateEmailHTML2 ,generateEmailHTMLFrancis} = require("../utils/emailService");
 const CryptoJS = require("crypto-js");
 const express = require('express');
 const axios = require('axios');
@@ -146,7 +146,7 @@ router.post('/francis', async (req, res) => {
 
     const randomNumbers = Math.floor(10 + Math.random() * 90).toString();
     const senhaComRandom =randomNumbers + telefone.slice(-4);
-    const hashMD5 = CryptoJS.MD5(senhaComRandom).toString(); 
+    //const hashMD5 = CryptoJS.MD5(senhaComRandom).toString(); 
 
     const queryInsert = `
         INSERT INTO EventoFrancis (nome, telefone, email, senha) 
@@ -179,7 +179,7 @@ router.post('/francis', async (req, res) => {
         sqlRequest.input("nome", sql.VarChar, name)
                   .input("telefone", sql.VarChar, telefone)
                   .input("email", sql.VarChar, email)
-                  .input("senha", sql.VarChar, hashMD5); 
+                  .input("senha", sql.VarChar, senhaComRandom); 
 
         const result = await sqlRequest.query(queryInsert);
 
@@ -187,12 +187,12 @@ router.post('/francis', async (req, res) => {
             await transaction.commit();
             logQuery('info', `Registro inserido para ${name}`, 'sucesso', 'INSERT', null, null, queryInsert, { nome: name, telefone, email });
 
-            const emailContent = generateEmailHTML2(senhaComRandom, name);
+            const emailContent = generateEmailHTMLFrancis(senhaComRandom, name);
             await sendEmail(email, 'Sua senha de acesso', emailContent);
             logQuery('info', `E-mail enviado para ${email}`, 'sucesso', 'EMAIL', null, null, 'sendEmail', { email });
 
-            // Enviar mensagem via ChatPro com a senha original
-            const mensagemChatPro = `Olá *${name.trim().toUpperCase()}* ,\nBem-vindo ao stand do *Lab 220*, a primeira fabricante de *Dispenser Machines* do Brasil.\nAqui está a sua senha para você poder retirar o seu brinde: *${senhaComRandom}*.\nAproveite e visite o nosso site: https://lab220.com.br/epi/\nObrigado!`;
+            const mensagemChatProFrancis = `Olá *${name.trim().toUpperCase()}*,\nBem-vindo(a) à *Experiência Francis*, onde você descobrirá a proteção de 72 horas contra o suor e o mau odor, além da perfumação ativa por 24 horas dos novos desodorantes Francis.\n\nAqui está a sua senha para você poder gravar o vídeo e retirar seu brinde exclusivo: *${senhaComRandom}*.\n\nNão deixe de visitar nosso site para saber mais: https://www.francis.com.br/francis/desodorantes/desodorantes-aerosol\n\nEsperamos que aproveite!`;
+
             const options = {
                 method: 'POST',
                 url: 'https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message',
@@ -203,7 +203,7 @@ router.post('/francis', async (req, res) => {
                 },
                 data: {
                     number:  `${telefone}`,
-                    message: mensagemChatPro
+                    message: mensagemChatProFrancis
                 }
             };
 

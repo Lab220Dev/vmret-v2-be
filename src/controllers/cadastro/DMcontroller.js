@@ -143,18 +143,17 @@ async function inserirControladoraGenerica(
   // Verifica o tipo da controladora e realiza a inserção adequada
   const tipoControladora = controladora.tipo;
 
-  sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
-  sqlRequest2.input("ID_DM", sql.Int, dmId);
-  sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
-  sqlRequest2.input("Sincronizado", sql.Int, 0); // Sincronizado como 0
-  sqlRequest2.input("Deleted", sql.Bit, false); // Deleted como falso
-
   if (tipoControladora === "2018") {
     for (const mola of controladora.dados.molas) {
-  const sqlRequest2 = new sql.Request(transaction);
       const queryControladora2018 = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, @Sincronizado, @Deleted)`;
+      const sqlRequest2 = new sql.Request(transaction);
+      sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequest2.input("ID_DM", sql.Int, dmId);
+      sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
+      sqlRequest2.input("Sincronizado", sql.Int, 0); 
+      sqlRequest2.input("Deleted", sql.Bit, false); 
       sqlRequest2.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest2.input("Mola1", sql.Int, mola);
       await sqlRequest2.query(queryControladora2018);
@@ -165,6 +164,12 @@ async function inserirControladoraGenerica(
         const queryControladora2023 = `
           INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Andar, Posicao, Sincronizado, Deleted)
           VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, @Sincronizado, @Deleted)`;
+        const sqlRequest2 = new sql.Request(transaction);
+        sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
+        sqlRequest2.input("ID_DM", sql.Int, dmId);
+        sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
+        sqlRequest2.input("Sincronizado", sql.Int, 0); 
+        sqlRequest2.input("Deleted", sql.Bit, false);
         sqlRequest2.input("DIP", sql.Int, controladora.dados.dip);
         sqlRequest2.input("Andar", sql.Int, andar);
         sqlRequest2.input("Posicao", sql.Int, posicao);
@@ -176,6 +181,12 @@ async function inserirControladoraGenerica(
       const queryControladoraLocker = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Posicao, @Sincronizado, @Deleted)`;
+      const sqlRequest2 = new sql.Request(transaction);
+      sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequest2.input("ID_DM", sql.Int, dmId);
+      sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
+      sqlRequest2.input("Sincronizado", sql.Int, 0); 
+      sqlRequest2.input("Deleted", sql.Bit, false);
       sqlRequest2.input("DIP", sql.Int, controladora.dados.dip);
       sqlRequest2.input("Posicao", sql.Int, posicao);
       await sqlRequest2.query(queryControladoraLocker);
@@ -185,6 +196,12 @@ async function inserirControladoraGenerica(
       const queryControladora2024 = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, @Sincronizado, @Deleted)`;
+      const sqlRequest2 = new sql.Request(transaction);
+      sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequest2.input("ID_DM", sql.Int, dmId);
+      sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
+      sqlRequest2.input("Sincronizado", sql.Int, 0);
+      sqlRequest2.input("Deleted", sql.Bit, false);
       sqlRequest2.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest2.input("Mola1", sql.Int, mola1);
       await sqlRequest2.query(queryControladora2024);
@@ -259,7 +276,7 @@ async function adicionar(request, response) {
     sqlRequest.input("UserID", sql.VarChar, UserID);
     sqlRequest.input("Chave", sql.NVarChar, Chave);
     sqlRequest.input("ID_CR_Usuario", sql.Int, id_usuario);
-    sqlRequest.input("Sincronizado", sql.Int, 0); 
+    sqlRequest.input("Sincronizado", sql.Int, 0);
 
     const urlToInsert = Integracao
       ? "https://api.mobsolucoesdigitais.com.br"
@@ -313,7 +330,27 @@ async function atualizar(request, response) {
     Controladoras,
     ChaveAPI,
   } = request.body;
-
+  console.log("Dados recebidos para atualização:", {
+    ID_DM,
+    IDcliente,
+    ClienteNome,
+    Numero,
+    Identificacao,
+    Ativo,
+    Deleted,
+    Created,
+    Updated,
+    Versao,
+    Enviada,
+    OP_Senha,
+    OP_Biometria,
+    OP_Facial,
+    Integracao,
+    ClienteID,
+    Chave,
+    ChaveAPI,
+    Devolucao,
+  });
   let transaction;
 
   try {
@@ -347,11 +384,11 @@ async function atualizar(request, response) {
           ChaveAPI = @ChaveAPI,
           Devolucao = @Devolucao,
           Sincronizado = 0
-      WHERE ID_DM = @ID_DM AND ID_Cliente = @IDcliente`;
+      WHERE ID_DM = @ID_DM AND ID_Cliente = @ID_Cliente`;
 
     const requestDM = new sql.Request(transaction);
     requestDM.input("ID_DM", sql.Int, ID_DM);
-    requestDM.input("IDcliente", sql.Int, IDcliente);
+    requestDM.input("ID_Cliente", sql.Int, IDcliente);
     requestDM.input("Numero", sql.VarChar, Numero);
     requestDM.input("Identificacao", sql.NVarChar, Identificacao);
     requestDM.input("Ativo", sql.Bit, Ativo);
@@ -645,7 +682,7 @@ async function atualizarControladora2023(
   // Remove andares antigos
   for (const andar of andaresExistentes) {
     if (!novasAndares.has(andar)) {
-      const sqlRequestUpdate = new sql.Request(transaction); 
+      const sqlRequestUpdate = new sql.Request(transaction);
 
       const updateQuery = `
         UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar`;
@@ -879,12 +916,12 @@ async function listarItensDM(request, response) {
 async function adicionarItensDM(request, response) {
   const {
     id_produto,
-    Porta,
     Motor1,
     Motor2,
     id_cliente,
     id_dm,
     Controladora,
+    tipo_controladora,
     id_usuario,
     Dip,
     Posicao,
@@ -936,8 +973,8 @@ async function adicionarItensDM(request, response) {
       id_cliente: id_cliente,
       ID_DM: id_dm,
       id_produto: id_produto,
-      Controladora: Controladora,
-      Placa: Porta,
+      Controladora: tipo_controladora,
+      Placa: Placa,
       Motor1: Motor1,
       Motor2: Motor2,
       DIP: Dip,
@@ -958,7 +995,7 @@ async function adicionarItensDM(request, response) {
     sqlRequest2.input("id_cliente", sql.Int, id_cliente);
     sqlRequest2.input("ID_DM", sql.Int, id_dm);
     sqlRequest2.input("id_produto", sql.Int, id_produto);
-    sqlRequest2.input("Controladora", sql.VarChar, Controladora);
+    sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
     sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
     sqlRequest2.input("Motor2", sql.Int, Motor2);
@@ -999,12 +1036,13 @@ async function atualizarItemDM(request, response) {
   const {
     id_item,
     id_produto,
-    Porta,
+    Placa,
     Motor1,
     Motor2,
     id_cliente,
     id_dm,
     Controladora,
+    tipo_controladora,
     id_usuario,
     Dip,
     Posicao,
@@ -1077,8 +1115,8 @@ async function atualizarItemDM(request, response) {
       id_cliente: id_cliente,
       ID_DM: id_dm,
       id_produto: id_produto,
-      Controladora: Controladora,
-      Placa: Porta,
+      Controladora: tipo_controladora,
+      Placa: Placa,
       Motor1: Motor1,
       Motor2: Motor2,
       DIP: Dip,
@@ -1100,8 +1138,8 @@ async function atualizarItemDM(request, response) {
     sqlRequest2.input("id_cliente", sql.Int, id_cliente);
     sqlRequest2.input("ID_DM", sql.Int, id_dm);
     sqlRequest2.input("id_produto", sql.Int, id_produto);
-    sqlRequest2.input("Controladora", sql.VarChar, Controladora);
-    sqlRequest2.input("Placa", sql.Int, Porta);
+    sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
+    sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
     sqlRequest2.input("Motor2", sql.Int, Motor2);
     sqlRequest2.input("DIP", sql.Int, Dip);
