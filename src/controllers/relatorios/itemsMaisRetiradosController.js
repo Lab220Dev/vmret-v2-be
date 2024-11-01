@@ -269,22 +269,22 @@ async function listarMaisRet(request, response) {
       response.status(401).json("O ID do cliente não foi enviado");
       return;
     }
-    let query = `SELECT TOP 5
-    ri.ProdutoNome, 
-    ri.ProdutoSKU, 
-    SUM(ri.Quantidade) AS TotalQuantidade
-FROM 
-    Retirada_Itens ri
-JOIN 
-    Retiradas r ON ri.ID_DM = r.ID_DM
-WHERE 
-    r.Dia >= DATEADD(MONTH, -6, GETDATE())
-    AND r.ID_Cliente = @id_cliente
-GROUP BY 
-    ri.ProdutoNome, 
-    ri.ProdutoSKU
-ORDER BY 
-    TotalQuantidade DESC`;
+    let query = `SELECT Top 5
+                ri.ProdutoNome,
+                ri.ProdutoSKU,
+                COUNT(*) AS NumeroDeRetiradas
+            FROM 
+                Retirada_Itens ri
+            JOIN 
+                Retiradas r ON ri.id_retirada = r.id_retirada
+            WHERE 
+                r.Dia >= DATEADD(MONTH, -6, GETDATE())  
+                AND r.ID_Cliente = @id_cliente         
+            GROUP BY 
+                ri.ProdutoNome, 
+                ri.ProdutoSKU
+            ORDER BY 
+                NumeroDeRetiradas DESC`;
     const request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);

@@ -36,6 +36,115 @@ async function relatorio(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function obterDadosResumo(request, response) {
+  try {
+      const { id_cliente } = request.body;
+
+      if (!id_cliente) {
+          return response.status(400).json({ error: "ID do cliente não enviado" });
+      }
+
+      const agora = new Date();
+      const tresHorasAtras = new Date(agora.getTime() - 3 * 60 * 60 * 1000); // Últimas 3 horas
+
+      const dbRequest = new sql.Request();
+      dbRequest.input("id_cliente", sql.Int, id_cliente);
+      dbRequest.input("tresHorasAtras", sql.DateTime, tresHorasAtras);
+      dbRequest.input("agora", sql.DateTime, agora);
+
+      // Obtenha todas as DMs associadas ao cliente
+      const dmsResult = await dbRequest.query(`
+          SELECT ID_DM, Identificacao
+          FROM DMs 
+          WHERE id_cliente = @id_cliente
+          AND Deleted = 0 
+      `);
+
+      const dms = dmsResult.recordset.map(dm => ({ id: dm.ID_DM, nome: dm.Identificacao }));
+      console.log(dms);
+      if (dms.length === 0) {
+          return response.status(204).json({ message: "Nenhuma DM encontrada para este cliente." });
+      }
+
+      const query = `
+          SELECT 
+              ID_DM,
+              FORMAT(DATEADD(MINUTE, (DATEDIFF(MINUTE, 0, dataHora) / 30) * 30, 0), 'HH:mm') AS intervalo,
+              status,
+              COUNT(*) AS total
+          FROM DM_status
+          WHERE 
+              id_cliente = @id_cliente
+              AND ID_DM IN (${dms.map(dm => dm.id).join(",")})
+              AND dataHora >= @tresHorasAtras
+              AND dataHora <= @agora
+          GROUP BY 
+              ID_DM,
+              FORMAT(DATEADD(MINUTE, (DATEDIFF(MINUTE, 0, dataHora) / 30) * 30, 0), 'HH:mm'),
+              status
+          ORDER BY 
+              ID_DM, intervalo;
+      `;
+
+      const result = await dbRequest.query(query);
+
+      // Gera os intervalos de 30 minutos para as últimas 3 horas
+      const intervalos = [];
+      const currentInterval = new Date(tresHorasAtras);
+
+      while (currentInterval <= agora) {
+          intervalos.push(currentInterval.toTimeString().slice(0, 5)); 
+          currentInterval.setMinutes(currentInterval.getMinutes() + 30);
+      }
+
+      // Organiza os dados no formato solicitado
+      const datasets = dms.map(dm => {
+          const data = Array(intervalos.length).fill("Offline"); // Inicializa com 'Offline'
+
+          intervalos.forEach((intervalo, index) => {
+              const registro = result.recordset.find(
+                  r => r.ID_DM === dm.id && r.intervalo === intervalo
+              );
+
+              if (registro) {
+                  data[index] = registro.status === 'Conectado' ? "Online" : "Offline";
+              }
+          });
+
+          return {
+              label: dm.nome,
+              data: data,
+              fill: false,
+              backgroundColor: getColor('Conectado'), 
+              borderColor: getColor('Desconectado'),
+              tension: 0.4
+          };
+      });
+
+      // Prepara o objeto para o gráfico
+      const lineData = {
+          labels: intervalos,
+          datasets: datasets
+      };
+
+      response.status(200).json(lineData);
+  } catch (error) {
+      console.error("Erro ao executar consulta:", error.message);
+      response.status(500).send("Erro ao executar consulta");
+  }
+}
+
+
+// Função para definir as cores com base no status
+function getColor(status) {
+  const colorMap = {
+      'Conectado': '#2f4860',
+      'Desconectado': '#00bb7e'
+  };
+  return colorMap[status] || '#888888';
+}
+
 module.exports = {
   relatorio,
+  obterDadosResumo,
 };

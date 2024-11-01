@@ -191,7 +191,7 @@ router.post('/francis', async (req, res) => {
             await sendEmail(email, 'Sua senha de acesso', emailContent);
             logQuery('info', `E-mail enviado para ${email}`, 'sucesso', 'EMAIL', null, null, 'sendEmail', { email });
 
-            const mensagemChatProFrancis = `Olá *${name.trim().toUpperCase()}*,\nBem-vindo(a) à *Experiência Francis*, onde você descobrirá a proteção de 72 horas contra o suor e o mau odor, além da perfumação ativa por 24 horas dos novos desodorantes Francis.\n\nAqui está a sua senha para você poder gravar o vídeo e retirar seu brinde exclusivo: *${senhaComRandom}*.\n\nNão deixe de visitar nosso site para saber mais: https://www.francis.com.br/francis/desodorantes/desodorantes-aerosol\n\nEsperamos que aproveite!`;
+            const mensagemChatProFrancis = `Olá *${name.trim().toUpperCase()}*,\nBem-vindo(a) a Vending Machine dos novos desodorantes Francis, com proteção de 72 horas contra o suor e o mau odor, além da perfumação ativa por 24 horas dos novos desodorantes Francis.\n\nAqui está a sua senha para você poder gravar o vídeo e retirar seu brinde exclusivo: *${senhaComRandom}*.\n\nNão deixe de visitar nosso site para saber mais: https://www.francis.com.br/francis/desodorantes/desodorantes-aerosol\n\nEsperamos que aproveite!`;
 
             const options = {
                 method: 'POST',
@@ -237,23 +237,43 @@ router.get('/updateDados', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    const primeirosDados = await checkForUpdates();
-    if (primeirosDados) {
-        res.write(`data: ${JSON.stringify(primeirosDados)}\n\n`);
-    } else {
-        res.write(`data: ${JSON.stringify({ message: "Nenhum dado inicial disponível." })}\n\n`);
-    }
+    
+    logQuery('info', `Início do SSE para updateDados`, 'sucesso', 'SSE', null, null, '/updateDados', {});
 
-    const intervalId = setInterval(async () => {
-        const atualizacoes = await checkForUpdates();
-        if (atualizacoes) {
-            res.write(`data: ${JSON.stringify(atualizacoes)}\n\n`);
+    try {
+        const primeirosDados = await checkForUpdates();
+        if (primeirosDados) {
+            res.write(`data: ${JSON.stringify(primeirosDados)}\n\n`);
+            //logQuery('info', `Dados iniciais enviados`, 'sucesso', 'SSE', null, null, 'checkForUpdates', { primeirosDados });
+        } else {
+            res.write(`data: ${JSON.stringify({ message: "Nenhum dado inicial disponível." })}\n\n`);
+            //logQuery('info', `Nenhum dado inicial disponível`, 'info', 'SSE', null, null, 'checkForUpdates', {});
         }
-    }, 45000);
 
-    req.on('close', () => {
-        clearInterval(intervalId);
-    });
+        const intervalId = setInterval(async () => {
+            try {
+                const atualizacoes = await checkForUpdates();
+                if (atualizacoes) {
+                    res.write(`data: ${JSON.stringify(atualizacoes)}\n\n`);
+                    //logQuery('info', `Atualizações enviadas`, 'sucesso', 'SSE', null, null, 'checkForUpdates', { atualizacoes });
+                }
+            } catch (error) {
+                console.error("Erro ao verificar atualizações no intervalo:", error);
+                res.write(`data: ${JSON.stringify({ error: "Erro ao verificar atualizações." })}\n\n`);
+                //logQuery('error', `Erro ao verificar atualizações: ${error.message}`, 'falha', 'SSE', null, null, 'checkForUpdates', { error: error.message });
+            }
+        }, 45000);
+
+        req.on('close', () => {
+            clearInterval(intervalId);
+            //logQuery('info', `Conexão SSE fechada pelo cliente`, 'info', 'SSE', null, null, '/updateDados', {});
+        });
+
+    } catch (error) {
+        console.error("Erro ao inicializar SSE:", error);
+        res.status(500).send("Erro ao iniciar a conexão de dados.");
+        //logQuery('error', `Erro ao inicializar SSE: ${error.message}`, 'falha', 'SSE', null, null, '/updateDados', { error: error.message });
+    }
 });
 
 async function checkForUpdates() {
@@ -276,8 +296,9 @@ async function checkForUpdates() {
             }
 
              const updatedColumns = [];
-            if (existingRecord.Foto !== record.Foto) updatedColumns.push('Foto');
+            if (existingRecord.arquivo !== record.arquivo) updatedColumns.push('arquivo');
             if (existingRecord.Retirada !== record.Retirada) updatedColumns.push('Retirada');
+            if (existingRecord.Video !== record.Video) updatedColumns.push('Video');
 
             return updatedColumns.length > 0 
                 ? { ...record, isNew: false, updatedColumns } 
@@ -289,7 +310,7 @@ async function checkForUpdates() {
         return fullRecords;
     } catch (error) {
         console.error("Erro ao verificar atualizações:", error);
-        return null;
+        throw error; 
     }
 }
 module.exports = router;

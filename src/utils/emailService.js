@@ -139,7 +139,7 @@ const generateEmailHTMLFrancis = (senha, nome) => {
     <div class="container">
         <p>Olá <span class="highlight">${nome}</span>,</p>
         
-        <p>Bem-vindo ao stand dos novos <strong>desodorantes Francis</strong>, com proteção de 72h contra o suor e o mau odor e perfumação ativa por 24h.</p>
+        <p>Bem-vindo a Vending Machine dos novos <strong>desodorantes Francis</strong>, com proteção de 72h contra o suor e o mau odor e perfumação ativa por 24h.</p>
         
         <p>Aqui está a sua senha para você poder gravar o vídeo e retirar seu brinde: <span class="highlight">${senha}</span></p>
         
