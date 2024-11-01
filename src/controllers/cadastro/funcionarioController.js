@@ -222,14 +222,14 @@ async function adicionarFuncionarios(request, response) {
          biometria, RG, CPF, CTPS, id_planta, foto, data_admissao, 
          hora_inicial, hora_final,
          segunda, terca, quarta, quinta, sexta, sabado, domingo, 
-         deleted, ordem, id_centro_custo, status, senha, biometria2, email, face)
+         deleted, ordem, id_centro_custo, status, senha, biometria2, email, face, Sincronizado)
         VALUES (@id_cliente, @id_setor, 
         @id_funcao, @nome, @matricula, @biometria, @RG,
         @CPF, @CTPS, @id_planta, @foto, @data_admissao, 
         @hora_inicial, @hora_final,
         @segunda, @terca, @quarta, @quinta, @sexta, @sabado, @domingo,
         @deleted, @ordem, @id_centro_custo, @status, @senha, 
-        @biometria2, @email, @face)`;
+        @biometria2, @email, @face, 0)`;
 
   const params = {
     id_cliente,
