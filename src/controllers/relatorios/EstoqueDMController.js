@@ -33,9 +33,9 @@ async function relatorio(request, response) {
         dbRequest.input('id_cliente', sql.Int, id_cliente);
 
         if (id_dm === null) {
-            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente';
+            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND deleted = 0';
         } else {
-            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM';
+            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM AND deleted = 0';
             dbRequest.input('ID_DM', sql.Int, id_dm);
         }
 
