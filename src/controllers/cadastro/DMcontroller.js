@@ -882,6 +882,7 @@ async function listarItensDM(request, response) {
 
       const itensFiltrados = result.recordset.map((row) => {
         let posicao;
+        let modeloControladora;
         console.log(row.Controladora);
         if (row.Controladora === "2018") {
           posicao = `${row.Controladora} / ${row.Placa} / ${row.Motor1} / ${row.Motor2}`;
@@ -893,6 +894,8 @@ async function listarItensDM(request, response) {
           posicao = "Posição desconhecida";
         }
 
+        modeloControladora = `${row.Controladora}`;
+
         return {
           id_produto: row.id_produto,
           id_item: row.id_item,
@@ -900,6 +903,7 @@ async function listarItensDM(request, response) {
           Nome_Produto: row.nome,
           QTD: row.quantidade,
           Posicao: posicao,
+          modelo: modeloControladora
         };
       });
 
