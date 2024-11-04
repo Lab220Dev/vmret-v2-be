@@ -116,7 +116,7 @@ async function obterDadosResumo(request, response) {
               data: data,
               fill: false,
               backgroundColor: getColor('Conectado'), 
-              borderColor: getColor('Desconectado'),
+              borderColor: getRandomWarmColor('Desconectado'),
               tension: 0.4
           };
       });
@@ -138,10 +138,39 @@ async function obterDadosResumo(request, response) {
 // Função para definir as cores com base no status
 function getColor(status) {
   const colorMap = {
-      'Conectado': '#2f4860',
+      'Conectado': '#17202a',
       'Desconectado': '#00bb7e'
   };
   return colorMap[status] || '#888888';
+}
+
+const ColorPalette = [
+  '#e51e1e', // Vermelho 1
+  '#e5501e', // Vermelho 2
+  '#e5821e', // Vermelho 3
+  '#138f13', // Verde 1
+  '#1ee51e', // Verde 2 -
+  '#1e1ee5', // Azul
+  '#1e88e5', // Azul claro
+  
+];
+
+const usedColors = [];
+
+function getRandomWarmColor() {
+  if (usedColors.length === ColorPalette.length) {
+      
+    usedColors.length = 0;
+      return null; 
+  }
+
+  let color;
+  do {
+      color = ColorPalette[Math.floor(Math.random() * ColorPalette.length)];
+  } while (usedColors.includes(color)); 
+
+  usedColors.push(color); 
+  return color;
 }
 
 module.exports = {

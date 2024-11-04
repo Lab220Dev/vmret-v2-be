@@ -23,11 +23,14 @@ async function relatorio(request, response) {
                 ri.ProdutoNome,
                 ri.ProdutoSKU,
                 ri.Quantidade,
-                r.Dia
+                r.Dia,
+                d.Identificacao
             FROM
                 Retiradas r
             INNER JOIN
                 retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+                INNER JOIN
+            DMs d ON r.id_dm = d.ID_DM 
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
             WHERE
@@ -80,7 +83,7 @@ async function relatorio(request, response) {
     const produtosMap = new Map();
 
     result.recordset.forEach((row) => {
-      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia } = row;
+      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Identificacao, Dia } = row;
       const dataFormatada = format(new Date(Dia), "dd/MM/yyyy - HH:mm");
 
       if (!produtosMap.has(ProdutoID)) {
@@ -100,6 +103,7 @@ async function relatorio(request, response) {
         ProdutoNome,
         ProdutoSKU,
         Quantidade,
+        Identificacao,
         Data: dataFormatada,
       });
     });
@@ -238,12 +242,15 @@ async function listarUltimos(request, response) {
     ri.Quantidade,
     r.Dia,
     r.id_dm,
-    p.Descricao AS ProdutoDescricao  
+    p.Descricao AS ProdutoDescricao,
+    d.Identificacao
 FROM
     Retiradas r
 INNER JOIN
     retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
-left JOIN
+INNER JOIN
+    DMs d ON r.id_dm = d.ID_DM 
+    LEFT join 
     Produtos p ON ri.ProdutoID = p.ID_Produto  
 WHERE
     r.ID_Cliente = @id_cliente
