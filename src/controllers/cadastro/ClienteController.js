@@ -712,6 +712,65 @@ function cleanItems(menu) {
         }
     }
 }
+
+async function deletarServico(request, response) {
+    const { id_cliente, id_servico} = request.body;
+    
+    if (!id_cliente || !id_servico ) {
+        return response.status(400).json({ error: "Parâmetros insuficientes. id_cliente, id_servico e id_funcionario_responsavel são obrigatórios." });
+    }
+
+    try {
+        // Verificando se o serviço existe
+        const checkQuery = `
+            SELECT 1 
+            FROM Notificacoes_Servicos 
+            WHERE id_cliente = @id_cliente 
+            AND id_servico = @id_servico 
+            AND deleted = 0
+        `;
+        
+        const checkSqlRequest = new sql.Request();
+        checkSqlRequest.input('id_cliente', sql.Int, id_cliente);
+        checkSqlRequest.input('id_servico', sql.Int, id_servico);
+        
+        const checkResult = await checkSqlRequest.query(checkQuery);
+        
+        if (checkResult.recordset.length === 0) {
+            console.log('Serviço não encontrado ou já está deletado.');
+            return response.status(404).json({ error: "Serviço não encontrado ou já está deletado." });
+        }
+
+        //tentar deletar
+        const query = `
+            UPDATE Notificacoes_Servicos 
+            SET deleted = 1 
+            WHERE id_cliente = @id_cliente 
+            AND id_servico = @id_servico 
+        `;
+        
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_cliente', sql.Int, id_cliente);
+        sqlRequest.input('id_servico', sql.Int, id_servico);
+        
+        const result = await sqlRequest.query(query);
+
+        if (result.rowsAffected[0] > 0) {
+            console.log(`Serviço ${id_servico} para o cliente ${id_cliente} removido com sucesso.`);
+            logQuery('info', `O usuário ${id_usuario} deletou o serviço ${id_servico} para o cliente ${id_cliente}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, { id_cliente, id_servico });
+            return response.status(200).json({ message: "Serviço excluído com sucesso" });
+        } else {
+            console.log('Falha ao excluir o serviço: Nenhuma linha foi afetada.');
+            logQuery('error', `O usuário ${id_usuario} falhou em deletar o serviço ${id_servico} para o cliente ${id_cliente}`, 'erro', 'DELETE', id_cliente, id_usuario, query, { id_cliente, id_servico});
+            return response.status(404).json({ error: "Serviço não encontrado" });
+        }
+    } catch (error) {
+        // Log do erro detalhado e resposta
+        logQuery('error', error.message, 'erro', 'DELETE', id_cliente, id_usuario, error.stack, { id_cliente, id_servico});
+        console.error('Erro ao excluir:', error.message);
+        return response.status(500).send('Erro ao excluir serviço');
+    }
+}
 module.exports = {
     listar,
     atualizar,
@@ -721,5 +780,6 @@ module.exports = {
     listarClienteComServicos,
     listarComMenu,
     adicionarServico,
-    atualizarServico
+    atualizarServico,
+    deletarServico
 };
