@@ -12,6 +12,7 @@ router.post('/listarComMenu', clienteController.listarComMenu);
 router.post('/atualizar', clienteController.atualizar);
 router.post('/deletar', clienteController.deletar); 
 router.post('/adicionar', clienteController.adicionar); 
-router.post('/adicionarServico', clienteController.adicionarServico); 
+router.post('/adicionarServico', clienteController.adicionarServico);
+router.post('/deletarServico', clienteController.deletarServico); 
 
 module.exports = router;
