@@ -133,6 +133,31 @@ const listarDM = async (request, response) => {
     response.status(500).send("Erro ao executar consulta");
   }
 };
+const listarDMResumido = async (request, response) => {
+  try {
+    const { id_cliente } = request.body;
+    let sqlRequest = new sql.Request();
+    let query = `
+      SELECT 
+        id_dm, Identificacao
+      FROM 
+        DMS
+      WHERE 
+        Deleted = 0
+    `;
+
+    if (id_cliente) {
+      query += ` AND id_cliente = @id_cliente`;
+      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    }
+    query += ` ORDER BY id_dm`;
+    const result = await sqlRequest.query(query);
+    response.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta no banco de dados.");
+  }
+};
 
 async function inserirControladoraGenerica(
   transaction,
@@ -1313,6 +1338,7 @@ module.exports = {
   atualizar,
   atualizarItemDM,
   deletarDM,
+  listarDMResumido,
   recuperarClienteInfo,
   updateClienteInfo
 };

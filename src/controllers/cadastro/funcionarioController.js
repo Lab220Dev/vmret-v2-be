@@ -5,7 +5,6 @@ const { logQuery } = require("../../utils/logUtils");
 const multer = require("multer");
 const { sendEmail, generateEmailHTML2 } = require("../../utils/emailService");
 const CryptoJS = require("crypto-js");
-//const chatpro = require("../../../.api/chatpro");
 const axios = require('axios');
 
 const storage = multer.memoryStorage();
@@ -61,7 +60,7 @@ async function listarFuncionarios(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
+};
 async function adiconarFuncionarioExt(request, response) {
     let transaction;
           // Resgatando os campos relevantes do form-data
@@ -145,9 +144,8 @@ async function adiconarFuncionarioExt(request, response) {
       console.error("Erro ao adicionar funcionário:", error);
       response.status(500).json({ error: "Erro ao adicionar funcionário." });
     }
-  }
-
-  const enviarMensagem = async (telefone, id_usuario) => {
+};
+const enviarMensagem = async (telefone, id_usuario) => {
     const options = {
       method: 'POST',
       url: 'https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message',
@@ -182,7 +180,7 @@ async function adiconarFuncionarioExt(request, response) {
       // Log do erro completo com stack trace
       logQuery('error', `Erro ao enviar mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, id_usuario, 'send_message', { telefone, error: error.message, stack: error.stack });
     }
-  };
+};
 async function adicionarFuncionarios(request, response) {
   const {
     id_setor,
@@ -279,6 +277,7 @@ async function adicionarFuncionarios(request, response) {
       const filePath = path.join(uploadPath, nomeFuncionario);
       await fs.writeFile(filePath, file.buffer);
     }
+    const hashMd5 = CryptoJS.MD5(senha).toString();
 
     // Inserção no banco de dados
     const sqlRequest = new sql.Request();
@@ -307,7 +306,7 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("ordem", sql.Int, ordem);
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("status", sql.NVarChar, status);
-    sqlRequest.input("senha", sql.NVarChar, senha);
+    sqlRequest.input("senha", sql.NVarChar, hashmd5);
     sqlRequest.input("biometria2", sql.NVarChar, biometria2);
     sqlRequest.input("email", sql.VarChar, email);
     sqlRequest.input("face", sql.VarChar, face);
@@ -330,9 +329,7 @@ async function adicionarFuncionarios(request, response) {
     console.error("Erro ao inserir funcionário:", error.message);
     response.status(500).send("Erro ao inserir funcionário");
   }
-}
-
-
+};
 async function foto(request, response) {
   if (!request.files) {
     return response.status(400).send("Nenhum arquivo foi enviado.");
@@ -340,7 +337,7 @@ async function foto(request, response) {
 
   const { id_cliente } = request.body;
   const foto = request.file;
-}
+};
 async function listarCentroCusto(request, response) {
   try {
     let query = "SELECT DISTINCT id_centro_custo FROM funcionarios WHERE 1 = 1";
@@ -356,7 +353,7 @@ async function listarCentroCusto(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
+};
 async function listarSetorDiretoria(request, response) {
   try {
     let query = "SELECT DISTINCT id_setor FROM funcionarios WHERE 1 = 1";
@@ -372,7 +369,7 @@ async function listarSetorDiretoria(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
+};
 async function listarHierarquia(request, response) {
   try {
     let query = "SELECT DISTINCT id_funcao FROM funcionarios WHERE 1 = 1";
@@ -388,7 +385,7 @@ async function listarHierarquia(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
+};
 async function listarPlanta(request, response) {
   try {
     let query = "SELECT DISTINCT id_planta FROM funcionarios WHERE 1 = 1";
@@ -404,8 +401,7 @@ async function listarPlanta(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
-
+};
 async function deleteFuncionario(request, response) {
   const { id_usuario, id_cliente, id_funcionario } = request.body;
 
@@ -437,8 +433,7 @@ async function deleteFuncionario(request, response) {
       .status(500)
       .send(`Erro ao excluir funcionário: ${error.message}`);
   }
-}
-
+};
 async function atualizarFuncionario(request, response) {
   const query = `
         UPDATE funcionarios
@@ -495,7 +490,7 @@ async function atualizarFuncionario(request, response) {
   let nomeFuncionario = foto;
   const id_cliente = request.body.id_cliente;
   const files = request.files;
-
+  const hashMd5 = CryptoJS.MD5(senha).toString();
   const params = {
     id_funcionario,
     id_setor,
@@ -520,7 +515,7 @@ async function atualizarFuncionario(request, response) {
     domingo,
     id_centro_custo,
     status,
-    senha,
+    hashMd5,
     biometria2,
     email,
     face,
@@ -567,7 +562,7 @@ async function atualizarFuncionario(request, response) {
     sqlRequest.input("domingo", sql.Bit, convertToBoolean(domingo));
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("status", sql.NVarChar, status);
-    sqlRequest.input("senha", sql.NVarChar, senha);
+    sqlRequest.input("senha", sql.NVarChar, hashMd5);
     sqlRequest.input("biometria2", sql.NVarChar, biometria2);
     sqlRequest.input("email", sql.VarChar, email);
     sqlRequest.input("face", sql.VarChar, face);
@@ -646,8 +641,7 @@ async function atualizarFuncionario(request, response) {
     console.error("Erro ao atualizar funcionário:", error.message);
     response.status(500).send("Erro ao atualizar funcionário");
   }
-}
-
+};
 async function listarOperadores(request, response) {
   const { id_cliente } = request.body;
   try {
@@ -666,7 +660,7 @@ async function listarOperadores(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-}
+};
 
 module.exports = {
   upload,
