@@ -1232,7 +1232,78 @@ async function deletarDM(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function recuperarClienteInfo(request, response) {
+  const id_cliente = request.body.id_cliente;
+  try {
+  const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI  FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
+  const transaction = new sql.Transaction(); 
+    await transaction.begin(); 
 
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+
+    const result = await sqlRequest.query(query);
+    
+    await transaction.commit();
+    if (result.recordset.length > 0) {
+      return response.status(200).json(result.recordset);
+    } else {
+      return response.status(404).json({ message: "Nenhuma informação encontrada para o cliente." });
+    }
+  } catch (error) {
+    if (transaction) {
+      await transaction.rollback(); 
+    }
+    console.error("Erro ao recuperar informações do cliente:", error);
+    throw error; 
+  }
+}
+async function updateClienteInfo(request, response) {
+  const {id_cliente,ID_DM,ClienteID,UserID,URL,Chave ,ChaveAPI} = request.body;
+  try {
+    const query = `
+    UPDATE DMs
+    SET 
+      ClienteID = @ClienteID,
+      UserID = @UserID,
+      URL = @URL,
+      Chave = @Chave,
+      ChaveAPI = @ChaveAPI,
+      Sincronizado = 0
+    WHERE 
+      ID_Cliente = @id_cliente 
+      AND ID_DM = @ID_DM
+  `;
+  const transaction = new sql.Transaction(); 
+    await transaction.begin(); 
+    if(!ID_DM || !id_cliente){
+      return response.status(404).json({ message: "informações insusficientes" });
+    }
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('ID_DM', sql.Int, ID_DM);
+    sqlRequest.input('ClienteID', sql.NVarChar, ClienteID);
+    sqlRequest.input('UserID', sql.NVarChar, UserID);
+    sqlRequest.input('URL', sql.NVarChar, URL);
+    sqlRequest.input('Chave', sql.NVarChar, Chave);
+    sqlRequest.input('ChaveAPI', sql.NVarChar, ChaveAPI);
+
+    const result = await sqlRequest.query(query);
+    
+    await transaction.commit();
+    if (result.rowsAffected > 0) {
+      return response.status(200).json({ message: "Atualizado com sucesso" });
+    } else {
+      return response.status(404).json({ message: "Nenhuma informação encontrada para o cliente." });
+    }
+  } catch (error) {
+    if (transaction) {
+      await transaction.rollback(); 
+    }
+    console.error("Erro ao recuperar informações do cliente:", error);
+    throw error; 
+  }
+}
 module.exports = {
   adicionar,
   listarDM,
@@ -1242,4 +1313,6 @@ module.exports = {
   atualizar,
   atualizarItemDM,
   deletarDM,
+  recuperarClienteInfo,
+  updateClienteInfo
 };

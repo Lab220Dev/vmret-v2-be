@@ -3,6 +3,8 @@ const router = express.Router();
 const DMController = require('../../controllers/cadastro/DMcontroller');
 
 router.post('/listar', DMController.listarDM);
+router.post('/recuperarInfo', DMController.recuperarClienteInfo);
+router.post('/updateInfo', DMController.updateClienteInfo);
 router.post('/adicionar', DMController.adicionar);
 router.post('/atualizar', DMController.atualizar);
 router.post('/listaritens', DMController.listarItensDM);
