@@ -161,7 +161,7 @@ async function listarClienteComServicos(request, response) {
                 LEFT JOIN 
                     Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
                 WHERE 
-                    c.id_cliente = @id_cliente AND c.deleted = 0
+                    c.id_cliente = @id_cliente AND c.deleted = 0 AND ns.deleted = 0
             `;
         }
         // const result = await new sql.Request().query(query);
