@@ -4,6 +4,7 @@ const produtosController = require('../../controllers/cadastro/produtoController
 const path = require('path');
 
 router.post('/listar', produtosController.listarProdutos);
+router.post('/listarResumo', produtosController.listarProdutosResumo);
 router.post('/adicionar', produtosController.upload,produtosController.adicionarProdutos);
 router.post('/listarplanta', produtosController.listarPlanta);
 router.post('/deleteProduto', produtosController.deleteProduto);

@@ -11,28 +11,58 @@ const upload = multer({ storage: storage }).fields([
 ]);
 
 
+// async function listarProdutos(request, response) {
+//     try {
+//         let query = 'SELECT * FROM produtos WHERE 1 = 1';
+
+//         if (request.body.id_cliente) {
+//             query += ` AND id_cliente = '${request.body.id_cliente}'`;
+//         } else {
+//             response.status(401).json("ID do cliente não enviado");
+//             return;
+//         }
+
+//         query += ' AND deleted = 0';
+
+//         const result = await new sql.Request().query(query);
+//         response.status(200).json(result.recordset);
+
+//     } catch (error) {
+//         console.error('Erro ao executar consulta:', error.message);
+//         response.status(500).send('Erro ao executar consulta');
+//     }
+// }
 async function listarProdutos(request, response) {
     try {
-        let query = 'SELECT * FROM produtos WHERE 1 = 1';
+        const page = request.body.page || 1;
+        const pageSize = request.body.pageSize || 10;
+        const offset = (page - 1) * pageSize;
 
-        if (request.body.id_cliente) {
-            query += ` AND id_cliente = '${request.body.id_cliente}'`;
-        } else {
-            response.status(401).json("ID do cliente não enviado");
-            return;
-        }
-
-        query += ' AND deleted = 0';
+        let query = `SELECT * FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY id_produto OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`;
+        let countQuery = `SELECT COUNT(*) as total FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0`;
 
         const result = await new sql.Request().query(query);
-        response.status(200).json(result.recordset);
+        const totalResult = await new sql.Request().query(countQuery);
 
+        response.status(200).json({
+            produtos: result.recordset,
+            totalRecords: totalResult.recordset[0].total
+        });
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
+async function listarProdutosResumo(request, response) {
+    try {
+        let query = `SELECT id_produto, codigo, nome FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY codigo`;
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 async function adicionarProdutos(request, response) {
     const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe, id_usuario } = request.body;
     const query = `
@@ -377,5 +407,6 @@ module.exports = {
     adicionarProdutos,
     listarPlanta,
     deleteProduto,
+    listarProdutosResumo,
     atualizarProduto
 };

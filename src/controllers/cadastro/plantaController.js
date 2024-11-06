@@ -18,7 +18,22 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
+async function listarSimlpes(request, response) {
+    try {
+        let query = 'SELECT id_planta,nome FROM plantas WHERE deleted = 0';
+        if (request.body.id_cliente) {
+            query += ` AND id_cliente = '${request.body.id_cliente}'`;
+            request = new sql.Request();
+            const result = await request.query(query);
+            response.status(200).json(result.recordset);
+            return;
+        }
+        response.status(401).json("ID do cliente não enviado");
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 async function adicionar(request, response) {
     const { codigo, nome, userId = '', senha = '', urlapi = '',
         clienteid = '' } = request.body;

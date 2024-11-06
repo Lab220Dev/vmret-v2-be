@@ -56,7 +56,6 @@ async function inserirMenuPrincipal(transaction, id_cliente, perfil, nome, order
     `);
     console.log(`Menu ${nome} inserido com sucesso`);
 }
-
 // Função para inserir o submenu
 async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu, referenciaCliente) {
     let sqlRequest = new sql.Request(transaction);
@@ -95,7 +94,6 @@ async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu,
         return 0;
     }
 }
-
 // Função para inserir o subsubmenu
 async function inserirSubsubmenu(transaction, id_cliente, perfil, id_item, id_sub_item, subsubmenu, referenciaCliente) {
     let sqlRequest = new sql.Request(transaction);
@@ -128,7 +126,16 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
+async function listaSimples(request, response) {
+    try {
+        const query = 'SELECT id_cliente,nome FROM clientes WHERE deleted = 0';
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 async function listarClienteComServicos(request, response) {
     try {
         let query;
@@ -177,7 +184,6 @@ async function listarClienteComServicos(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
 async function adicionar(request, response) {
     const { nome, cpfcnpj, ativo, usar_api, id_usuario } = request.body;
     const apiKey = generateApiKey();
@@ -314,7 +320,6 @@ async function buscarServicosExistentes(transaction, id_cliente) {
 
     return result.recordset;
 }
-
 async function marcarServicosDeletados(transaction, id_cliente, existingServices, servicos) {
     for (const existing of existingServices) {
         const found = servicos.some(servico =>
@@ -338,7 +343,6 @@ async function marcarServicosDeletados(transaction, id_cliente, existingServices
         }
     }
 }
-
 async function verificarServicoExistente(transaction, id_cliente, id_servico, id_funcionario_responsavel) {
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
@@ -355,7 +359,6 @@ async function verificarServicoExistente(transaction, id_cliente, id_servico, id
     // console.log("resultado do verifica Serviço :",result.recordset)
     return result.recordset.length > 0 ? result.recordset[0] : null;
 }
-
 async function reativarServico(transaction, id_cliente, servico, destinatario) {
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
@@ -396,7 +399,6 @@ function validarHoraNotificacao(hora) {
 
     throw new Error("Invalid time format");  // Se não estiver em nenhum formato válido, lança erro
 }
-
 async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
     const sqlRequest = new sql.Request(transaction);
     const horaNotificacao = validarHoraNotificacao(servico.horario_notificacao);
@@ -510,8 +512,6 @@ async function deletar(request, response) {
         response.status(500).send('Erro ao excluir');
     }
 }
-
-
 async function salvarMenus(request, response) {
     const { id_cliente, perfil, menus, id_usuario } = request.body; // Certifique-se de que `id_usuario` é passado no body
     const referenciaCliente = 57;
@@ -563,8 +563,6 @@ async function salvarMenus(request, response) {
         response.status(500).send('Erro ao salvar menus');
     }
 }
-
-
 async function listarComMenu(request, response) {
     try {
         const queryClientes = `
@@ -619,7 +617,6 @@ async function listarComMenu(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
 function buildMenuTree(menus, menuItems) {
     const menuMap = {};
     const itemMap = {};
@@ -685,7 +682,6 @@ function mapClientesComServicos(recordset) {
         return acc;
     }, []);
 }
-
 function mapServico(row) {
     return {
         id_servico: row.id_servico,
@@ -693,7 +689,6 @@ function mapServico(row) {
         notificacoes: [mapNotificacao(row)]
     };
 }
-
 function mapNotificacao(row) {
     return {
         nome: row.nome,
@@ -712,7 +707,6 @@ function cleanItems(menu) {
         }
     }
 }
-
 async function deletarServico(request, response) {
     const { id_cliente, id_servico} = request.body;
     
@@ -773,6 +767,7 @@ async function deletarServico(request, response) {
 }
 module.exports = {
     listar,
+    listaSimples,
     atualizar,
     deletar,
     adicionar,

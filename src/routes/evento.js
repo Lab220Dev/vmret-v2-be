@@ -282,7 +282,7 @@ async function checkForUpdates() {
     try {
         const request = new sql.Request();
         const result = await request.query(query);
-        const atual = result.recordset;
+        const atual = result.recordset.map(censurarDados);
         if (ultimo.length === 0) {
             ultimo = atual; 
             return atual; 
@@ -312,5 +312,27 @@ async function checkForUpdates() {
         console.error("Erro ao verificar atualizações:", error);
         throw error; 
     }
+}
+function censurarDados(record) {
+    // Censurar telefone (manter apenas os últimos 4 dígitos)
+    if (record.Telefone != null) {
+        const telefoneStr = String(record.Telefone); // Converte o telefone para string
+        const visibleDigits = telefoneStr.slice(-4); // Últimos 4 dígitos
+        const hiddenPart = '*'.repeat(telefoneStr.length - 4); // Substitui o restante por '*'
+        record.Telefone = hiddenPart + visibleDigits;
+    }
+
+    // Censurar email (manter os primeiros 5 caracteres e substituir o restante por '*')
+    if (record.Email && typeof record.Email === 'string') {
+        const [local, domain] = record.Email.split('@');
+        if (local.length <= 5) {
+            // Se o nome de usuário for menor ou igual a 5 caracteres, substitui tudo por '*'
+            record.Email = '*'.repeat(local.length) + '@' + domain;
+        } else {
+            record.Email = local.slice(0, 5) + '*'.repeat(local.length - 5) + '@' + domain;
+        }
+    }
+
+    return record;
 }
 module.exports = router;
