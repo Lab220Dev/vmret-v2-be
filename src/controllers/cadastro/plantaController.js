@@ -18,7 +18,7 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-async function listarSimlpes(request, response) {
+async function listaSimlpes(request, response) {
     try {
         let query = 'SELECT id_planta,nome FROM plantas WHERE deleted = 0';
         if (request.body.id_cliente) {
@@ -130,5 +130,5 @@ async function atualizar(request, response) {
     }
 }
 module.exports = {
-    adicionar, listar, atualizar
+    adicionar, listar, atualizar,listaSimlpes
 };
