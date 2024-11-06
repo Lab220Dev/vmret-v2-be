@@ -956,7 +956,7 @@ async function adicionarItensDM(request, response) {
   unidade_medida, imagem1,ca)
  VALUES (@id_item,@id_cliente, @ID_DM, @id_produto,@Controladora, @Placa, @Motor1, @Motor2,@DIP,@Andar,@Posicao,
  @quantidade,@quantidademinima,@capacidade,@deleted, @nome, @ProdutoCodigo, @sku, 
- @unidade_medida, @imagem1, @ca)`;
+ @unidade_medida, @imagem1, @ca) ORDER BY Posicao ASC`;
 
   try {
     if (!id_cliente) {

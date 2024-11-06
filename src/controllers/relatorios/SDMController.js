@@ -25,7 +25,7 @@ async function relatorio(request, response) {
         "SELECT * FROM DM_status WHERE  id_cliente = @id_cliente AND CONVERT(date, dataHora) = @dia";
     } else {
       query =
-        "SELECT * FROM DM_status WHERE ID_DM = @id_dm AND id_cliente = @id_cliente AND CONVERT(date, dataHora) = @dia";
+        "SELECT DISTINCT ds.ID_DM, d.Identificacao, ds.dataHora, ds.status FROM DM_Status ds INNER JOIN DMs d ON ds.id_dm = d.ID_DM WHERE ds.id_cliente = @id_cliente AND CONVERT(date, ds.dataHora) = @dia";
       dbRequest.input("ID_DM", sql.Int, id_dm);
     }
 
