@@ -2,64 +2,23 @@ const sql = require('mssql');
 const CryptoJS = require('crypto-js');
 const { logQuery } = require('../../utils/logUtils');
 
-// async function listar(request, response) {
-//     try {
-//         let query = 'SELECT * FROM Usuarios_DM WHERE deleted = 0';
-//         if (request.body.id_cliente) {
-//             query += ` AND id_cliente = '${request.body.id_cliente}'`;
-//             request = new sql.Request();
-//             const result = await request.query(query);
-//             const usuarios = result.recordset.map(usuario => {
-//                 return {
-//                     ...usuario,
-//                     senha: 'senhaAntiga'
-//                 };
-//             });
-//             response.status(200).json(usuarios);
-//             return;
-//         } else {
-//             request = new sql.Request();
-//             const result = await request.query(query);
-//             const usuarios = result.recordset.map(usuario => {
-//                 return {
-//                     ...usuario,
-//                     senha: 'senhaAntiga'
-//                 };
-//             });
-//             const userIds = usuarios.map(usuario => usuario.id); 
-//                 if (userIds.length > 0) {
-//             const idsList = userIds.join(','); // Prepara uma lista para a consulta IN
+async function listarUsuariosSimples(request, response) {
+    try {
+        let query = 'SELECT id, nome FROM Usuarios_DM WHERE deleted = 0';
+        const sqlRequest = new sql.Request();
 
-//             const permissionsQuery = `
-//                 SELECT id_usuario_dm, id_dm 
-//                 FROM DM_Usuario_Permissao 
-//                 WHERE id_usuario_dm IN (${idsList}) AND deleted = 0
-//             `;
-//             const permissionsRequest = new sql.Request();
-//             const permissionsResult = await permissionsRequest.query(permissionsQuery);
+        if (request.body.id_cliente) {
+            query += ' AND id_cliente = @id_cliente';
+            sqlRequest.input('id_cliente', sql.Int, request.body.id_cliente);
+        }
 
-//             // Agrupa os `id_dm` como um array por `id_usuario_dm`
-//             const permissionsMap = permissionsResult.recordset.reduce((acc, row) => {
-//                 if (!acc[row.id_usuario_dm]) {
-//                     acc[row.id_usuario_dm] = [];
-//                 }
-//                 acc[row.id_usuario_dm].push(row.id_dm);
-//                 return acc;
-//             }, {});
-
-//             // Adiciona as permissões como array ao objeto de cada usuário
-//             usuarios.forEach(usuario => {
-//                 usuario.DMOptions = permissionsMap[usuario.id] || [];
-//             });
-//         }
-//             response.status(200).json(usuarios);
-//             return;
-//         }
-//     } catch (error) {
-//         console.error('Erro ao executar consulta:', error.message);
-//         response.status(500).send('Erro ao executar consulta');
-//     }
-// }
+        const result = await sqlRequest.query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 async function listar(request, response) {
     try {
         let query = 'SELECT * FROM Usuarios_DM WHERE deleted = 0';
@@ -113,7 +72,6 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
 async function adicionar(request, response) {
     const { nome, login, senha, ativo, admin, admin_cliente, id_usuario } = request.body;
     const id_cliente = request.body.id_cliente;
@@ -211,38 +169,51 @@ async function manipularDMOptions(id_usuario_dm, DMOptions) {
         await transaction.begin(); 
         const sqlRequest = new sql.Request(transaction);
 
-        // Define o parâmetro para `id_usuario_dm`
         sqlRequest.input('id_usuario_dm', sql.Int, id_usuario_dm);
 
-        // Recupera DMs existentes para este usuário
         const existingDMsResult = await sqlRequest.query(`
             SELECT id_dm 
             FROM DM_Usuario_Permissao 
-            WHERE id_usuario_dm = @id_usuario_dm AND deleted = 0
+            WHERE id_usuario_dm = @id_usuario_dm
         `);
 
-        const existingDMs = existingDMsResult.recordset.map(record => record.id_dm);
+        const dmsatuais = existingDMsResult.recordset.reduce((acc, record) => {
+            acc[record.id_dm] = record.deleted;
+            return acc;
+        }, {});
+        const dmsNovas = DMOptions.filter(dm => !dmsatuais.hasOwnProperty(dm) || dmsatuais[dm] === 1);
+        const dmsToRemove = Object.keys(dmsatuais)
+            .filter(dm => !DMOptions.includes(parseInt(dm)) && dmsatuais[dm] === 0);
 
-        // Identifica DMs a adicionar e DMs a marcar como deleted
-        const dmsToAdd = DMOptions.filter(dm => !existingDMs.includes(dm));
-        const dmsToRemove = existingDMs.filter(dm => !DMOptions.includes(dm));
-
-        // Insere novos DMs
-        for (const dm of dmsToAdd) {
-            const sqlRequestdm = new sql.Request(transaction);
-            sqlRequestdm.input('id_usuario_dm', sql.Int, id_usuario_dm);
-            sqlRequestdm.input('id_dm', sql.Int, dm.id_dm);
-            await sqlRequestdm.query(`
-                INSERT INTO DM_Usuario_Permissao (id_usuario_dm, id_dm, deleted)
-                VALUES (@id_usuario_dm, @id_dm, 0)
-            `);
+        // Insere novos DMs ou atualiaza se for um re-entrada
+        for (const dm of dmsNovas) {
+            if (dmsatuais[dm] === 1) {
+                // Atualiza o registro para deleted = 0 se já existe como deletado
+                const sqlRequestdm = new sql.Request(transaction);
+                sqlRequestdm.input('id_usuario_dm', sql.Int, id_usuario_dm);
+                sqlRequestdm.input('id_dm', sql.Int, dm);
+                await sqlRequestdm.query(`
+                    UPDATE DM_Usuario_Permissao 
+                    SET deleted = 0 ,Sincronizado = 0 
+                    WHERE id_usuario_dm = @id_usuario_dm AND id_dm = @id_dm
+                `);
+            } else {
+                // Insere novo registro se não existe
+                const sqlRequestdm = new sql.Request(transaction);
+                sqlRequestdm.input('id_usuario_dm', sql.Int, id_usuario_dm);
+                sqlRequestdm.input('id_dm', sql.Int, dm.id_dm);
+                await sqlRequestdm.query(`
+                    INSERT INTO DM_Usuario_Permissao (id_usuario_dm, id_dm, deleted,Sincronizado)
+                    VALUES (@id_usuario_dm, @id_dm, 0, 0 )
+                `);
+            }
         }
 
-        // Atualiza DMs para deleted
+        // Atualiza DMs para deleted = 1
         for (const dm of dmsToRemove) {
             const sqlRequestdm = new sql.Request(transaction);
             sqlRequestdm.input('id_usuario_dm', sql.Int, id_usuario_dm);
-            sqlRequestdm.input('id_dm', sql.Int, dm);
+            sqlRequestdm.input('id_dm', sql.Int, dm.id_dm);
             await sqlRequestdm.query(`
                 UPDATE DM_Usuario_Permissao 
                 SET deleted = 1 
@@ -289,5 +260,5 @@ async function deletar(request, response) {
 }
 
 module.exports = {
-    adicionar, listar, atualizar, deletar
+    adicionar, listar, atualizar, deletar, listarUsuariosSimples
 };

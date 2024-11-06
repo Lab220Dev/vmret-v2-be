@@ -158,7 +158,6 @@ const listarDMResumido = async (request, response) => {
     response.status(500).send("Erro ao executar consulta no banco de dados.");
   }
 };
-
 async function inserirControladoraGenerica(
   transaction,
   controladora,
@@ -233,7 +232,6 @@ async function inserirControladoraGenerica(
     }
   }
 }
-
 async function adicionar(request, response) {
   const {
     IDcliente,
@@ -557,7 +555,6 @@ async function atualizar(request, response) {
     response.status(500).json({ message: "Erro ao atualizar DM." });
   }
 }
-
 async function atualizarControladora2024(
   transaction,
   controladora,
@@ -583,7 +580,6 @@ async function atualizarControladora2024(
       await sqlRequest.query(query);
     }
   }
-
   // Remove molas 2 antigas
   for (const mola2 of molasExistentes2) {
     if (!novasMolas2.has(mola2)) {
@@ -633,7 +629,6 @@ async function atualizarControladora2024(
     }
   }
 }
-
 async function atualizarControladoraLocker(
   transaction,
   controladora,
@@ -742,7 +737,6 @@ async function atualizarControladora2023(
     }
   }
 }
-
 async function atualizarControladora2018(
   transaction,
   controladora,
@@ -889,7 +883,6 @@ async function adicionarControladora2018(
     await sqlRequest.query(query);
   }
 }
-
 async function listarItensDM(request, response) {
   try {
     const id_dm = request.body.id_dm;
@@ -1196,7 +1189,6 @@ async function atualizarItemDM(request, response) {
     response.status(500).send("Erro ao atualizar o item DM.");
   }
 }
-
 async function deletarItensDM(request, response) {
   const id_item = request.body.id_item;
   const id_usuario = request.body.id_usuario;
@@ -1260,7 +1252,7 @@ async function deletarDM(request, response) {
 async function recuperarClienteInfo(request, response) {
   const id_cliente = request.body.id_cliente;
   try {
-  const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI  FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
+  const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
   const transaction = new sql.Transaction(); 
     await transaction.begin(); 
 
@@ -1273,7 +1265,7 @@ async function recuperarClienteInfo(request, response) {
     if (result.recordset.length > 0) {
       return response.status(200).json(result.recordset);
     } else {
-      return response.status(404).json({ message: "Nenhuma informação encontrada para o cliente." });
+      return response.status(401).json({ message: "Nenhuma Maquina com Integração registrada." });
     }
   } catch (error) {
     if (transaction) {

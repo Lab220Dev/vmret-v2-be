@@ -61,6 +61,36 @@ async function listarFuncionarios(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 };
+async function listarFuncionariosSimples(request, response) {
+  try {
+    if (!request.body.id_cliente) {
+      return response.status(401).json({ error: "ID do cliente não enviado" });
+    }
+
+    const id_cliente = request.body.id_cliente;
+
+    const queryFuncionarios = `
+            SELECT id_funcionario,nome
+            FROM funcionarios 
+            WHERE id_cliente = @id_cliente 
+            AND deleted = 0
+        `;
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    const funcionariosResult = await sqlRequest.query(queryFuncionarios);
+    const funcionarios = funcionariosResult.recordset;
+
+    if (!funcionarios.length) {
+      return response.status(200).json([]);
+    }
+    response.status(200).json(funcionarios);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+};
 async function adiconarFuncionarioExt(request, response) {
     let transaction;
           // Resgatando os campos relevantes do form-data
@@ -666,6 +696,7 @@ module.exports = {
   upload,
   foto,
   listarFuncionarios,
+  listarFuncionariosSimples,
   adicionarFuncionarios,
   listarCentroCusto,
   listarSetorDiretoria,

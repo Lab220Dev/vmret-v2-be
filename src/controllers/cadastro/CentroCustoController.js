@@ -22,7 +22,24 @@ async function listar(request, response) {
     response.status(500).send('Erro ao executar consulta');
   }
 }
-
+async function listaSimples(request, response) {
+  try {
+    const id_cliente = request.body.id_cliente;
+    if (id_cliente) {
+      const query =
+        "SELECT ID_CentroCusto,Nome  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0";
+      request = new sql.Request();
+      request.input("id_cliente", sql.Int, id_cliente);
+      const result = await request.query(query);
+      response.status(200).json(result.recordset);
+      return;
+    }
+    response.status(401).json("ID do cliente não enviado");
+  } catch (error) {
+    console.error('Erro ao executar consulta:', error.message);
+    response.status(500).send('Erro ao executar consulta');
+  }
+}
 async function adicionar(request, response) {
   const { id_cliente, Codigo, Nome, id_usuario } = request.body;
 
@@ -73,8 +90,6 @@ async function adicionar(request, response) {
     response.status(500).send('Erro ao adicionar Centro de Custo');
   }
 }
-
-
 async function deleteCentro(request, response) {
   const { id_usuario, id_cliente, ID_CentroCusto } = request.body;
 
@@ -114,7 +129,6 @@ async function deleteCentro(request, response) {
     response.status(500).send('Erro ao excluir');
   }
 }
-
 async function atualizar(request, response) {
 
   const { ID_CentroCusto, Nome, Codigo, id_cliente, id_usuario } = request.body;
@@ -165,5 +179,5 @@ async function atualizar(request, response) {
 }
 
 module.exports = {
-  adicionar, listar, deleteCentro, atualizar
+  adicionar, listar, deleteCentro, atualizar, listaSimples
 };
