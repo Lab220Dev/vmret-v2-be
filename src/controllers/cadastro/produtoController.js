@@ -37,22 +37,50 @@ async function listarProdutos(request, response) {
         const page = request.body.page || 1;
         const pageSize = request.body.pageSize || 10;
         const offset = (page - 1) * pageSize;
+        const searchTerm = request.body.searchTerm || ''; // requisição de busca  pelos termos
 
-        let query = `SELECT * FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY id_produto OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY`;
-        let countQuery = `SELECT COUNT(*) as total FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0`;
+        //  filtro de pesquisa
+        let searchCondition = '';
+        if (searchTerm) {
+            searchCondition = `AND (nome LIKE '%${searchTerm}%' OR codigo LIKE '%${searchTerm}%')`;
+        }
 
+        // hamada SQL 
+        let query = `
+            SELECT * FROM produtos 
+            WHERE id_cliente = '${request.body.id_cliente}' 
+            AND deleted = 0 
+            ${searchCondition} 
+            ORDER BY id_produto
+            OFFSET ${offset} ROWS 
+            FETCH NEXT ${pageSize} ROWS ONLY
+        `;
+
+        // chamada pra pegar o total de produtos, incluindo a pesquisa
+        let countQuery = `
+            SELECT COUNT(*) as total 
+            FROM produtos 
+            WHERE id_cliente = '${request.body.id_cliente}' 
+            AND deleted = 0 
+            ${searchCondition}
+        `;
+
+        // Executa as consultas
         const result = await new sql.Request().query(query);
         const totalResult = await new sql.Request().query(countQuery);
 
+        // Retorna os resultados já com o total de registros
         response.status(200).json({
             produtos: result.recordset,
             totalRecords: totalResult.recordset[0].total
         });
+
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
     }
 }
+
 async function listarProdutosResumo(request, response) {
     try {
         let query = `SELECT id_produto, codigo, nome FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY codigo`;
@@ -155,8 +183,6 @@ async function adicionarProdutos(request, response) {
             imagemdetalhePath = path.join(uploadPathInfoAdicional, nomeArquivoInfo);
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }
-
-
 
         const requestSql = new sql.Request();
         requestSql.input('id_cliente', sql.Int, id_cliente);
