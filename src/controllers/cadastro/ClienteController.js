@@ -710,6 +710,7 @@ function cleanItems(menu) {
 async function deletarServico(request, response) {
     const { id_cliente, id_servico} = request.body;
     
+    
     if (!id_cliente || !id_servico ) {
         return response.status(400).json({ error: "Parâmetros insuficientes. id_cliente, id_servico e id_funcionario_responsavel são obrigatórios." });
     }
@@ -760,7 +761,7 @@ async function deletarServico(request, response) {
         }
     } catch (error) {
         // Log do erro detalhado e resposta
-        logQuery('error', error.message, 'erro', 'DELETE', id_cliente, id_usuario, error.stack, { id_cliente, id_servico});
+        logQuery('error', error.message, 'erro', 'DELETE', id_cliente, id_usuario, error.stack, { "id_cliente":id_cliente, "id_servico":id_servico});
         console.error('Erro ao excluir:', error.message);
         return response.status(500).send('Erro ao excluir serviço');
     }

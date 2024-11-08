@@ -19,7 +19,24 @@ async function listar(request, response) {
     response.status(500).send('Erro ao executar consulta');
   }
 }
-
+async function listaSimples(request, response) {
+  try {
+    const id_cliente = request.body.id_cliente;
+    if (id_cliente) {
+      const query =
+        "SELECT id_setor,nome  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
+      request = new sql.Request();
+      request.input("id_cliente", sql.Int, id_cliente);
+      const result = await request.query(query);
+      response.status(200).json(result.recordset);
+      return;
+    }
+    response.status(401).json("ID do cliente não enviado");
+  } catch (error) {
+    console.error('Erro ao executar consulta:', error.message);
+    response.status(500).send('Erro ao executar consulta');
+  }
+}
 async function listarItensSetor(request, response) {
   try {
     const id_cliente = request.body.id_cliente;
@@ -246,5 +263,5 @@ async function deleteFuncao(request, response) {
 }
 
 module.exports = {
-  adicionar, listar, atualizar, deleteFuncao,listarItensSetor,adicionarItem,listarItensDisponiveisSetor
+  adicionar, listar, atualizar, deleteFuncao,listarItensSetor,adicionarItem,listarItensDisponiveisSetor,listaSimples
 };
