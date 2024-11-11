@@ -708,7 +708,7 @@ function cleanItems(menu) {
     }
 }
 async function deletarServico(request, response) {
-    const { id_cliente, id_servico} = request.body;
+    const { id_cliente, id_servico, id_usuario} = request.body;
     
     
     if (!id_cliente || !id_servico ) {
