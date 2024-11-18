@@ -320,7 +320,7 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("RG", sql.VarChar, RG);
     sqlRequest.input("CPF", sql.VarChar, CPF);
     sqlRequest.input("CTPS", sql.VarChar, CTPS);
-    sqlRequest.input("id_planta", sql.Int, id_planta);
+    sqlRequest.input("id_planta", sql.Int, id_planta ? parseInt(id_planta, 10) : 0);
     sqlRequest.input("foto", sql.VarChar, nomeFuncionario);
     sqlRequest.input("data_admissao", sql.DateTime, data_admissao);
     sqlRequest.input("hora_inicial", sql.Time, hora_inicial);
@@ -336,7 +336,7 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("ordem", sql.Int, ordem);
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("status", sql.NVarChar, status);
-    sqlRequest.input("senha", sql.NVarChar, hashmd5);
+    sqlRequest.input("senha", sql.NVarChar, hashMd5);
     sqlRequest.input("biometria2", sql.NVarChar, biometria2);
     sqlRequest.input("email", sql.VarChar, email);
     sqlRequest.input("face", sql.VarChar, face);
