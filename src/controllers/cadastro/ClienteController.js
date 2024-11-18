@@ -1,12 +1,14 @@
-const sql = require('mssql');
-const { logQuery } = require('../../utils/logUtils');
-const crypto = require('crypto');
+const sql = require('mssql');  // pacote para se conectar e executar consultas em um banco de dados SQL
+const { logQuery } = require('../../utils/logUtils'); // função para logar consultas
+const crypto = require('crypto');  // Módulo nativo do Node.js para criptografia e geração de valores aleatórios
 const convertToBoolean = (value) => {
-    return value === 'true';
+    return value === 'true';  // Converte uma string para um valor booleano.
 };
+
 function generateApiKey() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString('hex');  //Gera uma chave API aleatória de 32 bytes e converte pra uma string hexadecimal
 }
+
 function getMenuOrderByProfile(perfil) {
     const menuOrderMaster = {
         'Dashboard': { id_item: 1, icone: 'pi pi-fw pi-chart-pie' },
@@ -32,116 +34,154 @@ function getMenuOrderByProfile(perfil) {
 
     switch (perfil) {
         case 1: // Master
-            return menuOrderMaster;
+            return menuOrderMaster;  //menu para o perfil Master
         case 3: // Operador
-            return menuOrderOperador;
+            return menuOrderOperador;  //menu para o perfil Operador
         case 4: // Avulso
-            return menuOrderAvulso;
+            return menuOrderAvulso;  //menu para o perfil Avulso
         default:
-            throw new Error('Perfil não reconhecido');
+            throw new Error('Perfil não reconhecido');  //erro se o perfil não for reconhecido
     }
 }
 async function inserirMenuPrincipal(transaction, id_cliente, perfil, nome, order) {
-    let sqlRequest = new sql.Request(transaction);
-    sqlRequest.input('Cod_Cli', sql.Int, id_cliente)
-        .input('Nome', sql.VarChar, nome)
-        .input('Perfil', sql.Int, perfil)
-        .input('Icone', sql.VarChar, order.icone)
-        .input('ID_item', sql.Int, order.id_item);
+    let sqlRequest = new sql.Request(transaction);//criação de uma nova requisição SQL associada à transação recebida
+    
+    //definindo os parâmetros da consulta SQL. Esses parâmetros são utilizados para prevenir SQL Injection e melhoram a segurança.
+    sqlRequest.input('Cod_Cli', sql.Int, id_cliente)  //Cod_Cli é um parâmetro do tipo inteiro que representa o ID do cliente.
+        .input('Nome', sql.VarChar, nome)  //nome é um parâmetro do tipo varchar que representa o nome do menu.
+        .input('Perfil', sql.Int, perfil)  //perfil é um parâmetro do tipo inteiro que representa o perfil associado ao menu.
+        .input('Icone', sql.VarChar, order.icone)  //icone é um parâmetro do tipo varchar que representa o ícone associado ao menu.
+        .input('ID_item', sql.Int, order.id_item);  //ID_item é um parâmetro do tipo inteiro que representa o ID do item do menu.
 
-    console.log(`Inserindo menu: ${nome}`);
+    console.log(`Inserindo menu: ${nome}`);  //logando a inserção do menu para monitoramento
+
+    //Execução da consulta SQL que insere os dados na tabela 'Menu' usando os parâmetros fornecidos.
     await sqlRequest.query(`
         INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
         VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
     `);
-    console.log(`Menu ${nome} inserido com sucesso`);
-}
-// Função para inserir o submenu
-async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu, referenciaCliente) {
-    let sqlRequest = new sql.Request(transaction);
-    let submenuTo = null;
 
+    console.log(`Menu ${nome} inserido com sucesso`);  //Logando que a inserção foi bem-sucedida
+}
+//Função para inserir o submenu
+async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu, referenciaCliente) {
+    let sqlRequest = new sql.Request(transaction);//Criação de uma requisição SQL associada à transação recebida 
+    let submenuTo = null;  //Variável que vai armazenar o valor 'to' do submenu, caso ele seja necessário
+
+    //Verifica se o submenu não possui subsubmenus ou se a lista de subsubmenus está vazia
     if (!submenu.subsubmenus || submenu.subsubmenus.length === 0) {
+        // Consulta SQL para buscar o valor 'to' de um submenu específico, dado o nome do submenu e o código do cliente
         const result = await sqlRequest.query(`
             SELECT [to] FROM Menu_Itens WHERE Nome = '${submenu.name}' AND Cod_Cli = ${referenciaCliente}
         `);
+        //se houver um valor para 'to', armazena ele e caso contrário, mantém como uma string vazia
         submenuTo = result.recordset[0]?.to || '';
     }
 
-    sqlRequest.input('ID_Item', sql.Int, id_item)
-        .input('Cod_Cli', sql.Int, id_cliente)
-        .input('Nome', sql.VarChar, submenu.name)
-        .input('Perfil', sql.Int, perfil)
-        .input('to', sql.VarChar, submenuTo);
+    //definindo os parâmetros para a requisição SQL com os valores fornecidos
+    sqlRequest.input('ID_Item', sql.Int, id_item)  //id do item do menu ao qual o submenu pertence
+        .input('Cod_Cli', sql.Int, id_cliente)  //id do cliente associado ao submenu
+        .input('Nome', sql.VarChar, submenu.name)  //Nome do submenu
+        .input('Perfil', sql.Int, perfil)  //Perfil associado ao submenu
+        .input('to', sql.VarChar, submenuTo);  //'to' do submenu 
+    console.log(`Inserindo submenu: ${submenu.name}`);  //log para monitorar qual submenu está sendo inserido
 
-    console.log(`Inserindo submenu: ${submenu.name}`);
-
+    //Verifica se o submenu possui subsubmenus. Caso tenha, trata a inserção de forma diferente
     if (submenu.subsubmenus && submenu.subsubmenus.length > 0) {
+        //o submenu possui subsubmenus, insere o submenu como um item na tabela Menu_Itens
+        //e gera um ID para o submenu usando a cláusula OUTPUT
         const resultSubmenu = await sqlRequest.query(`
             INSERT INTO Menu_Itens (ID_Item, Cod_Cli, Nome, Perfil, [to], ID_Sub_Item)
             OUTPUT INSERTED.ID
             VALUES (@ID_Item, @Cod_Cli, @Nome, @Perfil, NULL, 0)
         `);
+
+        //Recupera o ID do submenu inserido e o armazena na variável submenuId
         const submenuId = resultSubmenu.recordset[0].ID;
         console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item: ${submenuId}`);
+        //Retorna o ID do submenu inserido
         return submenuId;
     } else {
+        //Caso o submenu não tenha subsubmenus, insere diretamente na tabela Menu_Itens
         await sqlRequest.query(`
             INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
             VALUES (@ID_Item, 0, @Cod_Cli, @Nome, @Perfil, @to)
         `);
-        console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item 0`);
+
+        console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item 0`);  //Log indicando que o submenu foi inserido com ID_Sub_Item 0 (ou seja, não tem subsubmenus
+        //retorna 0 indicando que não há subsubmenus
         return 0;
     }
 }
-// Função para inserir o subsubmenu
+//Função para inserir o subsubmenu
 async function inserirSubsubmenu(transaction, id_cliente, perfil, id_item, id_sub_item, subsubmenu, referenciaCliente) {
-    let sqlRequest = new sql.Request(transaction);
+    let sqlRequest = new sql.Request(transaction);// Cria uma requisição SQL associada à transação recebida. Isso permite que a consulta ao banco de dados seja feita dentro da transação.
+
+    //Realiza uma consulta SQL para buscar o valor de 'to' associado ao submenu. O nome do subsubmenu e o código do cliente são usados para a busca.
     const result = await sqlRequest.query(`
         SELECT [to] FROM Menu_Itens WHERE Nome = '${subsubmenu.name}' AND Cod_Cli = ${referenciaCliente}
     `);
+
+    //Se o resultado da consulta encontrar um valor para 'to', ele será atribuído à variável 'subsubmenuTo'. Caso contrário, a variável ficará vazia.
     const subsubmenuTo = result.recordset[0]?.to || '';
 
+    //Log para acompanhar a inserção do subsubmenu, fornecendo o nome do subsubmenu que está sendo inserido.
     console.log(`Inserindo subsubmenu: ${subsubmenu.name}`);
-    sqlRequest.input('ID_Item', sql.Int, id_item)
-        .input('ID_Sub_Item', sql.Int, id_sub_item)
-        .input('Cod_Cli', sql.Int, id_cliente)
-        .input('Nome', sql.VarChar, subsubmenu.name)
-        .input('Perfil', sql.Int, perfil)
-        .input('to', sql.VarChar, subsubmenuTo);
 
+    //Define os parâmetros que serão passados para a consulta SQL.
+    sqlRequest.input('ID_Item', sql.Int, id_item)  // ID do item de menu ao qual o subsubmenu pertence.
+        .input('ID_Sub_Item', sql.Int, id_sub_item)  // ID do submenu ao qual o subsubmenu pertence.
+        .input('Cod_Cli', sql.Int, id_cliente)  // ID do cliente.
+        .input('Nome', sql.VarChar, subsubmenu.name)  // Nome do subsubmenu.
+        .input('Perfil', sql.Int, perfil)  // Perfil associado ao subsubmenu.
+        .input('to', sql.VarChar, subsubmenuTo);  // Valor 'to' que foi obtido na consulta anterior.
+
+    //Executa a consulta SQL para inserir o subsubmenu na tabela Menu_Itens.
     await sqlRequest.query(`
         INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
         VALUES (@ID_Item, @ID_Sub_Item, @Cod_Cli, @Nome, @Perfil, @to)
     `);
+
+    //Log indicando que o subsubmenu foi inserido com sucesso.
     console.log(`Subsubmenu ${subsubmenu.name} inserido com sucesso`);
 }
-async function listar(request, response) {
-    try {
-        const query = 'SELECT * FROM clientes WHERE deleted = 0';
-        const result = await new sql.Request().query(query);
-        response.status(200).json(result.recordset);
-    } catch (error) {
-        console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
-    }
-}
 async function listaSimples(request, response) {
+    //tenta executar a lógica da função. Caso algo falhe, o erro será tratado no bloco 'catch'.
     try {
+        //definindo a consulta SQL para buscar os clientes não excluídos. A consulta retorna apenas o id_cliente e nome de cada cliente.
+        //o 'WHERE deleted = 0' garante que somente os clientes não excluídos ejam retornados.
         const query = 'SELECT id_cliente,nome FROM clientes WHERE deleted = 0';
+
+        //executa a consulta SQL usando o objeto Request do pacote 'mssql'.
+        //a função query() executa a consulta no banco de dados SQL Server e aguarda a resposta com 'await'.
         const result = await new sql.Request().query(query);
+
+        //quando a consulta é bem-sucedida, envia a resposta ao cliente com o status HTTP 200 (OK).
+        //a resposta é enviada no formato JSON, utilizando o 'recordset' que contém o resultado da consulta.
+        //'recordset' é um array de objetos, e nesse caso, contém os dados dos clientes (id_cliente e nome).
         response.status(200).json(result.recordset);
     } catch (error) {
+        //caso ocorra algum erro durante a execução da consulta ou da resposta:
+        //exibe a mensagem de erro no console para que os desenvolvedores possam verificar o problema.
         console.error('Erro ao executar consulta:', error.message);
+
+        //retorna uma resposta de erro com status HTTP 500 indicando que houve um problema no servidor.
+        //a mensagem genérica 'Erro ao executar consulta' é enviada para o cliente.
         response.status(500).send('Erro ao executar consulta');
     }
 }
 async function listarClienteComServicos(request, response) {
+    //tenta executar a lógica da função. Caso algo falhe, o erro será tratado no bloco 'catch'.
     try {
         let query;
-        const  id_cliente  = request.body.id_cliente;
-        const userRole  = request.roles;
+        //pega o 'id_cliente' da requisição para identificar o cliente
+        const id_cliente = request.body.id_cliente;
+        //pega a role do usuário
+        const userRole = request.roles;
+
+        //vverifica se o usuário tem a role 'Administrador'
         if (userRole.includes('Administrador')) {
+            //Se o usuário for 'Administrador', ele pode ver todos os clientes e seus serviços, mesmo os que não têm notificações
             query = `
                 SELECT 
                     c.id_cliente, c.nome AS cliente_nome,
@@ -157,6 +197,7 @@ async function listarClienteComServicos(request, response) {
                     AND (ns.deleted = 0 OR ns.deleted IS NULL)
             `;
         } else {
+            //Caso o usuário não seja 'Administrador', ele só poderá ver os serviços do cliente especificado
             query = `
                 SELECT 
                     c.id_cliente, c.nome AS cliente_nome,
@@ -171,141 +212,175 @@ async function listarClienteComServicos(request, response) {
                     c.id_cliente = @id_cliente AND c.deleted = 0 AND ns.deleted = 0
             `;
         }
-        // const result = await new sql.Request().query(query);
+
+        //executa a consulta SQL com o parâmetro 'id_cliente' inserido na query
         const result = await new sql.Request()
-            .input('id_cliente', sql.Int, id_cliente)
-            .query(query);
-            //console.log(result.recordset)
+            .input('id_cliente', sql.Int, id_cliente)  // Define o parâmetro 'id_cliente' da consulta
+            .query(query);  // Executa a consulta SQL e espera o resultado
+
+        //mapeia o resultado para um formato mais adequado (isso é feito pela função 'mapClientesComServicos')
         const clientesComServicos = mapClientesComServicos(result.recordset);
 
+        //retorna a resposta ao cliente com status HTTP 200 (OK), enviando os dados dos clientes e serviços
         response.status(200).json(clientesComServicos);
     } catch (error) {
+        //caso ocorra algum erro, captura a falha e exibe no console para diagnóstico
         console.error('Erro ao executar consulta:', error.message);
+
+        //envia uma resposta de erro para o cliente com status HTTP 500 (Erro Interno do Servidor)
         response.status(500).send('Erro ao executar consulta');
     }
 }
 async function adicionar(request, response) {
+    //desestrutura os dados recebidos no corpo da requisição
     const { nome, cpfcnpj, ativo, usar_api, id_usuario } = request.body;
+
+    //gera uma chave de API única para o cliente
     const apiKey = generateApiKey();
 
+    //define a consulta SQL para inserir um novo cliente na tabela 'clientes'
     const queryCliente = `
         INSERT INTO clientes 
         (id_cliente, nome, cpfcnpj, ativo, deleted, created, updated, last_login, usar_api, atualizado)
         VALUES (@id_cliente, @nome, @cpfcnpj, @ativo, @deleted, @created, @updated, @last_login, @usar_api, @atualizado)
     `;
 
+    //define a consulta SQL para inserir uma chave de API associada ao cliente
     const queryApiKey = `
         INSERT INTO API_KEY (id_cliente, api_key, Nome_cliente)
         VALUES (@id_cliente, @api_key, @nome_cliente)
     `;
 
+    //inicia uma transação no banco de dados
     const transaction = new sql.Transaction();
     try {
+        //começa a transação 
         await transaction.begin();
 
-        // Instancia um novo sql.Request para a primeira query
+        //cria uma instância do sql.Request para executar a consulta de inserção do cliente
         let sqlRequest = new sql.Request(transaction);
 
-        // Recupera o maior valor de id_cliente na tabela
+        //consulta o maior id de cliente existente para gerar um novo ID 
         const resultId = await sqlRequest.query(`SELECT ISNULL(MAX(id_cliente), 0) AS lastId FROM clientes`);
         const lastId = resultId.recordset[0].lastId;
-        const newIdCliente = lastId + 1;
+        const newIdCliente = lastId + 1; // Incrementa o id para o novo cliente
 
-        // Prepara as variáveis para a query de inserção de cliente
+        //prepara os parâmetros necessários para a inserção na tabela 'clientes'
         sqlRequest.input('id_cliente', sql.Int, newIdCliente);
         sqlRequest.input('nome', sql.VarChar, nome);
         sqlRequest.input('cpfcnpj', sql.VarChar, cpfcnpj);
         sqlRequest.input('ativo', sql.Bit, ativo);
-        sqlRequest.input('deleted', sql.Bit, false);
-        sqlRequest.input('created', sql.DateTime, new Date());
-        sqlRequest.input('updated', sql.DateTime, new Date());
-        sqlRequest.input('last_login', sql.DateTime, new Date('1900-01-01 00:00:00.000'));
+        sqlRequest.input('deleted', sql.Bit, false); //define que o cliente não foi excluído
+        sqlRequest.input('created', sql.DateTime, new Date()); //data de criação
+        sqlRequest.input('updated', sql.DateTime, new Date()); //data de atualização
+        sqlRequest.input('last_login', sql.DateTime, new Date('1900-01-01 00:00:00.000')); //data de último login 
         sqlRequest.input('usar_api', sql.Bit, usar_api);
-        sqlRequest.input('atualizado', sql.Bit, false);
+        sqlRequest.input('atualizado', sql.Bit, false); //define que o cliente não foi atualizado
 
-        // Executa a query para inserir o cliente
+        //executa a query para inserir o cliente no banco de dados
         await sqlRequest.query(queryCliente);
 
-        // Instancia um novo sql.Request para a query de inserção de API Key
+        //cria uma nova instância de sql.Request para inserir a chave de API
         sqlRequest = new sql.Request(transaction);
 
-        // Prepara as variáveis para a query de inserção de API Key
+        //prepara os parâmetros necessários para a inserção na tabela 'API_KEY'
         sqlRequest.input('id_cliente', sql.Int, newIdCliente);
-        sqlRequest.input('api_key', sql.VarChar, apiKey);
+        sqlRequest.input('api_key', sql.VarChar, apiKey); //chave de API gerada
         sqlRequest.input('nome_cliente', sql.VarChar, nome);
 
-        // Executa a query para inserir a chave de API
+        //executa a query para inserir a chave de API
         await sqlRequest.query(queryApiKey);
 
-        // Commit da transação
+        //se tudo ocorrer bem, confirma a transação 
         await transaction.commit();
 
+        //retorna uma resposta de sucesso para o cliente
         response.status(201).send('Cliente criado com sucesso e API Key gerada!');
     } catch (error) {
-        await transaction.rollback();  // Em caso de erro, reverte a transação
+        //se ocorrer qualquer erro, desfaz a transação (rollback), revertendo as alterações no banco
+        await transaction.rollback();
+
+        //registra o erro no console para que o time de desenvolvimento possa analisar
         console.error('Erro ao inserir o usuário:', error.message);
+
+        //retorna um erro para o cliente com status HTTP 500 
         response.status(500).send('Erro ao inserir o usuário');
     }
 }
-async function adicionarServico(request, response) {
-    const { id_cliente, servicos } = request.body;
-    try {
-        let transaction = new sql.Transaction();
-        await transaction.begin();
-        for (const servico of servicos) {
-            for (const destinatario of servico.destinatarios) {
-                await inserirNovoServico(transaction, id_cliente, servico, destinatario);
-            }
-        }
-        await transaction.commit();
-        response.status(200).json({ message: 'Serviços adicionados com sucesso' })
-    } catch (error) {
-        console.error('Erro ao salvar configurações', error);
-        if (transaction) {
-            await transaction.rollback();
-        }
-        response.status(500).json({ message: 'Erro ao salvar configurações' })
+async function adicionar(request, response) {
+    //desestrutura os dados recebidos no corpo da requisição
+    const { nome, cpfcnpj, ativo, usar_api, id_usuario } = request.body;
 
-    }
-}
-async function atualizarServico(request, response) {
-    const { id_cliente, servicos } = request.body;
-    let transaction;
+    //gera uma chave de API única para o cliente
+    const apiKey = generateApiKey();
 
+    //define a consulta SQL para inserir um novo cliente na tabela 'clientes'
+    const queryCliente = `
+        INSERT INTO clientes 
+        (id_cliente, nome, cpfcnpj, ativo, deleted, created, updated, last_login, usar_api, atualizado)
+        VALUES (@id_cliente, @nome, @cpfcnpj, @ativo, @deleted, @created, @updated, @last_login, @usar_api, @atualizado)
+    `;
+
+    //define a consulta SQL para inserir uma chave de API associada ao cliente
+    const queryApiKey = `
+        INSERT INTO API_KEY (id_cliente, api_key, Nome_cliente)
+        VALUES (@id_cliente, @api_key, @nome_cliente)
+    `;
+
+    //inicia uma transação no banco de dados
+    const transaction = new sql.Transaction();
     try {
-        transaction = new sql.Transaction();
+        //começa a transação (inicia os blocos de inserção)
         await transaction.begin();
 
-        const existingServices = await buscarServicosExistentes(transaction, id_cliente);
+        //cia uma instância do sql.Request para executar a consulta de inserção do cliente
+        let sqlRequest = new sql.Request(transaction);
 
-        await marcarServicosDeletados(transaction, id_cliente, existingServices, servicos);
+        //consulta o maior ID de cliente existente para gerar um novo ID (evitando duplicação)
+        const resultId = await sqlRequest.query(`SELECT ISNULL(MAX(id_cliente), 0) AS lastId FROM clientes`);
+        const lastId = resultId.recordset[0].lastId;
+        const newIdCliente = lastId + 1; //incrementa o ID para o novo cliente
 
-        for (const servico of servicos) {
-            for (const destinatario of servico.destinatarios) {
-                const serviceExists = await verificarServicoExistente(transaction, id_cliente, servico.id_servico, destinatario);
-                if (serviceExists) {
-                    const { deleted } = serviceExists;
-                    if (deleted) {
-                        await reativarServico(transaction, id_cliente, servico, destinatario);
-                    } else {
-                        await atualizarServicoExistente(transaction, id_cliente, servico, destinatario);
-                    }
-                } else {
-                    await inserirNovoServico(transaction, id_cliente, servico, destinatario);
-                }
-            }
-        }
+        //prepara os parâmetros necessários para a inserção na tabela 'clientes'
+        sqlRequest.input('id_cliente', sql.Int, newIdCliente);
+        sqlRequest.input('nome', sql.VarChar, nome);
+        sqlRequest.input('cpfcnpj', sql.VarChar, cpfcnpj);
+        sqlRequest.input('ativo', sql.Bit, ativo);
+        sqlRequest.input('deleted', sql.Bit, false); //define que o cliente não foi excluído
+        sqlRequest.input('created', sql.DateTime, new Date()); //data de criação
+        sqlRequest.input('updated', sql.DateTime, new Date()); //data de atualização
+        sqlRequest.input('last_login', sql.DateTime, new Date('1900-01-01 00:00:00.000')); //data de último login (inicialmente setada para uma data padrão)
+        sqlRequest.input('usar_api', sql.Bit, usar_api);
+        sqlRequest.input('atualizado', sql.Bit, false); //define que o cliente não foi atualizado
 
+        //Executa a query para inserir o cliente no banco de dados
+        await sqlRequest.query(queryCliente);
+
+        //Cria uma nova instância de sql.Request para inserir a chave de API
+        sqlRequest = new sql.Request(transaction);
+
+        //Prepara os parâmetros necessários para a inserção na tabela 'API_KEY'
+        sqlRequest.input('id_cliente', sql.Int, newIdCliente);
+        sqlRequest.input('api_key', sql.VarChar, apiKey); //chave de API gerada
+        sqlRequest.input('nome_cliente', sql.VarChar, nome);
+
+        //executa a query para inserir a chave de API
+        await sqlRequest.query(queryApiKey);
+
+        //se tudo ocorrer bem, confirma a transação (commita as alterações no banco)
         await transaction.commit();
-        response.status(200).json({ message: 'Serviços atualizados com sucesso' });
+
+        //retorna uma resposta de sucesso para o cliente
+        response.status(201).send('Cliente criado com sucesso e API Key gerada!');
     } catch (error) {
-        console.error('Erro ao atualizar serviços:', error);
+        //se ocorrer qualquer erro, desfaz a transação (rollback), revertendo as alterações no banco
+        await transaction.rollback();
 
-        if (transaction) {
-            await transaction.rollback();
-        }
+        //registra o erro no console para que o time de desenvolvimento possa analisar
+        console.error('Erro ao inserir o usuário:', error.message);
 
-        response.status(500).json({ message: 'Erro ao atualizar serviços' });
+        //retorna um erro para o cliente com status HTTP 500
+        response.status(500).send('Erro ao inserir o usuário');
     }
 }
 async function buscarServicosExistentes(transaction, id_cliente) {
