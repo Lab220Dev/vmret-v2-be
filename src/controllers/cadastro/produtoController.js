@@ -11,21 +11,69 @@ const upload = multer({ storage: storage }).fields([
 ]);
 
 
+// async function listarProdutos(request, response) {
+//     try {
+//         let query = 'SELECT * FROM produtos WHERE 1 = 1';
+
+//         if (request.body.id_cliente) {
+//             query += ` AND id_cliente = '${request.body.id_cliente}'`;
+//         } else {
+//             response.status(401).json("ID do cliente não enviado");
+//             return;
+//         }
+
+//         query += ' AND deleted = 0';
+
+//         const result = await new sql.Request().query(query);
+//         response.status(200).json(result.recordset);
+
+//     } catch (error) {
+//         console.error('Erro ao executar consulta:', error.message);
+//         response.status(500).send('Erro ao executar consulta');
+//     }
+// }
 async function listarProdutos(request, response) {
     try {
-        let query = 'SELECT * FROM produtos WHERE 1 = 1';
+        const page = request.body.page || 1;
+        const pageSize = request.body.pageSize || 10;
+        const offset = (page - 1) * pageSize;
+        const searchTerm = request.body.searchTerm || ''; // requisição de busca  pelos termos
 
-        if (request.body.id_cliente) {
-            query += ` AND id_cliente = '${request.body.id_cliente}'`;
-        } else {
-            response.status(401).json("ID do cliente não enviado");
-            return;
+        //  filtro de pesquisa
+        let searchCondition = '';
+        if (searchTerm) {
+            searchCondition = `AND (nome LIKE '%${searchTerm}%' OR codigo LIKE '%${searchTerm}%')`;
         }
 
-        query += ' AND deleted = 0';
+        // hamada SQL 
+        let query = `
+            SELECT * FROM produtos 
+            WHERE id_cliente = '${request.body.id_cliente}' 
+            AND deleted = 0 
+            ${searchCondition} 
+            ORDER BY id_produto
+            OFFSET ${offset} ROWS 
+            FETCH NEXT ${pageSize} ROWS ONLY
+        `;
 
+        // chamada pra pegar o total de produtos, incluindo a pesquisa
+        let countQuery = `
+            SELECT COUNT(*) as total 
+            FROM produtos 
+            WHERE id_cliente = '${request.body.id_cliente}' 
+            AND deleted = 0 
+            ${searchCondition}
+        `;
+
+        // Executa as consultas
         const result = await new sql.Request().query(query);
-        response.status(200).json(result.recordset);
+        const totalResult = await new sql.Request().query(countQuery);
+
+        // Retorna os resultados já com o total de registros
+        response.status(200).json({
+            produtos: result.recordset,
+            totalRecords: totalResult.recordset[0].total
+        });
 
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
@@ -33,17 +81,27 @@ async function listarProdutos(request, response) {
     }
 }
 
+async function listarProdutosResumo(request, response) {
+    try {
+        let query = `SELECT id_produto, codigo, nome FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY codigo`;
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
 async function adicionarProdutos(request, response) {
     const { id_cliente, id_categoria, nome, descricao, validadedias, codigo, id_planta, id_tipoProduto, unidade_medida, imagem1, imagem2, imagemdetalhe, id_usuario } = request.body;
     const query = `
     INSERT INTO produtos
     (id_cliente, id_categoria, nome, descricao, validadedias,
     imagem1, imagem2, imagemdetalhe, deleted, codigo,
-    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida)
+    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida,Sincronizado)
     VALUES
     (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
     @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
-    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida)
+    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida,@Sincronizado)
 `;
     const params = {
         id_cliente: id_cliente,
@@ -71,12 +129,23 @@ async function adicionarProdutos(request, response) {
             return;
         }
 
+
         const sanitizeFileName = (filename) => {
             if (typeof filename === 'string') {
-                return filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+                // Divide o nome do arquivo e a extensão
+                const parts = filename.split('.');
+                const extension = parts.length > 1 ? `.${parts.pop()}` : '';  // Pega a extensão do arquivo
+        
+                // Reconstroi o nome do arquivo sem a extensão
+                const nameWithoutExtension = parts.join('.').normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')  // Remove acentos
+                    .replace(/[^a-zA-Z0-9 _]/g, '-')  // Substitui caracteres especiais por '-'
+                    .replace(/ /g, '_');  // Substitui espaços por '_'
+        
+                return `${nameWithoutExtension}${extension}`;
             } else {
                 console.error('Filename is not a string:', filename);
-                return 'unknown_filename'; // Retorna um nome padrão ou lança um erro, dependendo do que você deseja
+                return 'unknown_filename';  // Retorna um nome padrão se não for string
             }
         };
 
@@ -115,18 +184,17 @@ async function adicionarProdutos(request, response) {
             await fs.writeFile(imagemdetalhePath, file.buffer);
         }
 
-
-
         const requestSql = new sql.Request();
         requestSql.input('id_cliente', sql.Int, id_cliente);
         requestSql.input('id_categoria', sql.Int, id_categoria);
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, imagem1);
-        requestSql.input('imagem2', sql.VarChar, imagem2); // Imagem secundária única
-        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhe);
+        requestSql.input('imagem1', sql.VarChar, sanitizeFileName(imagem1));
+        requestSql.input('imagem2', sql.VarChar, sanitizeFileName(imagem2)); // Imagem secundária única
+        requestSql.input('imagemdetalhe', sql.VarChar,sanitizeFileName(imagemdetalhe));
         requestSql.input('deleted', sql.Bit, false);
+        requestSql.input('Sincronizado', sql.Bit, 0);
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('quantidademinima', sql.Int, 0);
         requestSql.input('capacidade', sql.Int, 0);
@@ -265,12 +333,31 @@ async function atualizarProduto(request, response) {
         }
 
         // Função para sanitizar nomes de arquivos
-        const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
+        const sanitizeFileName = (filename) => {
+            if (typeof filename === 'string') {
+                // Divide o nome do arquivo e a extensão
+                const parts = filename.split('.');
+                const extension = parts.length > 1 ? `.${parts.pop()}` : '';  // Pega a extensão do arquivo
+        
+                // Reconstroi o nome do arquivo sem a extensão
+                const nameWithoutExtension = parts.join('.').normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')  // Remove acentos
+                    .replace(/[^a-zA-Z0-9 _]/g, '-')  // Substitui caracteres especiais por '-'
+                    .replace(/ /g, '_');  // Substitui espaços por '_'
+        
+                // Retorna o nome sanitizado com a extensão preservada
+                return `${nameWithoutExtension}${extension}`;
+            } else {
+                console.error('Filename is not a string:', filename);
+                return 'unknown_filename';  // Retorna um nome padrão se não for string
+            }
+        };
 
         // Diretórios de upload com id_cliente antes da pasta principal
-        const uploadPathPrincipal = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'principal');
-        const uploadPathSecundario = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'secundario');
-        const uploadPathInfoAdicional = path.join(__dirname, '../uploads/produtos', id_cliente.toString(), 'info');
+        const uploadPathPrincipal = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'principal');
+        const uploadPathSecundario = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'secundario');
+        const uploadPathInfoAdicional = path.join(__dirname, '../../uploads/produtos', id_cliente.toString(), 'info');
 
         // Cria diretórios de upload se não existirem
         await fs.mkdir(uploadPathPrincipal, { recursive: true });
@@ -311,9 +398,9 @@ async function atualizarProduto(request, response) {
         requestSql.input('nome', sql.VarChar, nome);
         requestSql.input('descricao', sql.VarChar, descricao);
         requestSql.input('validadedias', sql.Int, validadedias);
-        requestSql.input('imagem1', sql.VarChar, imagem1Path);
-        requestSql.input('imagem2', sql.VarChar, imagem2Path);
-        requestSql.input('imagemdetalhe', sql.VarChar, imagemdetalhePath);
+        requestSql.input('imagem1', sql.VarChar, sanitizeFileName(imagem1));
+        requestSql.input('imagem2', sql.VarChar, sanitizeFileName(imagem2));
+        requestSql.input('imagemdetalhe', sql.VarChar, sanitizeFileName(imagemdetalhe));
         requestSql.input('codigo', sql.VarChar, codigo);
         requestSql.input('id_planta', sql.Int, id_planta);
         requestSql.input('id_tipoProduto', sql.BigInt, id_tipoProduto);
@@ -346,5 +433,6 @@ module.exports = {
     adicionarProdutos,
     listarPlanta,
     deleteProduto,
+    listarProdutosResumo,
     atualizarProduto
 };

@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { Console } = require("console");
+const { console } = require("inspector");
 
 // Função para baixar e salvar uma imagem
 async function baixarImagem(url, localPath) {
@@ -58,38 +59,43 @@ async function sincronizar(request, response) {
         transaction = new sql.Transaction();
         await transaction.begin();
 
-        // Recuperar informações do cliente
-        const clienteInfo = await recuperarClienteInfo(transaction, id_cliente);
+        // Recuperar informações do cliente (lista de resultados)
+        const clienteInfos = await recuperarClienteInfo(transaction, id_cliente);
 
-        if (!clienteInfo) {
+        if (!Array.isArray(clienteInfos) || clienteInfos.length === 0) {
             await transaction.rollback();
             return response.status(404).json({ mensagem: "Nenhum dado encontrado para o cliente especificado" });
         }
 
-        const { ClienteID, UserID, Chave } = clienteInfo;
+        const produtosComStatusPorCliente = [];
 
-        // Obter token de acesso da API externa
-        const accessToken = await obterAccessToken(ClienteID, UserID, Chave);
+        // Processar o fluxo para cada resultado da lista retornada por recuperarClienteInfo
+        for (const clienteInfo of clienteInfos) {
+            const { ClienteID, UserID, ChaveAPI, URL } = clienteInfo;
 
-        if (!accessToken) {
-            await transaction.rollback();
-            return response.status(500).json({ mensagem: 'Erro ao fazer login na API externa' });
+            // Obter token de acesso da API externa para cada registro
+            const accessToken = await obterAccessToken(ClienteID, UserID, ChaveAPI, URL);
+            if (!accessToken) {
+                console.warn(`Erro ao fazer login na API externa para o ClienteID: ${ClienteID}`);
+                continue; // Pula para o próximo resultado se houver erro
+            }
+
+            // Obter produtos externos
+            const produtosExternos = await obterProdutosExternos(accessToken, URL);
+            if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
+                console.warn(`Nenhum produto registrado para o ClienteID: ${ClienteID}`);
+                continue; // Pula para o próximo resultado se não houver produtos
+            }
+
+            // Inserir ou atualizar produtos no banco de dados para cada item da lista
+            const produtosComStatus = await inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente);
+            produtosComStatusPorCliente.push({ ClienteID, produtosComStatus });
         }
 
-        // Obter produtos externos
-        const produtosExternos = await obterProdutosExternos(accessToken);
-
-        if (!Array.isArray(produtosExternos) || produtosExternos.length === 0) {
-            await transaction.rollback();
-            return response.status(404).json("Nenhum produto registrado");
-        }
-
-        // Inserir ou atualizar produtos no banco de dados
-        const produtosComStatus = await inserirOuAtualizarProdutos(transaction, produtosExternos, id_cliente);
         await transaction.commit();
 
-        // Retornando os produtos inseridos
-        response.status(200).json(produtosComStatus);
+        // Retornando os produtos inseridos/atualizados para todos os resultados da lista
+        response.status(200).json(produtosComStatusPorCliente);
 
     } catch (error) {
         console.error('Erro ao sincronizar:', error.message);
@@ -100,20 +106,21 @@ async function sincronizar(request, response) {
 
 // Função para recuperar informações do cliente
 async function recuperarClienteInfo(transaction, id_cliente) {
-    const query = `SELECT ClienteID, UserID, Chave FROM DMs WHERE IDcliente = @id_cliente`;
+    const query = `SELECT ClienteID, UserID, ChaveAPI,URL FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0`;
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input('id_cliente', sql.Int, id_cliente);
     const result = await sqlRequest.query(query);
-
-    return result.recordset.length > 0 ? result.recordset[0] : null;
+    console.log(result)
+    return result.recordset.length > 0 ? result.recordset : null;
 }
 
 // Função para obter o token de acesso da API externa
-async function obterAccessToken(ClienteID, UserID, Chave) {
+async function obterAccessToken(ClienteID, UserID, Chaveapi,URL) {
     try {
-        const response = await axios.post('https://api.mobsolucoesdigitais.com.br/api/Login', {
+        console.log(`${URL}/api/Login`)
+        const response = await axios.post(`${URL}/api/Login`, {
             UserID: UserID,
-            AccessKey: Chave,
+            AccessKey: Chaveapi,
             IdCliente: ClienteID,
             tpReadFtp: 0
         });
@@ -126,9 +133,9 @@ async function obterAccessToken(ClienteID, UserID, Chave) {
 }
 
 // Função para obter produtos externos da API
-async function obterProdutosExternos(accessToken) {
+async function obterProdutosExternos(accessToken,URL) {
     try {
-        const response = await axios.get('https://api.mobsolucoesdigitais.com.br/api/VendingMachine/obterEpis', {
+        const response = await axios.get(`${URL}/api/VendingMachine/obterEpis`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`
             }
@@ -139,14 +146,6 @@ async function obterProdutosExternos(accessToken) {
         console.error('Erro ao obter produtos externos:', error.message);
         return null;
     }
-}
-
-// Função para determinar o tipo e ajustar o nome da imagem
-function determinarTipoENomeImagem(imagemNome) {
-    const prefixo = "Princ_";
-    const extensao = path.extname(imagemNome); // Obtém a extensão do arquivo (.jpg, .png, etc.)
-    const novoNome = `${prefixo}${path.basename(imagemNome, extensao)}${extensao}`; // Concatena o prefixo com o nome base e a extensão
-    return novoNome;
 }
 
 // Função para inserir ou atualizar produtos no banco de dados
@@ -297,6 +296,13 @@ async function inserirOuAtualizarProdutos(transaction, produtosExternos, id_clie
     return produtosComStatus;
 }
 
+// Função para determinar o tipo e ajustar o nome da imagem
+function determinarTipoENomeImagem(imagemNome) {
+    const prefixo = "Princ_";
+    const extensao = path.extname(imagemNome); // Obtém a extensão do arquivo (.jpg, .png, etc.)
+    const novoNome = `${prefixo}${path.basename(imagemNome, extensao)}${extensao}`; // Concatena o prefixo com o nome base e a extensão
+    return novoNome;
+}
 
 module.exports = {
     recuperar, sincronizar

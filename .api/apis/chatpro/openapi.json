@@ -1,0 +1,2753 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "chatPro API",
+    "version": "unknown"
+  },
+  "servers": [
+    {
+      "url": "https://v5.chatpro.com.br/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/{instance_id}/api/v1/status": {
+      "get": {
+        "summary": "status",
+        "description": "Retorna o status da conexão entre a instância e o WhatsApp.",
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (exemplo: chatpro-fx5qbe2hah)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"connected\": true,\n  \"power_save\": false,\n  \"name\": \"Nome da sua instância\",\n  \"info\": {\n    \"Battery\": 100,\n    \"Platform\": \"A plataforma na qual você escaneou o QR Code, podendo ser IOS ou Android\",\n    \"Connected\": true,\n    \"Pushname\": \"O seu nome no WhatsApp, definido por você no momento da criação da sua conta\",\n    \"Wid\": \"É o seu ID no WhatsApp\",\n    \"Lc\": \"BR\",\n    \"Phone\": {\n      \"Mcc\": \"000\",\n      \"Mnc\": \"000\",\n      \"OsVersion\": \"9\",\n      \"DeviceManufacturer\": \"Web Beta\",\n      \"DeviceModel\": \"octopus_cheets\",\n      \"OsBuildNumber\": \"R92-13982.82.0 release-keys\",\n      \"WaVersion\": \"2.21.21.19\"\n    },\n    \"Plugged\": true,\n    \"Tos\": 0,\n    \"Lg\": \"pt\",\n    \"Is24h\": true\n  }\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connected": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "power_save": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Nome da sua instância"
+                    },
+                    "info": {
+                      "type": "object",
+                      "properties": {
+                        "Battery": {
+                          "type": "integer",
+                          "example": 100,
+                          "default": 0
+                        },
+                        "Platform": {
+                          "type": "string",
+                          "example": "A plataforma na qual você escaneou o QR Code, podendo ser IOS ou Android"
+                        },
+                        "Connected": {
+                          "type": "boolean",
+                          "example": true,
+                          "default": true
+                        },
+                        "Pushname": {
+                          "type": "string",
+                          "example": "O seu nome no WhatsApp, definido por você no momento da criação da sua conta"
+                        },
+                        "Wid": {
+                          "type": "string",
+                          "example": "É o seu ID no WhatsApp"
+                        },
+                        "Lc": {
+                          "type": "string",
+                          "example": "BR"
+                        },
+                        "Phone": {
+                          "type": "object",
+                          "properties": {
+                            "Mcc": {
+                              "type": "string",
+                              "example": "000"
+                            },
+                            "Mnc": {
+                              "type": "string",
+                              "example": "000"
+                            },
+                            "OsVersion": {
+                              "type": "string",
+                              "example": "9"
+                            },
+                            "DeviceManufacturer": {
+                              "type": "string",
+                              "example": "Web Beta"
+                            },
+                            "DeviceModel": {
+                              "type": "string",
+                              "example": "octopus_cheets"
+                            },
+                            "OsBuildNumber": {
+                              "type": "string",
+                              "example": "R92-13982.82.0 release-keys"
+                            },
+                            "WaVersion": {
+                              "type": "string",
+                              "example": "2.21.21.19"
+                            }
+                          }
+                        },
+                        "Plugged": {
+                          "type": "boolean",
+                          "example": true,
+                          "default": true
+                        },
+                        "Tos": {
+                          "type": "integer",
+                          "example": 0,
+                          "default": 0
+                        },
+                        "Lg": {
+                          "type": "string",
+                          "example": "pt"
+                        },
+                        "Is24h": {
+                          "type": "boolean",
+                          "example": true,
+                          "default": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/generate_qrcode": {
+      "get": {
+        "summary": "generate_qrcode",
+        "description": "Gera um QR Code para conectar-se ao chatPro \n\nO QR Code gerado está no formato `base64`\n\n_Obs: o QR Code também é exibido no <a href=\"https://api.chatpro.com.br/painel\" target=\"_blank\">Painel da API</a>._",
+        "operationId": "generate_qrcode",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n\t\"qr\": \"QR code em base64\"\n  \"status\": true,\n  \"error\": \"\"\n}"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/reload": {
+      "get": {
+        "summary": "reload",
+        "description": "Reinicia os processos da instância. Caso a instância esteja conectada, após o reinício ela será reconectada automaticamente.\n\nEste processo é indicado quando sua instância apresenta alguma instabilidade ou não gera QR Code.",
+        "operationId": "reload",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"status\": \"OK\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/remove_session": {
+      "get": {
+        "summary": "remove_session",
+        "description": "Remove a sessão (desconecta-se do WhatsApp)",
+        "operationId": "remove_session",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Sessão removida\",\n  \"status\": 200\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sessão removida"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200,
+                      "default": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/get_profile": {
+      "post": {
+        "summary": "get_profile",
+        "description": "Retorna informações de um contato",
+        "operationId": "get_profile",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (exemplo: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp (ex: `62953907197`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"eurl\": \"Link da imagem de perfil\",\n  \"imgUrl\": \"Link da imagem de perfil\",\n  \"jid\": \"ID do usuário no WhatsApp\",\n  \"name\": \"Nome que você deu para o contato\",\n  \"pushname\": \"Nome definido pelo contato quando ele criou a sua conta\",\n  \"setAt\": \"\",\n  \"status\": \"\",\n  \"tag\": \"\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "eurl": {
+                      "type": "string",
+                      "example": "Link da imagem de perfil"
+                    },
+                    "imgUrl": {
+                      "type": "string",
+                      "example": "Link da imagem de perfil"
+                    },
+                    "jid": {
+                      "type": "string",
+                      "example": "ID do usuário no WhatsApp"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Nome que você deu para o contato"
+                    },
+                    "pushname": {
+                      "type": "string",
+                      "example": "Nome definido pelo contato quando ele criou a sua conta"
+                    },
+                    "setAt": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "tag": {
+                      "type": "string",
+                      "example": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/contacts": {
+      "get": {
+        "summary": "contacts",
+        "description": "Retorna os contatos do WhatsApp conectado",
+        "operationId": "contacts",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "[\n  {\n    \"app\": \"ID da instância\",\n    \"id\": \"ID do usuário no seguinte formato: 'app:jid' \",\n    \"jid\": \"ID do usuário no WhatsApp\",\n    \"name\": \"Nome que você deu para o contato\",\n    \"pushname\": \"Nome definido pelo contato quando ele criou a sua conta\"\n  },\n  ...\n]"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/create_group": {
+      "post": {
+        "summary": "create_group",
+        "description": "Cria um grupo para o WhatsApp conectado",
+        "operationId": "create_group",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (exemplo: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "phones"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome do grupo  (ex: `Grupo da Família`)"
+                  },
+                  "phones": {
+                    "type": "array",
+                    "description": "Números a serem adicionados no grupo (ex: `[\"1198884444\", \"1196881111\"]`)",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"É uma mensagem formatada da seguinte forma: 'Criou grupo com sucesso, com o id: groupId' \",\n  \"resposeMessage\": {\n    \"groupId\": \"ID do grupo no WhatsApp\"\n  },\n  \"invalidParticipantsMessage\": \"Informa se foi inserido algum número inválido\",\n  \"status\": \"É um boolean, que informa se a requisição foi bem sucedida ou não\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "É uma mensagem formatada da seguinte forma: 'Criou grupo com sucesso, com o id: groupId' "
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "groupId": {
+                          "type": "string",
+                          "example": "ID do grupo no WhatsApp"
+                        }
+                      }
+                    },
+                    "invalidParticipantsMessage": {
+                      "type": "string",
+                      "example": "Informa se foi inserido algum número inválido"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "É um boolean, que informa se a requisição foi bem sucedida ou não"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/leave_group": {
+      "post": {
+        "summary": "leave_group",
+        "description": "Sai de um grupo do WhatsApp",
+        "operationId": "leave_group",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "jid"
+                ],
+                "properties": {
+                  "jid": {
+                    "type": "string",
+                    "description": "ID do grupo que deseja sair"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"É uma mensagem formatada da seguinte forma: 'Saiu do grupo, com o id: groupID' \",\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "É uma mensagem formatada da seguinte forma: 'Saiu do grupo, com o id: groupID' "
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/chats": {
+      "get": {
+        "summary": "chats",
+        "description": "Retorna todos os chats do WhatsApp conectado",
+        "operationId": "chats",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "[\n  {\n    \"jid\": \"ID do usuário no WhatsApp\",\n    \"name\": \"Nome que você deu para o contato\",\n    \"unread\": \"É um número que representa a quantidade de mensagens que não foram visualizadas\",\n    \"lastMessageTime\": \"É a data, em timestamp, da última mensagem\",\n    \"ismuted\": \"É um número que está entre 0 e 1, se for 0 o chat não está silenciado, se for 1 o chat está silenciado\"\n  },\n  ...\n]"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_message": {
+      "post": {
+        "summary": "send_message",
+        "description": "Envia uma mensagem de texto",
+        "operationId": "send_message",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "message"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário  (ex: `62953907197`)"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Mensagem a ser enviada. Emojis são permitidos. (ex: `Bom dia! 😉`)"
+                  },
+                  "quoted_message_id": {
+                    "type": "string",
+                    "description": "Opcional. ID da mensagem a ser respondida (ex: `3EB0D2C0DF1DB21406FF`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "201",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada\",\n    \"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_message_file_from_url": {
+      "post": {
+        "summary": "send_message_file_from_url",
+        "description": "Envia um arquivo a partir de uma URL",
+        "operationId": "send_message_file_from_url",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "url"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário (ex: `62953907197`)"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "URL do arquivo a ser enviado (ex: `https://api.chatpro.com.br/img/icone1.png`)"
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "Legenda do arquivo. Permitido ao enviar imagens e documentos (ex: `Foto da reunião de ontem`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada\",\n\t\t\"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_location": {
+      "post": {
+        "summary": "send_location",
+        "description": "Envia uma localização",
+        "operationId": "send_location",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "lat",
+                  "lng"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário (ex: `62953907197`)"
+                  },
+                  "lat": {
+                    "type": "string",
+                    "description": "Coordenada da latitude (ex: `-19.8012712`)"
+                  },
+                  "lng": {
+                    "type": "string",
+                    "description": "Coordenada da longitude (ex: `-40.7039535`)"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Endereço a ser exibido (ex: `Av. Paulista, 1005. São Paulo-SP`)"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nome do local a ser exibido (ex:  `Ed. São Miguel`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada \",\n    \"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada "
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_vcard": {
+      "post": {
+        "summary": "send_vcard",
+        "description": "Envia um vcard (contato)",
+        "operationId": "send_vcard",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "contact_name",
+                  "contact_number"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário  (ex: \"11963907197`)"
+                  },
+                  "contact_name": {
+                    "type": "string",
+                    "description": "Nome do contato a ser compartilhado (ex: `João da Silva`)"
+                  },
+                  "contact_number": {
+                    "type": "string",
+                    "description": "Número do contato a ser compartilhado (ex: `+55 68 94462-1573`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"3EB0632F1F51261D2360\",\n    \"timestamp\": 1661362613058\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "3EB0632F1F51261D2360"
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "example": 1661362613058,
+                          "default": 0
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_forward_message": {
+      "post": {
+        "summary": "send_forward_message",
+        "description": "Encaminha uma mensagem",
+        "operationId": "send_forward_message",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "forward_id"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário (ex: `11953907197`)"
+                  },
+                  "forward_id": {
+                    "type": "string",
+                    "description": "ID da mensagem a ser encaminhada (ex: `3EB0D2C0DF1DB21406FF`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada\",\n    \"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/delete_message": {
+      "post": {
+        "summary": "delete_message",
+        "description": "Apaga uma mensagem",
+        "operationId": "delete_message",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message_id"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp que consta a mensagem a ser apagada (ex: `62953907197`)"
+                  },
+                  "message_id": {
+                    "type": "string",
+                    "description": "ID da mensagem a ser apagada (ex: `3EB0D2C0DF1DB21406FF`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Deletada para todos\",\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Deletada para todos"
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/get_message_byid": {
+      "post": {
+        "summary": "get_message_byid",
+        "description": "Retorna informações detalhadas de mensagens enviadas ou recebidas",
+        "operationId": "get_message_byid",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário (ex: `62953907197`)"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "id da mensagem que deseja consultar (ex: `3EB03BE5888ACBE15BBB`)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"id\": \"false_5527998278888@c.us_3AA6415C5F4DDB233EEE\",\n  \"body\": \"Exemplo de mensagem recebida\",\n  \"type\": \"chat\",\n  \"t\": 1672775086,\n  \"notifyName\": \"Exemplo Nome 🏄🏻‍♂️\",\n  \"from\": \"5527998278888@c.us\",\n  \"to\": \"5511969079999@c.us\",\n  \"self\": \"in\",\n  \"ack\": 1,\n  \"isNewMsg\": true,\n  \"star\": false,\n  \"kicNotified\": false,\n  \"recvFresh\": true,\n  \"isFromTemplate\": false,\n  \"broadcast\": false, \n  \"mentionedJidList\": [],\n  \"isVcardOverMmsDocument\": false,\n  \"isForwarded\": false,\n  \"labels\": [],\n  \"hasReaction\": false,\n  \"ephemeralOutOfSync\": false,\n  \"productHeaderImageRejected\": false,\n  \"lastPlaybackProgress\": 0,\n  \"isDynamicReplyButtonsMsg\": false,\n  \"isMdHistoryMsg\": false,\n  \"requiresDirectConnection\": false,\n  \"pttForwardedFeaturesEnabled\": true,\n  \"chatId\": {\n    \"server\": \"c.us\",\n    \"user\": \"5527998278888\",\n    \"_serialized\": \"552799829999@c.us\"\n  },\n  \"fromMe\": false,\n  \"sender\": {\n    \"id\": {\n      \"server\": \"c.us\",\n      \"user\": \"5527998278888\",\n      \"_serialized\": \"5527998279999@c.us\"\n    },\n    \"pushname\": \"Exemplo Nome 🏄🏻‍♂️\",\n    \"type\": \"in\",\n    \"labels\": [],\n    \"formattedName\": \"+55 27 99827-8888\",\n    \"isMe\": false,\n    \"isMyContact\": false,\n    \"isPSA\": false,\n    \"isUser\": true,\n    \"isWAContact\": true,\n    \"profilePicThumbObj\": {\n      \"id\": {\n        \"server\": \"c.us\",\n        \"user\": \"552799828888\",\n        \"_serialized\": \"5527998278888@c.us\"\n      },\n      \"tag\": \"\"\n    },\n    \"msgs\": null\n  },\n  \"timestamp\": 1672775086,\n  \"content\": \"Exemplo de mensagem recebida\",\n  \"isGroupMsg\": false,\n  \"isMedia\": false,\n  \"isNotification\": false,\n  \"isPSA\": false,\n  \"mediaData\": {}\n}\n"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "false_5527998278888@c.us_3AA6415C5F4DDB233EEE"
+                    },
+                    "body": {
+                      "type": "string",
+                      "example": "Exemplo de mensagem recebida"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "chat"
+                    },
+                    "t": {
+                      "type": "integer",
+                      "example": 1672775086,
+                      "default": 0
+                    },
+                    "notifyName": {
+                      "type": "string",
+                      "example": "Exemplo Nome 🏄🏻‍♂️"
+                    },
+                    "from": {
+                      "type": "string",
+                      "example": "5527998278888@c.us"
+                    },
+                    "to": {
+                      "type": "string",
+                      "example": "5511969079999@c.us"
+                    },
+                    "self": {
+                      "type": "string",
+                      "example": "in"
+                    },
+                    "ack": {
+                      "type": "integer",
+                      "example": 1,
+                      "default": 0
+                    },
+                    "isNewMsg": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "star": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "kicNotified": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "recvFresh": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "isFromTemplate": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "broadcast": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "mentionedJidList": {
+                      "type": "array"
+                    },
+                    "isVcardOverMmsDocument": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "isForwarded": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "labels": {
+                      "type": "array"
+                    },
+                    "hasReaction": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "ephemeralOutOfSync": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "productHeaderImageRejected": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "lastPlaybackProgress": {
+                      "type": "integer",
+                      "example": 0,
+                      "default": 0
+                    },
+                    "isDynamicReplyButtonsMsg": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "isMdHistoryMsg": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "requiresDirectConnection": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "pttForwardedFeaturesEnabled": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "chatId": {
+                      "type": "object",
+                      "properties": {
+                        "server": {
+                          "type": "string",
+                          "example": "c.us"
+                        },
+                        "user": {
+                          "type": "string",
+                          "example": "5527998278888"
+                        },
+                        "_serialized": {
+                          "type": "string",
+                          "example": "552799829999@c.us"
+                        }
+                      }
+                    },
+                    "fromMe": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "sender": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "object",
+                          "properties": {
+                            "server": {
+                              "type": "string",
+                              "example": "c.us"
+                            },
+                            "user": {
+                              "type": "string",
+                              "example": "5527998278888"
+                            },
+                            "_serialized": {
+                              "type": "string",
+                              "example": "5527998279999@c.us"
+                            }
+                          }
+                        },
+                        "pushname": {
+                          "type": "string",
+                          "example": "Exemplo Nome 🏄🏻‍♂️"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "in"
+                        },
+                        "labels": {
+                          "type": "array"
+                        },
+                        "formattedName": {
+                          "type": "string",
+                          "example": "+55 27 99827-8888"
+                        },
+                        "isMe": {
+                          "type": "boolean",
+                          "example": false,
+                          "default": true
+                        },
+                        "isMyContact": {
+                          "type": "boolean",
+                          "example": false,
+                          "default": true
+                        },
+                        "isPSA": {
+                          "type": "boolean",
+                          "example": false,
+                          "default": true
+                        },
+                        "isUser": {
+                          "type": "boolean",
+                          "example": true,
+                          "default": true
+                        },
+                        "isWAContact": {
+                          "type": "boolean",
+                          "example": true,
+                          "default": true
+                        },
+                        "profilePicThumbObj": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "object",
+                              "properties": {
+                                "server": {
+                                  "type": "string",
+                                  "example": "c.us"
+                                },
+                                "user": {
+                                  "type": "string",
+                                  "example": "552799828888"
+                                },
+                                "_serialized": {
+                                  "type": "string",
+                                  "example": "5527998278888@c.us"
+                                }
+                              }
+                            },
+                            "tag": {
+                              "type": "string",
+                              "example": ""
+                            }
+                          }
+                        },
+                        "msgs": {}
+                      }
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "example": 1672775086,
+                      "default": 0
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "Exemplo de mensagem recebida"
+                    },
+                    "isGroupMsg": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "isMedia": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "isNotification": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "isPSA": {
+                      "type": "boolean",
+                      "example": false,
+                      "default": true
+                    },
+                    "mediaData": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_button_message": {
+      "post": {
+        "summary": "send_button_message",
+        "description": "Envia uma mensagem de texto com até três botões **(indisponível temporariamente)**",
+        "operationId": "send_button_message",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "message",
+                  "buttons"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário  (ex: `62953907197`)"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Mensagem a ser enviada. Emojis são permitidos. (ex: `Bom dia! 😉`)"
+                  },
+                  "buttons": {
+                    "type": "array",
+                    "description": "Array com até três strings, indicando o título do botão. Ex.: [ { \"id\": \"1\",  \"text\": \"Comercial\" },     { \"id\": \"2\",  \"text\": \"Suporte\" }]",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Id do botão"
+                        },
+                        "text": {
+                          "type": "string",
+                          "description": "Texto do botão"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "text"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Título da mensagem de botão"
+                  },
+                  "footer": {
+                    "type": "string",
+                    "description": "Rodapé da mensagem de botão."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada\",\n    \"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{instance_id}/api/v1/send_list_message": {
+      "post": {
+        "summary": "send_list_message",
+        "description": "Envia uma mensagem do tipo lista. **(indisponível temporariamente)**",
+        "operationId": "send_list_message",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "description": "Código da sua instância (ex: `chatpro-fx5qbe2hah`)",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "number",
+                  "message",
+                  "button_text",
+                  "list_sections"
+                ],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "description": "Número do WhatsApp do destinatário  (ex: `62953907197`)"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Mensagem a ser enviada. Emojis são permitidos. (ex: `Bom dia! 😉`)"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Título da mensagem de botão"
+                  },
+                  "footer": {
+                    "type": "string",
+                    "description": "Rodapé da mensagem de botão."
+                  },
+                  "button_text": {
+                    "type": "string",
+                    "description": "Botão para abrir as opções da lista",
+                    "default": "Opções"
+                  },
+                  "list_sections": {
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "description": "Título da seção da lista"
+                        },
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "title": {
+                                "type": "string",
+                                "description": "Título da opção"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "Descrição da opção"
+                              }
+                            },
+                            "required": [
+                              "title"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"message\": \"Mensagem Enviada\",\n  \"resposeMessage\": {\n    \"id\": \"ID da mensagem enviada\",\n    \"timestamp\": \"Data de envio da mensagem em timestamp\"\n  },\n  \"status\": true\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem Enviada"
+                    },
+                    "resposeMessage": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "ID da mensagem enviada"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "example": "Data de envio da mensagem em timestamp"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 400,\n  \"message\": \"error: Error: Invalid WID value for {número informado}\",\n  \"error\": \"Bad Request\"\n}"
+                  }
+                },
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: NotFoundException: O número {número informado} não está cadastrado no WhatsApp"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400,
+                          "default": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "error: Error: Invalid WID value for {número informado}"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n  \"statusCode\": 500,\n  \"message\": \"Internal server error\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 500,
+                      "default": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "x-readme": {
+    "headers": []
+  },
+  "x-readme-fauxas": true
+}

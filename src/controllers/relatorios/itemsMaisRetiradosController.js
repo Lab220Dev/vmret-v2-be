@@ -1,6 +1,6 @@
 const sql = require("mssql");
 const { format } = require("date-fns");
-const { logQuery } = require('../../utils/logUtils');
+const { logQuery } = require("../../utils/logUtils");
 
 async function relatorio(request, response) {
   try {
@@ -10,7 +10,7 @@ async function relatorio(request, response) {
       data_inicio,
       data_final,
       id_cliente,
-      id_usuario
+      id_usuario,
     } = request.body;
 
     if (!id_cliente) {
@@ -23,11 +23,14 @@ async function relatorio(request, response) {
                 ri.ProdutoNome,
                 ri.ProdutoSKU,
                 ri.Quantidade,
-                r.Dia
+                r.Dia,
+                d.Identificacao
             FROM
                 Retiradas r
             INNER JOIN
                 retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+                INNER JOIN
+            DMs d ON r.id_dm = d.ID_DM 
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
             WHERE
@@ -49,7 +52,9 @@ async function relatorio(request, response) {
     if (data_inicio && data_final) {
       // Se o usuário enviar data_inicio e data_final
       if (new Date(data_inicio) > new Date(data_final)) {
-        return response.status(400).json("A data de início não pode ser posterior à data final");
+        return response
+          .status(400)
+          .json("A data de início não pode ser posterior à data final");
       }
       query += " AND r.Dia BETWEEN @data_inicio AND @data_final";
       params.data_inicio = new Date(data_inicio).toISOString();
@@ -80,7 +85,14 @@ async function relatorio(request, response) {
     const produtosMap = new Map();
 
     result.recordset.forEach((row) => {
-      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia } = row;
+      const {
+        ProdutoID,
+        ProdutoNome,
+        ProdutoSKU,
+        Quantidade,
+        Identificacao,
+        Dia,
+      } = row;
       const dataFormatada = format(new Date(Dia), "dd/MM/yyyy - HH:mm");
 
       if (!produtosMap.has(ProdutoID)) {
@@ -100,14 +112,38 @@ async function relatorio(request, response) {
         ProdutoNome,
         ProdutoSKU,
         Quantidade,
+        Identificacao,
         Data: dataFormatada,
       });
     });
 
     const produtosList = Array.from(produtosMap.values());
-    
+
+    // Log de sucesso na geração do relatório
+    logQuery(
+      "info",
+      `Usuário ${id_usuario} gerou um relatório de itens mais retirados`,
+      "sucesso",
+      "Relatório",
+      id_cliente,
+      id_usuario,
+      query,
+      params
+    );
+
     return response.status(200).json(produtosList);
   } catch (error) {
+    // Log de falha ao gerar o relatório
+    logQuery(
+      "error",
+      `Erro ao gerar o relatório para o usuário ${id_usuario}: ${error.message}`,
+      "falha",
+      "Relatório",
+      id_cliente,
+      id_usuario,
+      query,
+      {}
+    );
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
@@ -127,12 +163,12 @@ async function listarDM(request, response) {
     request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);
-    const retiradasfiltradas = result.recordset.map(row => ({
+    const retiradasfiltradas = result.recordset.map((row) => ({
       ID_DM: row.ID_DM,
       ID_Cliente: row.IDcliente,
       Identificacao: row.Identificacao,
-      Numero: row.Numero
-  }));
+      Numero: row.Numero,
+    }));
     response.status(200).json(retiradasfiltradas);
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
@@ -238,12 +274,15 @@ async function listarUltimos(request, response) {
     ri.Quantidade,
     r.Dia,
     r.id_dm,
-    p.Descricao AS ProdutoDescricao  
+    p.Descricao AS ProdutoDescricao,
+    d.Identificacao
 FROM
     Retiradas r
 INNER JOIN
     retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
-left JOIN
+INNER JOIN
+    DMs d ON r.id_dm = d.ID_DM 
+    LEFT join 
     Produtos p ON ri.ProdutoID = p.ID_Produto  
 WHERE
     r.ID_Cliente = @id_cliente
@@ -269,22 +308,22 @@ async function listarMaisRet(request, response) {
       response.status(401).json("O ID do cliente não foi enviado");
       return;
     }
-    let query = `SELECT TOP 5
-    ri.ProdutoNome, 
-    ri.ProdutoSKU, 
-    SUM(ri.Quantidade) AS TotalQuantidade
-FROM 
-    Retirada_Itens ri
-JOIN 
-    Retiradas r ON ri.ID_DM = r.ID_DM
-WHERE 
-    r.Dia >= DATEADD(MONTH, -6, GETDATE())
-    AND r.ID_Cliente = @id_cliente
-GROUP BY 
-    ri.ProdutoNome, 
-    ri.ProdutoSKU
-ORDER BY 
-    TotalQuantidade DESC`;
+    let query = `SELECT Top 5
+                ri.ProdutoNome,
+                ri.ProdutoSKU,
+                COUNT(*) AS NumeroDeRetiradas
+            FROM 
+                Retirada_Itens ri
+            JOIN 
+                Retiradas r ON ri.id_retirada = r.id_retirada
+            WHERE 
+                r.Dia >= DATEADD(MONTH, -6, GETDATE())  
+                AND r.ID_Cliente = @id_cliente         
+            GROUP BY 
+                ri.ProdutoNome, 
+                ri.ProdutoSKU
+            ORDER BY 
+                NumeroDeRetiradas DESC`;
     const request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
     const result = await request.query(query);

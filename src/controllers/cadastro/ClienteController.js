@@ -56,7 +56,6 @@ async function inserirMenuPrincipal(transaction, id_cliente, perfil, nome, order
     `);
     console.log(`Menu ${nome} inserido com sucesso`);
 }
-
 // Função para inserir o submenu
 async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu, referenciaCliente) {
     let sqlRequest = new sql.Request(transaction);
@@ -95,7 +94,6 @@ async function inserirSubmenu(transaction, id_cliente, perfil, id_item, submenu,
         return 0;
     }
 }
-
 // Função para inserir o subsubmenu
 async function inserirSubsubmenu(transaction, id_cliente, perfil, id_item, id_sub_item, subsubmenu, referenciaCliente) {
     let sqlRequest = new sql.Request(transaction);
@@ -123,6 +121,64 @@ async function listar(request, response) {
         const query = 'SELECT * FROM clientes WHERE deleted = 0';
         const result = await new sql.Request().query(query);
         response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+async function listaSimples(request, response) {
+    try {
+        const query = 'SELECT id_cliente,nome FROM clientes WHERE deleted = 0';
+        const result = await new sql.Request().query(query);
+        response.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Erro ao executar consulta:', error.message);
+        response.status(500).send('Erro ao executar consulta');
+    }
+}
+async function listarClienteComServicos(request, response) {
+    try {
+        let query;
+        const  id_cliente  = request.body.id_cliente;
+        const userRole  = request.roles;
+        if (userRole.includes('Administrador')) {
+            query = `
+                SELECT 
+                    c.id_cliente, c.nome AS cliente_nome,
+                    ns.id_servico, ns.nome AS servico_nome, 
+                    ns.frequencia, ns.tipo_notificacao, 
+                    ns.id_funcionario_responsavel, ns.hora_notificacao, ns.nome
+                FROM 
+                    clientes c
+                LEFT JOIN 
+                    Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
+                WHERE 
+                    c.deleted = 0
+                    AND (ns.deleted = 0 OR ns.deleted IS NULL)
+            `;
+        } else {
+            query = `
+                SELECT 
+                    c.id_cliente, c.nome AS cliente_nome,
+                    ns.id_servico, ns.nome AS servico_nome, 
+                    ns.frequencia, ns.tipo_notificacao, 
+                    ns.id_funcionario_responsavel, ns.hora_notificacao, ns.nome
+                FROM 
+                    clientes c
+                LEFT JOIN 
+                    Notificacoes_Servicos ns ON c.id_cliente = ns.id_cliente
+                WHERE 
+                    c.id_cliente = @id_cliente AND c.deleted = 0 AND ns.deleted = 0
+            `;
+        }
+        // const result = await new sql.Request().query(query);
+        const result = await new sql.Request()
+            .input('id_cliente', sql.Int, id_cliente)
+            .query(query);
+            //console.log(result.recordset)
+        const clientesComServicos = mapClientesComServicos(result.recordset);
+
+        response.status(200).json(clientesComServicos);
     } catch (error) {
         console.error('Erro ao executar consulta:', error.message);
         response.status(500).send('Erro ao executar consulta');
@@ -191,8 +247,197 @@ async function adicionar(request, response) {
         response.status(500).send('Erro ao inserir o usuário');
     }
 }
+async function adicionarServico(request, response) {
+    const { id_cliente, servicos } = request.body;
+    try {
+        let transaction = new sql.Transaction();
+        await transaction.begin();
+        for (const servico of servicos) {
+            for (const destinatario of servico.destinatarios) {
+                await inserirNovoServico(transaction, id_cliente, servico, destinatario);
+            }
+        }
+        await transaction.commit();
+        response.status(200).json({ message: 'Serviços adicionados com sucesso' })
+    } catch (error) {
+        console.error('Erro ao salvar configurações', error);
+        if (transaction) {
+            await transaction.rollback();
+        }
+        response.status(500).json({ message: 'Erro ao salvar configurações' })
 
+    }
+}
+async function atualizarServico(request, response) {
+    const { id_cliente, servicos } = request.body;
+    let transaction;
 
+    try {
+        transaction = new sql.Transaction();
+        await transaction.begin();
+
+        const existingServices = await buscarServicosExistentes(transaction, id_cliente);
+
+        await marcarServicosDeletados(transaction, id_cliente, existingServices, servicos);
+
+        for (const servico of servicos) {
+            for (const destinatario of servico.destinatarios) {
+                const serviceExists = await verificarServicoExistente(transaction, id_cliente, servico.id_servico, destinatario);
+                if (serviceExists) {
+                    const { deleted } = serviceExists;
+                    if (deleted) {
+                        await reativarServico(transaction, id_cliente, servico, destinatario);
+                    } else {
+                        await atualizarServicoExistente(transaction, id_cliente, servico, destinatario);
+                    }
+                } else {
+                    await inserirNovoServico(transaction, id_cliente, servico, destinatario);
+                }
+            }
+        }
+
+        await transaction.commit();
+        response.status(200).json({ message: 'Serviços atualizados com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar serviços:', error);
+
+        if (transaction) {
+            await transaction.rollback();
+        }
+
+        response.status(500).json({ message: 'Erro ao atualizar serviços' });
+    }
+}
+async function buscarServicosExistentes(transaction, id_cliente) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+
+    const result = await sqlRequest.query(`
+        SELECT id_servico, id_funcionario_responsavel 
+        FROM Notificacoes_Servicos 
+        WHERE id_cliente = @id_cliente AND deleted = 0
+    `);
+
+    return result.recordset;
+}
+async function marcarServicosDeletados(transaction, id_cliente, existingServices, servicos) {
+    for (const existing of existingServices) {
+        const found = servicos.some(servico =>
+            servico.id_servico === existing.id_servico &&
+            servico.destinatarios.includes(existing.id_funcionario_responsavel)
+        );
+
+        if (!found) {
+            const sqlRequest = new sql.Request(transaction);
+            sqlRequest.input('id_cliente', sql.Int, id_cliente);
+            sqlRequest.input('id_servico', sql.Int, existing.id_servico);
+            sqlRequest.input('id_funcionario_responsavel', sql.Int, existing.id_funcionario_responsavel);
+
+            await sqlRequest.query(`
+                UPDATE Notificacoes_Servicos
+                SET deleted = 1
+                WHERE id_cliente = @id_cliente 
+                AND id_servico = @id_servico
+                AND id_funcionario_responsavel = @id_funcionario_responsavel
+            `);
+        }
+    }
+}
+async function verificarServicoExistente(transaction, id_cliente, id_servico, id_funcionario_responsavel) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, id_funcionario_responsavel);
+
+    const result = await sqlRequest.query(`
+        SELECT deleted 
+        FROM Notificacoes_Servicos 
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+    // console.log("resultado do verifica Serviço :",result.recordset)
+    return result.recordset.length > 0 ? result.recordset[0] : null;
+}
+async function reativarServico(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+
+    await sqlRequest.query(`
+        UPDATE Notificacoes_Servicos 
+        SET frequencia = @frequencia,
+            tipo_notificacao = @tipo_notificacao,
+            hora_notificacao = @hora_notificacao,
+            deleted = 0
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+}
+function validarHoraNotificacao(hora) {
+    if (!hora) {
+        return null;  // Se a hora for null, retorna null para o banco de dados
+    }
+
+    // Verifica se a string está no formato HH:MM
+    const timeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
+    if (timeFormat.test(hora)) {
+        // Adiciona ":00" para completar no formato HH:MM:SS
+        return `${hora}:00`;
+    }
+
+    // Se a string já estiver no formato HH:MM:SS, não faz modificações
+    const fullTimeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
+    if (fullTimeFormat.test(hora)) {
+        return hora;
+    }
+
+    throw new Error("Invalid time format");  // Se não estiver em nenhum formato válido, lança erro
+}
+async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    const horaNotificacao = validarHoraNotificacao(servico.horario_notificacao);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    //validarHoraNotificacao(servico.horario_notificacao)
+    console.log(horaNotificacao)
+    sqlRequest.input('hora_notificacao', sql.VarChar, horaNotificacao); 
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+
+    await sqlRequest.query(`
+        UPDATE Notificacoes_Servicos 
+        SET frequencia = @frequencia,
+            tipo_notificacao = @tipo_notificacao,
+            hora_notificacao = @hora_notificacao
+        WHERE id_cliente = @id_cliente 
+        AND id_servico = @id_servico 
+        AND id_funcionario_responsavel = @id_funcionario_responsavel
+    `);
+}
+async function inserirNovoServico(transaction, id_cliente, servico, destinatario) {
+    const sqlRequest = new sql.Request(transaction);
+    sqlRequest.input('nome', sql.VarChar, servico.nome_servico);
+    sqlRequest.input('frequencia', sql.VarChar, servico.frequencia_notificacao);
+    sqlRequest.input('tipo_notificacao', sql.VarChar, servico.metodos_notificacao.join(', '));
+    sqlRequest.input('hora_notificacao', sql.Time, servico.horario_notificacao);
+    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input('id_servico', sql.Int, servico.id_servico);
+    sqlRequest.input('id_funcionario_responsavel', sql.Int, destinatario);
+    sqlRequest.input('deleted', sql.Bit, 0);
+
+    await sqlRequest.query(`
+        INSERT INTO Notificacoes_Servicos 
+        (nome, id_cliente, frequencia, tipo_notificacao, id_funcionario_responsavel, hora_notificacao, id_servico, deleted)
+        VALUES (@nome, @id_cliente, @frequencia, @tipo_notificacao, @id_funcionario_responsavel, @hora_notificacao, @id_servico, @deleted)
+    `);
+}
 async function atualizar(request, response) {
     const { id_cliente, nome, cpfcnpj, ativo, usarapi, id_usuario } = request.body;
     const params = {
@@ -267,8 +512,6 @@ async function deletar(request, response) {
         response.status(500).send('Erro ao excluir');
     }
 }
-
-
 async function salvarMenus(request, response) {
     const { id_cliente, perfil, menus, id_usuario } = request.body; // Certifique-se de que `id_usuario` é passado no body
     const referenciaCliente = 57;
@@ -320,8 +563,6 @@ async function salvarMenus(request, response) {
         response.status(500).send('Erro ao salvar menus');
     }
 }
-
-
 async function listarComMenu(request, response) {
     try {
         const queryClientes = `
@@ -376,7 +617,6 @@ async function listarComMenu(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
 function buildMenuTree(menus, menuItems) {
     const menuMap = {};
     const itemMap = {};
@@ -419,8 +659,45 @@ function buildMenuTree(menus, menuItems) {
 
     return menuTree;
 }
+function mapClientesComServicos(recordset) {
+    return recordset.reduce((acc, row) => {
+        const clienteIndex = acc.findIndex(c => c.id_cliente === row.id_cliente);
 
+        if (clienteIndex === -1) {
+            acc.push({
+                id_cliente: row.id_cliente,
+                nome: row.cliente_nome,
+                servicos: row.id_servico ? [mapServico(row)] : []
+            });
+        } else {
+            const serviceIndex = acc[clienteIndex].servicos.findIndex(s => s.id_servico === row.id_servico);
 
+            if (serviceIndex === -1) {
+                acc[clienteIndex].servicos.push(mapServico(row));
+            } else {
+                acc[clienteIndex].servicos[serviceIndex].notificacoes.push(mapNotificacao(row));
+            }
+        }
+
+        return acc;
+    }, []);
+}
+function mapServico(row) {
+    return {
+        id_servico: row.id_servico,
+        nome: row.servico_nome,
+        notificacoes: [mapNotificacao(row)]
+    };
+}
+function mapNotificacao(row) {
+    return {
+        nome: row.nome,
+        frequencia: row.frequencia,
+        tipo_notificacao: row.tipo_notificacao,
+        id_funcionario_responsavel: row.id_funcionario_responsavel,
+        hora_notificacao: row.hora_notificacao
+    };
+}
 function cleanItems(menu) {
     if (menu.items) {
         if (menu.items.length === 0) {
@@ -430,11 +707,75 @@ function cleanItems(menu) {
         }
     }
 }
+async function deletarServico(request, response) {
+    const { id_cliente, id_servico, id_usuario} = request.body;
+    
+    
+    if (!id_cliente || !id_servico ) {
+        return response.status(400).json({ error: "Parâmetros insuficientes. id_cliente, id_servico e id_funcionario_responsavel são obrigatórios." });
+    }
+
+    try {
+        // Verificando se o serviço existe
+        const checkQuery = `
+            SELECT 1 
+            FROM Notificacoes_Servicos 
+            WHERE id_cliente = @id_cliente 
+            AND id_servico = @id_servico 
+            AND deleted = 0
+        `;
+        
+        const checkSqlRequest = new sql.Request();
+        checkSqlRequest.input('id_cliente', sql.Int, id_cliente);
+        checkSqlRequest.input('id_servico', sql.Int, id_servico);
+        
+        const checkResult = await checkSqlRequest.query(checkQuery);
+        
+        if (checkResult.recordset.length === 0) {
+            console.log('Serviço não encontrado ou já está deletado.');
+            return response.status(404).json({ error: "Serviço não encontrado ou já está deletado." });
+        }
+
+        //tentar deletar
+        const query = `
+            UPDATE Notificacoes_Servicos 
+            SET deleted = 1 
+            WHERE id_cliente = @id_cliente 
+            AND id_servico = @id_servico 
+        `;
+        
+        const sqlRequest = new sql.Request();
+        sqlRequest.input('id_cliente', sql.Int, id_cliente);
+        sqlRequest.input('id_servico', sql.Int, id_servico);
+        
+        const result = await sqlRequest.query(query);
+
+        if (result.rowsAffected[0] > 0) {
+            console.log(`Serviço ${id_servico} para o cliente ${id_cliente} removido com sucesso.`);
+            logQuery('info', `O usuário ${id_usuario} deletou o serviço ${id_servico} para o cliente ${id_cliente}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, { id_cliente, id_servico });
+            return response.status(200).json({ message: "Serviço excluído com sucesso" });
+        } else {
+            console.log('Falha ao excluir o serviço: Nenhuma linha foi afetada.');
+            logQuery('error', `O usuário ${id_usuario} falhou em deletar o serviço ${id_servico} para o cliente ${id_cliente}`, 'erro', 'DELETE', id_cliente, id_usuario, query, { id_cliente, id_servico});
+            return response.status(404).json({ error: "Serviço não encontrado" });
+        }
+    } catch (error) {
+        // Log do erro detalhado e resposta
+        logQuery('error', error.message, 'erro', 'DELETE', id_cliente, id_usuario, error.stack, { "id_cliente":id_cliente, "id_servico":id_servico});
+        console.error('Erro ao excluir:', error.message);
+        return response.status(500).send('Erro ao excluir serviço');
+    }
+}
 module.exports = {
     listar,
+    listaSimples,
     atualizar,
     deletar,
     adicionar,
     salvarMenus,
-    listarComMenu
+    listarClienteComServicos,
+    listarComMenu,
+    adicionarServico,
+    atualizarServico,
+    deletarServico
 };

@@ -11,7 +11,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # dependencies
-/node_modules
+node_modules
 package-lock.json
 yarn.lock
 
@@ -43,3 +43,5 @@ public/themes/mira/
 public/themes/nano/
 server.zip
 web.config
+src/controllers/uploads/produtos/78/principal/produto_Óculos_Leopardo_Kalipso_0002_Princ1725914538835.jpg
+/dist

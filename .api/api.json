@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "chatpro",
+      "source": "@chatpro/v1.0#1yrje2dltx99e4v",
+      "integrity": "sha512-muD6cSxDpAHOBbYpmUiXNJiqXrhhEZUqNap3JXaBPlE2SAPmpcdovKIGnpzHnrR5c3mTp5iwaqBpLUa3HRAe5g==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}

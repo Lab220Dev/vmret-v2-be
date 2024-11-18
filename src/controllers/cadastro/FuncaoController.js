@@ -18,7 +18,24 @@ async function listar(request, response) {
     response.status(500).send('Erro ao executar consulta');
   }
 }
-
+async function listarSimples(request, response) {
+  try {
+    const id_cliente = request.body.id_cliente;
+    if (id_cliente) {
+      const query =
+        "SELECT id_funcao,nome  FROM Funcao WHERE id_cliente = @id_cliente AND Deleted = 0";
+      request = new sql.Request();
+      request.input("id_cliente", sql.Int, id_cliente);
+      const result = await request.query(query);
+      response.status(200).json(result.recordset);
+      return;
+    }
+    response.status(401).json("ID do cliente não enviado");
+  } catch (error) {
+    console.error('Erro ao executar consulta:', error.message);
+    response.status(500).send('Erro ao executar consulta');
+  }
+}
 async function adicionar(request, response) {
   const { id_cliente, nome, codigo, id_centro_custo, id_usuario } = request.body;
 
@@ -46,7 +63,7 @@ async function adicionar(request, response) {
     sqlRequest.input('ID_Cliente', sql.Int, id_cliente);
     sqlRequest.input('codigo', sql.Int, codigo);
     sqlRequest.input('nome', sql.VarChar, nome);
-    sqlRequest.input('id_centro_custo', sql.VarChar, id_centro_custo);
+    sqlRequest.input('id_centro_custo', sql.Int, id_centro_custo);
     sqlRequest.input('Deleted', sql.Bit, false);
 
     const result = await sqlRequest.query(query);
@@ -154,5 +171,5 @@ async function deleteFuncao(request, response) {
 
 
 module.exports = {
-  adicionar, listar, atualizar, deleteFuncao
+  adicionar, listar, atualizar, deleteFuncao, listarSimples
 };

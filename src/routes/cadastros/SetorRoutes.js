@@ -3,6 +3,7 @@ const router = express.Router();
 const Setorcontroller = require('../../controllers/cadastro/Setorcontroller');
 
 router.post('/listar', Setorcontroller.listar);
+router.post('/listaSimples', Setorcontroller.listaSimples);
 router.post('/fetchProdutoSetor', Setorcontroller.listarItensSetor);
 router.post('/itensdisponiveissetor', Setorcontroller.listarItensDisponiveisSetor);
 router.post('/additem', Setorcontroller.adicionarItem);
