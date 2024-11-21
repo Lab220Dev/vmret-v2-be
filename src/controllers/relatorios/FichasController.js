@@ -51,9 +51,9 @@ async function relatorio(request, response) {
         r.id_dm,
         p.Descricao AS ProdutoDescricao  
       FROM
-        Retiradas r
+        DM_Retiradas r
       INNER JOIN
-        retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+        DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
       LEFT JOIN
         Produtos p ON ri.ProdutoID = p.ID_Produto
       LEFT JOIN

@@ -6,6 +6,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 let ultimo = [];
+let ultimoSE = [];
 
 router.post('/cadastro', async (req, res) => {
     let transaction;
@@ -232,7 +233,98 @@ router.post('/francis', async (req, res) => {
         res.status(500).json({ error: "Erro no servidor. Tente novamente mais tarde." });
     }
 });
+router.post('/soulelite', async (req, res) => {
+    let transaction;
+    const name = req.body['form_fields[name]'];
+    const telefone = req.body['form_fields[Telefone]'];
+    const email = req.body['form_fields[email]'];
+    const rg = req.body['form_fields[RG]'];
 
+    const randomNumbers = Math.floor(10 + Math.random() * 90).toString();
+    const senhaComRandom =randomNumbers + telefone.slice(-4);
+
+    const queryInsert = `
+        INSERT INTO SoulElite (Nome, Telefone, Email, RG, Senha) 
+        VALUES (@nome, @telefone, @email, @rg, @Senha)
+    `;
+    
+    const queryCheckDuplicate = `
+        SELECT COUNT(*) as count FROM SoulElite 
+        WHERE telefone = @telefone OR email = @email OR RG = @rg
+    `;
+
+    try {
+        transaction = new sql.Transaction();
+        await transaction.begin();
+
+        // Validação de duplicidade
+        const sqlRequestCheck = new sql.Request(transaction);
+        sqlRequestCheck.input("telefone", sql.VarChar, telefone)
+                       .input("email", sql.VarChar, email)
+                       .input("rg", sql.VarChar, rg);
+
+        const checkResult = await sqlRequestCheck.query(queryCheckDuplicate);
+
+        if (checkResult.recordset[0].count > 0) {
+            await transaction.rollback();
+            logQuery('error', `Tentativa de cadastro duplicado para o telefone ${telefone} ou email ${email} ou ${rg}`, 'falha', 'DUPLICATE', null, null, queryCheckDuplicate, { telefone:telefone, email:email,rg:rg });
+            return res.status(400).json({ error: "Registro já existente com este telefone ou email ou documento." });
+        }
+
+        const sqlRequest = new sql.Request(transaction);
+        sqlRequest.input("nome", sql.VarChar, name)
+                  .input("telefone", sql.VarChar, telefone)
+                  .input("email", sql.VarChar, email)
+                  .input("Senha", sql.VarChar, senhaComRandom)
+                  .input("rg", sql.VarChar, rg); 
+
+        const result = await sqlRequest.query(queryInsert);
+
+        if (result.rowsAffected.length > 0) {
+            await transaction.commit();
+            logQuery('info', `Registro inserido para ${name}`, 'sucesso', 'INSERT', null, null, queryInsert, { nome: name, telefone:telefone, email:email,rg:rg,Senha:senhaComRandom });
+
+            const mensagemChat = `Olá *${name.trim().toUpperCase()}*,\nBem-vindo(a) a Vending Machine do evento Soul Elite, seu cadastro foi feito com sucesso, por favor faça a retirada dos brinde na maquinca com a sua senha:${senhaComRandom}`;
+
+            const options = {
+                method: 'POST',
+                url: 'https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message',
+                headers: {
+                    accept: 'application/json',
+                    'content-type': 'application/json',
+                    Authorization: 'ac9de8b5b1f8f8cd344c8e9057e365e7'
+                },
+                data: {
+                    number:  `${telefone}`,
+                    message: mensagemChat
+                }
+            };
+
+            try {
+                const response = await axios.request(options);
+                if (response.status === 201) {
+                    logQuery('info', `Mensagem enviada para o telefone ${telefone}`, 'sucesso', 'CHATPRO', null, null, 'send_message', { telefone:telefone });
+                } else {
+                    logQuery('error', `Falha ao enviar a mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, null, 'send_message', { telefone:telefone, status: response.status, statusText: response.statusText });
+                }
+            } catch (error) {
+                logQuery('error', `Erro ao enviar mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, null, 'send_message', { telefone:telefone, error: error.message });
+            }
+
+            res.status(200).json({ message: "Registro inserido com sucesso e mensagens enviadas." });
+        } else {
+            await transaction.rollback();
+            logQuery('error', `Falha na inserção do registro para ${name}`, 'falha', 'INSERT', null, null, queryInsert, { nome: name, telefone:telefone, email:email });
+            res.status(500).json({ error: "Erro ao inserir registro." });
+        }
+    } catch (error) {
+        if (transaction) {
+            await transaction.rollback();
+        }
+        logQuery('error', `Erro ao inserir registro: ${error.message}`, 'falha', 'ERROR', null, null, 'INSERT', {});
+        res.status(500).json({ error: "Erro no servidor. Tente novamente mais tarde." });
+    }
+});
 router.get('/updateDados', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -275,7 +367,43 @@ router.get('/updateDados', async (req, res) => {
         //logQuery('error', `Erro ao inicializar SSE: ${error.message}`, 'falha', 'SSE', null, null, '/updateDados', { error: error.message });
     }
 });
+router.get('/DadosSoulElite', async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    logQuery('info', `Início do SSE`, 'sucesso', 'SSE', null, null, '/DadosSoulElite', {});
 
+    try {
+        const primeirosDados = await checkForUpdatesSE();
+        if (primeirosDados) {
+            res.write(`data: ${JSON.stringify(primeirosDados)}\n\n`);
+        } else {
+            res.write(`data: ${JSON.stringify({ message: "Nenhum dado inicial disponível." })}\n\n`);
+        }
+
+        const intervalId = setInterval(async () => {
+            try {
+                const atualizacoes = await checkForUpdatesSE();
+                if (atualizacoes) {
+                    res.write(`data: ${JSON.stringify(atualizacoes)}\n\n`);
+                }
+            } catch (error) {
+                console.error("Erro ao verificar atualizações no intervalo:", error);
+                res.write(`data: ${JSON.stringify({ error: "Erro ao verificar atualizações." })}\n\n`);
+            }
+        }, 45000);
+
+        req.on('close', () => {
+            clearInterval(intervalId);
+        });
+
+    } catch (error) {
+        console.error("Erro ao inicializar SSE:", error);
+        res.status(500).send("Erro ao iniciar a conexão de dados.");
+        //logQuery('error', `Erro ao inicializar SSE: ${error.message}`, 'falha', 'SSE', null, null, '/updateDados', { error: error.message });
+    }
+});
 async function checkForUpdates() {
     const query = `SELECT * FROM EventoFrancis`;
 
@@ -313,6 +441,42 @@ async function checkForUpdates() {
         throw error; 
     }
 }
+async function checkForUpdatesSE() {
+    const query = `SELECT * FROM SoulElite`;
+
+    try {
+        const request = new sql.Request();
+        const result = await request.query(query);
+        const atual = result.recordset.map(censurarDados);
+        if (ultimoSE.length === 0) {
+            ultimoSE = atual; 
+            return atual; 
+        }
+
+        const fullRecords = atual.map(record => {
+            const existingRecord = ultimoSE.find(r => r.ID === record.ID);
+
+            if (!existingRecord) {
+                return { ...record, isNew: true };
+            }
+
+             const updatedColumns = [];
+            if (existingRecord.Retirada !== record.Retirada) updatedColumns.push('Retirada');
+            if (existingRecord.hora_retirada !== record.hora_retirada) updatedColumns.push('hora_retirada');
+
+            return updatedColumns.length > 0 
+                ? { ...record, isNew: false, updatedColumns } 
+                : { ...record, isNew: false };
+        });
+
+        ultimoSE = atual;
+
+        return fullRecords;
+    } catch (error) {
+        console.error("Erro ao verificar atualizações:", error);
+        throw error; 
+    }
+}
 function censurarDados(record) {
     // Censurar telefone (manter apenas os últimos 4 dígitos)
     if (record.Telefone != null) {
@@ -332,7 +496,12 @@ function censurarDados(record) {
             record.Email = local.slice(0, 5) + '*'.repeat(local.length - 5) + '@' + domain;
         }
     }
-
+    if (record.RG && typeof record.RG === 'string') {
+        const rgStr = String(record.RG);
+        const visibleDigits = rgStr.slice(-3);
+        const hiddenPart = '*'.repeat(rgStr.length - 3);
+        record.RG = hiddenPart + visibleDigits;
+    }
     return record;
 }
 module.exports = router;

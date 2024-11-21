@@ -29,9 +29,9 @@ async function relatorio(request, response) {
                 CONCAT(p.codigo, '/', p.ca) AS CodigoCa,
                 ri.ProdutoNome AS Item
             FROM
-                Retiradas r
+                DM_Retiradas r
             INNER JOIN
-                retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+                DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
             LEFT JOIN

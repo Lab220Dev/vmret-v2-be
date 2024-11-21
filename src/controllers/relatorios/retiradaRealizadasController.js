@@ -46,9 +46,9 @@ async function relatorio(request, response) {
                 f.email,
                 dm.Identificacao AS DM_Identificacao
             FROM
-                Retiradas r
+                DM_Retiradas r
             INNER JOIN
-                retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+                DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
             LEFT JOIN
                 funcionarios f ON r.ID_Funcionario = f.id_funcionario
             LEFT JOIN

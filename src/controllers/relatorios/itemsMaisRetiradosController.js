@@ -26,9 +26,9 @@ async function relatorio(request, response) {
                 r.Dia,
                 d.Identificacao
             FROM
-                Retiradas r
+                DM_Retiradas r
             INNER JOIN
-                retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+                DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
                 INNER JOIN
             DMs d ON r.id_dm = d.ID_DM 
             LEFT JOIN
@@ -277,9 +277,9 @@ async function listarUltimos(request, response) {
     p.Descricao AS ProdutoDescricao,
     d.Identificacao
 FROM
-    Retiradas r
+    DM_Retiradas r
 INNER JOIN
-    retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+    DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
 INNER JOIN
     DMs d ON r.id_dm = d.ID_DM 
     LEFT join 
@@ -313,9 +313,9 @@ async function listarMaisRet(request, response) {
                 ri.ProdutoSKU,
                 COUNT(*) AS NumeroDeRetiradas
             FROM 
-                Retirada_Itens ri
+                DM_Retirada_Itens ri
             JOIN 
-                Retiradas r ON ri.id_retirada = r.id_retirada
+                DM_Retiradas r ON ri.id_retirada = r.id_retirada
             WHERE 
                 r.Dia >= DATEADD(MONTH, -6, GETDATE())  
                 AND r.ID_Cliente = @id_cliente         
