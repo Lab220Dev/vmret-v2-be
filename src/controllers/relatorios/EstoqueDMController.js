@@ -1,63 +1,86 @@
-const sql = require('mssql');
-const { logQuery } = require('../../utils/logUtils');
-
+const sql = require("mssql");
+const { logQuery } = require("../../utils/logUtils");
 
 async function listarDM(request, response) {
-    try {
-        if (!request.body.id_cliente) {
-            return response.status(401).json("ID do cliente não enviado");
-        }
-
-        let query = 'SELECT ID_DM, Identificacao FROM DMs WHERE deleted = 0 AND ID_cliente = @IDcliente';
-        const dbRequest = new sql.Request();
-        dbRequest.input('IDcliente', sql.Int, request.body.id_cliente);
-        
-        const result = await dbRequest.query(query);
-        response.status(200).json(result.recordset);
-    } catch (error) {
-        console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
+  try {
+    if (!request.body.id_cliente) {
+      return response.status(401).json("ID do cliente não enviado");
     }
+
+    let query =
+      "SELECT ID_DM, Identificacao FROM DMs WHERE deleted = 0 AND ID_cliente = @IDcliente";
+    const dbRequest = new sql.Request();
+    dbRequest.input("IDcliente", sql.Int, request.body.id_cliente);
+
+    const result = await dbRequest.query(query);
+    response.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
 }
 
 async function relatorio(request, response) {
-    try {
-        const { id_cliente, id_dm, id_usuario } = request.body;
+  try {
+    const { id_cliente, id_dm, id_usuario } = request.body;
 
-        if (!id_cliente) {
-            return response.status(401).json("ID do cliente não enviado");
-        }
-
-        let query;
-        const dbRequest = new sql.Request();
-        dbRequest.input('id_cliente', sql.Int, id_cliente);
-
-        if (id_dm === null) {
-            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND deleted = 0';
-        } else {
-            query = 'SELECT sku, nome, Posicao, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM AND deleted = 0';
-            dbRequest.input('ID_DM', sql.Int, id_dm);
-        }
-
-        const result = await dbRequest.query(query);
-        if (result.rowsAffected[0] > 0) {
-            response.status(200).send(result.recordset);
-        } else {
-            response.status(200).send([]); 
-        }
-    } catch (error) {
-        console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
+    if (!id_cliente) {
+      return response.status(401).json("ID do cliente não enviado");
     }
+
+    let query;
+    const dbRequest = new sql.Request();
+    dbRequest.input("id_cliente", sql.Int, id_cliente);
+
+    if (id_dm === null) {
+      query =
+        "SELECT sku, nome, Posicao,Placa,Motor1,DIP,Andar,Controladora, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND deleted = 0";
+    } else {
+      query =
+        "SELECT sku, nome, Posicao,Placa,Motor1,DIP,Andar,Controladora, quantidade, quantidademinima, capacidade FROM DM_Itens WHERE id_cliente = @id_cliente AND ID_DM = @ID_DM AND deleted = 0";
+      dbRequest.input("ID_DM", sql.Int, id_dm);
+    }
+
+    const result = await dbRequest.query(query);
+    if (result.rowsAffected[0] > 0) {
+      const itensFiltrados = result.recordset.map((row) => {
+        let posicao;
+        if (row.Controladora === "2018") {
+          posicao = `${row.Placa} / ${row.Motor1}`;
+        } else if (row.Controladora === "2023") {
+          posicao = `${row.Andar} / ${row.Posicao}`;
+        } else if (row.Controladora === "Locker") {
+          posicao = `${row.Placa} / ${row.Posicao}`;
+        } else {
+          posicao = "Posição desconhecida";
+        }
+        return {
+          sku: row.sku,
+          nome: row.nome,
+          quantidade: row.quantidade,
+          quantidademinima: row.quantidademinima,
+          capacidade: row.capacidade,
+          Posicao: posicao,
+          modelo: row.Controladora
+        };
+      });
+      response.status(200).send(itensFiltrados);
+    } else {
+      response.status(200).send([]);
+    }
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
 }
 async function relatorioEstoqueBaixo(request, response) {
-    try {
-        const { id_cliente, id_usuario } = request.body;
-        const params = {
-            id_cliente: id_cliente
-        };
+  try {
+    const { id_cliente, id_usuario } = request.body;
+    const params = {
+      id_cliente: id_cliente,
+    };
 
-        let queryEstoqueBaixo = `
+    let queryEstoqueBaixo = `
             SELECT sku, nome, quantidade, quantidademinima 
             FROM DM_Itens 
             WHERE id_cliente = @id_cliente 
@@ -67,7 +90,7 @@ async function relatorioEstoqueBaixo(request, response) {
               AND deleted = 0
         `;
 
-        let queryTop5Itens = `
+    let queryTop5Itens = `
             SELECT TOP 5 sku, nome, quantidade, quantidademinima 
             FROM DM_Itens 
             WHERE id_cliente = @id_cliente
@@ -75,29 +98,49 @@ async function relatorioEstoqueBaixo(request, response) {
             ORDER BY quantidade ASC
         `;
 
-        if (!id_cliente) {
-            return response.status(401).json("ID do cliente não enviado");
-        }
-
-        const dbRequest = new sql.Request();
-        dbRequest.input('id_cliente', sql.Int, id_cliente);
-
-        // Executa a consulta de estoque baixo
-        let result = await dbRequest.query(queryEstoqueBaixo);
-
-        if (result.rowsAffected[0] > 0) {
-            logQuery('info', `Usuário ${id_usuario} criou um novo Relatório de Estoque Baixo`, 'sucesso', 'SELECT', id_cliente, id_usuario, queryEstoqueBaixo, params);
-            response.status(201).send(result.recordset);
-        } else {
-            result = await dbRequest.query(queryTop5Itens);
-            logQuery('info', `Usuário ${id_usuario} criou um Relatório dos Top 5 Itens com Menor Estoque`, 'sucesso', 'SELECT', id_cliente, id_usuario, queryTop5Itens, params);
-            response.status(200).send(result.recordset);
-        }
-    } catch (error) {
-        console.error('Erro ao executar consulta:', error.message);
-        response.status(500).send('Erro ao executar consulta');
+    if (!id_cliente) {
+      return response.status(401).json("ID do cliente não enviado");
     }
+
+    const dbRequest = new sql.Request();
+    dbRequest.input("id_cliente", sql.Int, id_cliente);
+
+    // Executa a consulta de estoque baixo
+    let result = await dbRequest.query(queryEstoqueBaixo);
+
+    if (result.rowsAffected[0] > 0) {
+      logQuery(
+        "info",
+        `Usuário ${id_usuario} criou um novo Relatório de Estoque Baixo`,
+        "sucesso",
+        "SELECT",
+        id_cliente,
+        id_usuario,
+        queryEstoqueBaixo,
+        params
+      );
+      response.status(201).send(result.recordset);
+    } else {
+      result = await dbRequest.query(queryTop5Itens);
+      logQuery(
+        "info",
+        `Usuário ${id_usuario} criou um Relatório dos Top 5 Itens com Menor Estoque`,
+        "sucesso",
+        "SELECT",
+        id_cliente,
+        id_usuario,
+        queryTop5Itens,
+        params
+      );
+      response.status(200).send(result.recordset);
+    }
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
 }
 module.exports = {
-     relatorio, listarDM,relatorioEstoqueBaixo
-  };
+  relatorio,
+  listarDM,
+  relatorioEstoqueBaixo,
+};

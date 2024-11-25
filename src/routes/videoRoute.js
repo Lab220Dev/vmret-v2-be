@@ -45,7 +45,6 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5MB
 });
 
-// Rota protegida para upload
 router.post('/upload',autenticarToken,autorizarRoles(['Master','Administrador']),
  upload.single('video'),
     async (req, res) => {
