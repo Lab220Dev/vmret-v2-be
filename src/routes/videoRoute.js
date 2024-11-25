@@ -4,6 +4,7 @@ const sql = require('mssql');
 const { autenticarToken, autorizarRoles } = require('../middleware/authMiddleware');
 const path = require('path');
 const fs = require('fs');
+const { logQuery } = require("../utils/logUtils");
 
 const router = express.Router();
 
@@ -113,6 +114,7 @@ router.get('/:Identificacao', async (req, res) => {
         const result = await request.query(query);
 
         if (!result.recordset || result.recordset.length === 0) {
+            logQuery('error', 'Registro não encontrado para a identificação fornecida', 'falha', 'SELECT', null, null, query,{Identificacao:identificacao});
             return res.status(404).json({ error: 'Registro não encontrado para a identificação fornecida.' });
         }
 
@@ -121,16 +123,19 @@ router.get('/:Identificacao', async (req, res) => {
         const videoPath = path.join(__dirname, '../uploads/videos', videoName);
 
         if (!fs.existsSync(videoPath)) {
+            logQuery('error','Vídeo não encontrado no servidor','falha','VALIDATE',null,null,'nenhuma query associada para o video:@Video no para o Path:@path',{ Video: videoName, Path: videoPath });
             return res.status(404).json({ error: 'Vídeo não encontrado no servidor.' });
         }
 
         res.download(videoPath, videoName, (err) => {
             if (err) {
+                logQuery('error','Erro ao processar o download','falha','DOWNLOAD',null,null,null,{ Video: videoName, Path: videoPath, Error: err.message });
                 console.error('Erro ao processar o download:', err);
                 res.status(500).json({ error: 'Erro ao processar o download.' });
             }
         });
     } catch (error) {
+        logQuery('error',`Erro ao processar requisição para Identificação: ${identificacao}`,'falha','DOWNLOAD', null,null,null,{ Identificacao: identificacao, Error: error.message });
         console.error('Erro ao buscar ou enviar o arquivo:', error);
         res.status(500).json({ error: 'Erro ao processar a requisição.' });
     }

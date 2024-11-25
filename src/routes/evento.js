@@ -250,7 +250,7 @@ router.post('/soulelite', async (req, res) => {
     
     const queryCheckDuplicate = `
         SELECT COUNT(*) as count FROM SoulElite 
-        WHERE telefone = @telefone OR email = @email OR RG = @rg
+        WHERE telefone = @telefone OR email = @email
     `;
 
     try {
@@ -260,8 +260,7 @@ router.post('/soulelite', async (req, res) => {
         // Validação de duplicidade
         const sqlRequestCheck = new sql.Request(transaction);
         sqlRequestCheck.input("telefone", sql.VarChar, telefone)
-                       .input("email", sql.VarChar, email)
-                       .input("rg", sql.VarChar, rg);
+                       .input("email", sql.VarChar, email);
 
         const checkResult = await sqlRequestCheck.query(queryCheckDuplicate);
 
@@ -367,12 +366,12 @@ router.get('/updateDados', async (req, res) => {
         //logQuery('error', `Erro ao inicializar SSE: ${error.message}`, 'falha', 'SSE', null, null, '/updateDados', { error: error.message });
     }
 });
-router.get('/DadosSoulElite', async (req, res) => {
+router.get('/updateSE24', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     
-    logQuery('info', `Início do SSE`, 'sucesso', 'SSE', null, null, '/DadosSoulElite', {});
+    logQuery('info', `Início do SSE`, 'sucesso', 'SSE', null, null, '/updateSE24', {});
 
     try {
         const primeirosDados = await checkForUpdatesSE();
