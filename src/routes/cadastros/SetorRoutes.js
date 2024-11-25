@@ -10,5 +10,7 @@ router.post('/additem', Setorcontroller.adicionarItem);
 router.post('/adicionar', Setorcontroller.adicionar); 
 router.post('/atualizar', Setorcontroller.atualizar); 
 router.post('/deletar', Setorcontroller.deleteFuncao); 
+router.post('/deletarProduto', Setorcontroller.deletarProduto);
+router.post('/atualizarproduto', Setorcontroller.atualizarproduto);
 
 module.exports = router;

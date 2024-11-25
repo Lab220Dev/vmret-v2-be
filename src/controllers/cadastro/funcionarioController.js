@@ -5,7 +5,7 @@ const { logQuery } = require("../../utils/logUtils");
 const multer = require("multer");
 const { sendEmail, generateEmailHTML2 } = require("../../utils/emailService");
 const CryptoJS = require("crypto-js");
-const axios = require('axios');
+const axios = require("axios");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -60,7 +60,7 @@ async function listarFuncionarios(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function listarFuncionariosSimples(request, response) {
   try {
     if (!request.body.id_cliente) {
@@ -90,126 +90,192 @@ async function listarFuncionariosSimples(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function adiconarFuncionarioExt(request, response) {
-    let transaction;
-          // Resgatando os campos relevantes do form-data
-          const name = request.body['form_fields[name]'];
-          const email = request.body['form_fields[email]'];
-          const telefone = request.body['form_fields[Telefone]'];
-          const empresa = request.body['form_fields[Empresa]'];
-          const cargo = request.body['form_fields[Cargo]'];
-          const id_usuario =request.body.id_usuario;
-          const query = `
+  let transaction;
+  // Resgatando os campos relevantes do form-data
+  const name = request.body["form_fields[name]"];
+  const email = request.body["form_fields[email]"];
+  const telefone = request.body["form_fields[Telefone]"];
+  const empresa = request.body["form_fields[Empresa]"];
+  const cargo = request.body["form_fields[Cargo]"];
+  const id_usuario = request.body.id_usuario;
+  const query = `
           INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
           VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
       `;
-    try {
-      
-      transaction = new sql.Transaction();
-      await transaction.begin();
-  
+  try {
+    transaction = new sql.Transaction();
+    await transaction.begin();
 
-      
-      const hashMD5 = CryptoJS.MD5(telefone.slice(-4)).toString();
-      const sqlrequest = new sql.Request(transaction);
-      sqlrequest.input("id_cliente", sql.Int, 79)
-        .input("nome", sql.VarChar, name)
-        .input("matricula", sql.VarChar, telefone)
-        .input("email", sql.VarChar, email)
-        .input("senha", sql.VarChar, hashMD5)
-        .input("Empresa", sql.VarChar, empresa)
-        .input("Cargo", sql.VarChar, cargo)
-        .input("Sincronizado", sql.Bit, 0);
-  
-      const result = await sqlrequest.query(query);
-  
-      if (result.rowsAffected.length > 0) {
-        const params = {
-          id_cliente: 79,
-          nome: name,
-          matricula: telefone,
-          email: email,
-          senha: hashMD5,
-          empresa: empresa,
-          cargo: cargo,
-          sincronizado: 0
-        };
-  
-        // Log da inserção no banco de dados
-        logQuery('info', `Funcionário ${name} inserido com sucesso pelo usuário ${id_usuario}`, 'sucesso', 'INSERT', null,id_usuario, query, params);
-  
-        let Email = generateEmailHTML2(telefone.slice(-4));
-        await sendEmail(email, 'Sua senha', Email);
-  
-        // Log do envio de e-mail
-        logQuery('info', `E-mail enviado para ${email} com a senha de retirada`, 'sucesso', 'EMAIL', null, id_usuario, 'sendEmail', { email });
-  
-        // Envio da mensagem via ChatPro
-        await enviarMensagem(telefone,id_usuario);
-        
-        await transaction.commit();
-        response.status(200).json({ message: "Funcionário adicionado com sucesso." });
-      }
-    } catch (error) {
-      if (transaction) {
-        await transaction.rollback();
-      }
-  
-      const errorParams = {
+    const hashMD5 = CryptoJS.MD5(telefone.slice(-4)).toString();
+    const sqlrequest = new sql.Request(transaction);
+    sqlrequest
+      .input("id_cliente", sql.Int, 79)
+      .input("nome", sql.VarChar, name)
+      .input("matricula", sql.VarChar, telefone)
+      .input("email", sql.VarChar, email)
+      .input("senha", sql.VarChar, hashMD5)
+      .input("Empresa", sql.VarChar, empresa)
+      .input("Cargo", sql.VarChar, cargo)
+      .input("Sincronizado", sql.Bit, 0);
+
+    const result = await sqlrequest.query(query);
+
+    if (result.rowsAffected.length > 0) {
+      const params = {
         id_cliente: 79,
         nome: name,
         matricula: telefone,
         email: email,
+        senha: hashMD5,
         empresa: empresa,
-        cargo: cargo
+        cargo: cargo,
+        sincronizado: 0,
       };
-  
-      // Log do erro
-      logQuery('error', `Erro ao adicionar funcionário ${name}: ${error.message}`, 'falha', 'ERROR', null, id_usuario, query, errorParams);
-  
-      // Log adicional do stack trace
-      logQuery('error', `Stack trace: ${error.stack}`, 'falha', 'ERROR_STACK', null,id_usuario, query, {});
-  
-      console.error("Erro ao adicionar funcionário:", error);
-      response.status(500).json({ error: "Erro ao adicionar funcionário." });
+
+      // Log da inserção no banco de dados
+      logQuery(
+        "info",
+        `Funcionário ${name} inserido com sucesso pelo usuário ${id_usuario}`,
+        "sucesso",
+        "INSERT",
+        null,
+        id_usuario,
+        query,
+        params
+      );
+
+      let Email = generateEmailHTML2(telefone.slice(-4));
+      await sendEmail(email, "Sua senha", Email);
+
+      // Log do envio de e-mail
+      logQuery(
+        "info",
+        `E-mail enviado para ${email} com a senha de retirada`,
+        "sucesso",
+        "EMAIL",
+        null,
+        id_usuario,
+        "sendEmail",
+        { email }
+      );
+
+      // Envio da mensagem via ChatPro
+      await enviarMensagem(telefone, id_usuario);
+
+      await transaction.commit();
+      response
+        .status(200)
+        .json({ message: "Funcionário adicionado com sucesso." });
     }
-};
-const enviarMensagem = async (telefone, id_usuario) => {
-    const options = {
-      method: 'POST',
-      url: 'https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        Authorization: 'ac9de8b5b1f8f8cd344c8e9057e365e7'
-      },
-      data: {
-        number: `${telefone}`,
-        message: `Sua senha para retirada é: ${telefone.slice(-4)}`
-      }
+  } catch (error) {
+    if (transaction) {
+      await transaction.rollback();
+    }
+
+    const errorParams = {
+      id_cliente: 79,
+      nome: name,
+      matricula: telefone,
+      email: email,
+      empresa: empresa,
+      cargo: cargo,
     };
-  
-    try {
-      const response = await axios.request(options);
-      if (response.status === 201) {
-        console.log('Mensagem enviada com sucesso:', response.data);
-  
-        // Log de sucesso
-        logQuery('info', `Mensagem enviada para o telefone ${telefone}`, 'sucesso', 'CHATPRO', null, id_usuario, 'send_message', { telefone });
-  
-      } else {
-        console.error('Falha ao enviar a mensagem:', response.status, response.statusText);
-  
-        // Log de falha
-        logQuery('error', `Falha ao enviar a mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, id_usuario, 'send_message', { telefone, status: response.status, statusText: response.statusText });
-      }
-    } catch (error) {
-      console.error('Erro ao enviar a mensagem:', error.message);
-  
-      // Log do erro completo com stack trace
-      logQuery('error', `Erro ao enviar mensagem para o telefone ${telefone}`, 'falha', 'CHATPRO', null, id_usuario, 'send_message', { telefone, error: error.message, stack: error.stack });
+
+    // Log do erro
+    logQuery(
+      "error",
+      `Erro ao adicionar funcionário ${name}: ${error.message}`,
+      "falha",
+      "ERROR",
+      null,
+      id_usuario,
+      query,
+      errorParams
+    );
+
+    // Log adicional do stack trace
+    logQuery(
+      "error",
+      `Stack trace: ${error.stack}`,
+      "falha",
+      "ERROR_STACK",
+      null,
+      id_usuario,
+      query,
+      {}
+    );
+
+    console.error("Erro ao adicionar funcionário:", error);
+    response.status(500).json({ error: "Erro ao adicionar funcionário." });
+  }
+}
+const enviarMensagem = async (telefone, id_usuario) => {
+  const options = {
+    method: "POST",
+    url: "https://v5.chatpro.com.br/chatpro-w2u3pnxtci/api/v1/send_message",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      Authorization: "ac9de8b5b1f8f8cd344c8e9057e365e7",
+    },
+    data: {
+      number: `${telefone}`,
+      message: `Sua senha para retirada é: ${telefone.slice(-4)}`,
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    if (response.status === 201) {
+      console.log("Mensagem enviada com sucesso:", response.data);
+
+      // Log de sucesso
+      logQuery(
+        "info",
+        `Mensagem enviada para o telefone ${telefone}`,
+        "sucesso",
+        "CHATPRO",
+        null,
+        id_usuario,
+        "send_message",
+        { telefone }
+      );
+    } else {
+      console.error(
+        "Falha ao enviar a mensagem:",
+        response.status,
+        response.statusText
+      );
+
+      // Log de falha
+      logQuery(
+        "error",
+        `Falha ao enviar a mensagem para o telefone ${telefone}`,
+        "falha",
+        "CHATPRO",
+        null,
+        id_usuario,
+        "send_message",
+        { telefone, status: response.status, statusText: response.statusText }
+      );
     }
+  } catch (error) {
+    console.error("Erro ao enviar a mensagem:", error.message);
+
+    // Log do erro completo com stack trace
+    logQuery(
+      "error",
+      `Erro ao enviar mensagem para o telefone ${telefone}`,
+      "falha",
+      "CHATPRO",
+      null,
+      id_usuario,
+      "send_message",
+      { telefone, error: error.message, stack: error.stack }
+    );
+  }
 };
 async function adicionarFuncionarios(request, response) {
   const {
@@ -336,7 +402,7 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("ordem", sql.Int, ordem);
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("status", sql.NVarChar, status);
-    sqlRequest.input("senha", sql.NVarChar, hashmd5);
+    sqlRequest.input("senha", sql.NVarChar, hashMd5);
     sqlRequest.input("biometria2", sql.NVarChar, biometria2);
     sqlRequest.input("email", sql.VarChar, email);
     sqlRequest.input("face", sql.VarChar, face);
@@ -359,7 +425,7 @@ async function adicionarFuncionarios(request, response) {
     console.error("Erro ao inserir funcionário:", error.message);
     response.status(500).send("Erro ao inserir funcionário");
   }
-};
+}
 async function foto(request, response) {
   if (!request.files) {
     return response.status(400).send("Nenhum arquivo foi enviado.");
@@ -367,7 +433,7 @@ async function foto(request, response) {
 
   const { id_cliente } = request.body;
   const foto = request.file;
-};
+}
 async function listarCentroCusto(request, response) {
   try {
     let query = "SELECT DISTINCT id_centro_custo FROM funcionarios WHERE 1 = 1";
@@ -383,7 +449,7 @@ async function listarCentroCusto(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function listarSetorDiretoria(request, response) {
   try {
     let query = "SELECT DISTINCT id_setor FROM funcionarios WHERE 1 = 1";
@@ -399,7 +465,7 @@ async function listarSetorDiretoria(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function listarHierarquia(request, response) {
   try {
     let query = "SELECT DISTINCT id_funcao FROM funcionarios WHERE 1 = 1";
@@ -415,7 +481,7 @@ async function listarHierarquia(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function listarPlanta(request, response) {
   try {
     let query = "SELECT DISTINCT id_planta FROM funcionarios WHERE 1 = 1";
@@ -431,7 +497,7 @@ async function listarPlanta(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 async function deleteFuncionario(request, response) {
   const { id_usuario, id_cliente, id_funcionario } = request.body;
 
@@ -463,7 +529,7 @@ async function deleteFuncionario(request, response) {
       .status(500)
       .send(`Erro ao excluir funcionário: ${error.message}`);
   }
-};
+}
 async function atualizarFuncionario(request, response) {
   const query = `
         UPDATE funcionarios
@@ -658,11 +724,9 @@ async function atualizarFuncionario(request, response) {
           .status(200)
           .json({ message: "Funcionário e itens atualizados com sucesso!" });
       } else {
-        response
-          .status(200)
-          .json({
-            message: "Funcionário atualizado, sem alterações nos itens.",
-          });
+        response.status(200).json({
+          message: "Funcionário atualizado, sem alterações nos itens.",
+        });
       }
     } else {
       response.status(400).send("Nenhuma alteração foi feita no funcionário.");
@@ -671,7 +735,88 @@ async function atualizarFuncionario(request, response) {
     console.error("Erro ao atualizar funcionário:", error.message);
     response.status(500).send("Erro ao atualizar funcionário");
   }
-};
+}
+
+async function adicionarItem(request, response) {
+  try {
+    const { id_produto, id_funcionario, id_cliente, quantidade, deleted } = request.body;
+
+    if (id_produto && id_funcionario && id_cliente) {
+      const requestDb = new sql.Request();
+
+      const queryProduto = `
+        SELECT codigo AS sku, nome, imagem1
+        FROM Produtos
+        WHERE id_produto = @id_produto AND Deleted = 0
+      `;
+      requestDb.input("id_produto", sql.Int, id_produto);
+      const produtoResult = await requestDb.query(queryProduto);
+
+      if (produtoResult.recordset.length > 0) {
+        const { sku, nome: nomeProduto, imagem1 } = produtoResult.recordset[0];
+
+        const queryCheckExistente = `
+          SELECT id_item_funcionario, quantidade
+          FROM Ret_Item_Funcionario
+          WHERE id_produto = @id_produto AND id_funcionario = @id_funcionario AND Deleted = 0
+        `;
+        requestDb.input("id_funcionario", sql.Int, id_funcionario);
+        const checkResult = await requestDb.query(queryCheckExistente);
+
+        if (checkResult.recordset.length > 0) {
+          // Item já existe, vamos atualizar a quantidade
+          const { id_item_funcionario, quantidade: qtdExistente } = checkResult.recordset[0];
+          const novaQuantidade = qtdExistente + quantidade; 
+
+          const updateQuery = `
+            UPDATE Ret_Item_Funcionario
+            SET quantidade = @novaQuantidade
+            WHERE id_item_funcionario = @id_item_funcionario
+          `;
+          const updateRequest = new sql.Request();
+          updateRequest.input("novaQuantidade", sql.Int, novaQuantidade);
+          updateRequest.input("id_item_funcionario", sql.Int, id_item_funcionario);
+
+          await updateRequest.query(updateQuery);
+
+          response.status(200).json({ message: "Quantidade do item atualizada com sucesso" });
+        } else {
+          // Item não existe, vamos inserir um novo item
+          const queryMaxId = `
+            SELECT ISNULL(MAX(id_item_funcionario), 0) + 1 
+            FROM Ret_Item_Funcionario
+          `;
+          const idResult = await requestDb.query(queryMaxId);
+
+          const insertQuery = `
+            INSERT INTO Ret_Item_Funcionario (id_funcionario, id_produto, sku, nome_produto, quantidade, deleted)
+            VALUES (@id_funcionario, @id_produto, @sku, @nome_produto, @quantidade, @deleted)
+          `;
+          const insertRequest = new sql.Request();
+          insertRequest.input("id_funcionario", sql.Int, id_funcionario);
+          insertRequest.input("id_produto", sql.Int, id_produto);
+          insertRequest.input("sku", sql.NVarChar, sku);
+          insertRequest.input("nome_produto", sql.NVarChar, nomeProduto);
+          insertRequest.input("quantidade", sql.Int, quantidade);
+          insertRequest.input("deleted", sql.Bit, deleted || 0);  // Usa o valor de `deleted` ou 0 por padrão
+
+          await insertRequest.query(insertQuery);
+
+          response.status(201).json({ message: "Item adicionado com sucesso" });
+        }
+      } else {
+        response.status(404).json({ message: "Produto não encontrado" });
+      }
+      return;
+    }
+
+    response.status(400).json({ message: "ID do cliente, produto ou funcionário não enviado" });
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+
 async function listarOperadores(request, response) {
   const { id_cliente } = request.body;
   try {
@@ -690,7 +835,7 @@ async function listarOperadores(request, response) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
-};
+}
 
 module.exports = {
   upload,
@@ -706,4 +851,5 @@ module.exports = {
   deleteFuncionario,
   listarOperadores,
   adiconarFuncionarioExt,
+  adicionarItem,
 };
