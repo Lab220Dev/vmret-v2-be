@@ -32,7 +32,10 @@ async function listarFuncionarios(request, response) {
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     const funcionariosResult = await sqlRequest.query(queryFuncionarios);
-    const funcionarios = funcionariosResult.recordset;
+    const funcionarios = funcionariosResult.recordset.map(funcionarios => ({
+      ...funcionarios,
+      senha: 'senhaAntiga' // Oculta a senha real
+  }));
 
     if (!funcionarios.length) {
       return response.status(200).json([]);
