@@ -9,7 +9,7 @@ router.post('/updateInfo', DMController.updateClienteInfo);
 router.post('/adicionar', DMController.adicionar);
 router.post('/atualizar', DMController.atualizar);
 router.post('/listaritens', DMController.listarItensDM);
-router.post('/adicionarItens', DMController.adicionarItensDM);
+router.post('/adicionarItensDM', DMController.adicionarItens);
 router.post('/atualizarItens', DMController.atualizarItemDM);
 router.post('/deleteItem', DMController.deletarItensDM);
 router.post('/delete', DMController.deletarDM);

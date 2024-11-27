@@ -921,7 +921,8 @@ async function listarItensDM(request, response) {
           Nome_Produto: row.nome,
           QTD: row.quantidade,
           Posicao: posicao,
-          modelo: modeloControladora
+          modelo: modeloControladora,
+          mola: row.Motor1
         };
       });
 
@@ -935,7 +936,7 @@ async function listarItensDM(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
-async function adicionarItensDM(request, response) {
+async function adicionarItens(request, response) {
   const {
     id_produto,
     Motor1,
@@ -951,12 +952,16 @@ async function adicionarItensDM(request, response) {
     Andar,
   } = request.body;
 
-  const insertQuery = `INSERT INTO DM_itens (id_item,id_cliente, ID_DM, id_produto,Controladora, Placa, Motor1, Motor2, 
-  DIP, Andar, Posicao, quantidade,quantidademinima, capacidade, deleted,nome, ProdutoCodigo, sku, 
-  unidade_medida, imagem1,ca)
- VALUES (@id_item,@id_cliente, @ID_DM, @id_produto,@Controladora, @Placa, @Motor1, @Motor2,@DIP,@Andar,@Posicao,
- @quantidade,@quantidademinima,@capacidade,@deleted, @nome, @ProdutoCodigo, @sku, 
- @unidade_medida, @imagem1, @ca) ORDER BY Posicao ASC`;
+  const insertQuery = `INSERT INTO DM_itens (
+    id_item, id_cliente, ID_DM, id_produto, Controladora, Placa, Motor1, Motor2, 
+    DIP, Andar, Posicao, quantidade, quantidademinima, capacidade, deleted, nome, 
+    ProdutoCodigo, sku, unidade_medida, imagem1, ca
+) 
+VALUES (
+    @id_item, @id_cliente, @ID_DM, @id_produto, @Controladora, @Placa, @Motor1, @Motor2, 
+    @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @capacidade, @deleted, @nome, 
+    @ProdutoCodigo, @sku, @unidade_medida, @imagem1, @ca
+)`;
 
   try {
     if (!id_cliente) {
@@ -1325,7 +1330,7 @@ module.exports = {
   adicionar,
   listarDM,
   listarItensDM,
-  adicionarItensDM,
+  adicionarItens,
   deletarItensDM,
   atualizar,
   atualizarItemDM,
