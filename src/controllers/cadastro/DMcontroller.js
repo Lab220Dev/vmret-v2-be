@@ -922,7 +922,8 @@ async function listarItensDM(request, response) {
           QTD: row.quantidade,
           Posicao: posicao,
           modelo: modeloControladora,
-          mola: row.Motor1
+          mola: row.Motor1,
+          Capacidade: row.capacidade
         };
       });
 
@@ -950,6 +951,7 @@ async function adicionarItens(request, response) {
     Posicao,
     Placa,
     Andar,
+    Capacidade
   } = request.body;
 
   const insertQuery = `INSERT INTO DM_itens (
@@ -969,7 +971,7 @@ VALUES (
       return;
     }
     const sqlRequest = new sql.Request();
-    const produtoQuery = `SELECT nome, codigo AS ProdutoCodigo, codigo AS sku, unidade_medida, imagem1, quantidademinima, ca, capacidade
+    const produtoQuery = `SELECT nome, codigo AS ProdutoCodigo, codigo AS sku, unidade_medida, imagem1, quantidademinima, ca
                           FROM produtos
                           WHERE id_produto = @id_produto`;
     sqlRequest.input("id_produto", sql.Int, id_produto);
@@ -989,7 +991,6 @@ VALUES (
       imagem1,
       quantidademinima,
       ca,
-      capacidade,
     } = produto;
 
     const nextIdItem = await obterProximoIdItem();
@@ -1008,7 +1009,7 @@ VALUES (
       Andar: null,
       Posicao: null,
       quantidade: 0,
-      capacidade: capacidade,
+      capacidade: Capacidade,
       deleted: false,
       nome: nome,
       ProdutoCodigo: ProdutoCodigo,
@@ -1030,7 +1031,7 @@ VALUES (
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
     sqlRequest2.input("quantidade", sql.Int, 0);
-    sqlRequest2.input("capacidade", sql.Int, capacidade);
+    sqlRequest2.input("capacidade", sql.Int, Capacidade);
     sqlRequest2.input("deleted", sql.Bit, false);
     sqlRequest2.input("nome", sql.NVarChar, nome);
     sqlRequest2.input("ProdutoCodigo", sql.NVarChar, ProdutoCodigo);
