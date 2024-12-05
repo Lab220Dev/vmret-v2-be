@@ -4,6 +4,7 @@ const EstoqueDMController = require('../../controllers/relatorios/EstoqueDMContr
 
 router.post('/listar', EstoqueDMController.listarDM);
 router.post('/relatorio', EstoqueDMController.relatorio);
+router.post('/outro', EstoqueDMController.HomeOperador);
 router.post('/ItensEstoqueBaixo', EstoqueDMController.relatorioEstoqueBaixo);
 
 module.exports = router;

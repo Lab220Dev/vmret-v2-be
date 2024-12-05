@@ -61,7 +61,7 @@ async function relatorio(request, response) {
           quantidademinima: row.quantidademinima,
           capacidade: row.capacidade,
           Posicao: posicao,
-          modelo: row.Controladora
+          modelo: row.Controladora,
         };
       });
       response.status(200).send(itensFiltrados);
@@ -139,8 +139,54 @@ async function relatorioEstoqueBaixo(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function HomeOperador(req, res) {
+  console.log(req);
+  const { id_cliente } = req.body;
+  try {
+    let query = `
+  SELECT * 
+  FROM DM_Itens 
+  WHERE id_cliente = @id_cliente 
+    AND quantidademinima > 0
+    AND deleted = 0
+`; 
+    const request = new sql.Request();
+    request.input("id_cliente", sql.Int, id_cliente);
+    const result = await request.query(query);
+    if (result.rowsAffected[0] > 0) {
+      const itensFiltrados = result.recordset.map((row) => {
+        let posicao;
+        if (row.Controladora === "2018") {
+          posicao = `${row.Placa} / ${row.Motor1}`;
+        } else if (row.Controladora === "2023") {
+          posicao = `${row.Andar} / ${row.Posicao}`;
+        } else if (row.Controladora === "Locker") {
+          posicao = `${row.Placa} / ${row.Posicao}`;
+        } else {
+          posicao = "Posição desconhecida";
+        }
+        return {
+          ID_DM: row.ID_DM,
+          sku: row.sku,
+          nome: row.nome,
+          quantidade: row.quantidade,
+          quantidademinima: row.quantidademinima,
+          capacidade: row.capacidade,
+          Posicao: posicao,
+          modelo: row.Controladora,
+        };
+      });
+      res.status(200).send(itensFiltrados);
+    } else {
+      res.status(200).send([]);
+    }
+  } catch (err) {
+    res.status(500).send("Erro ao executar consulta");
+  }
+}
 module.exports = {
   relatorio,
   listarDM,
+  HomeOperador,
   relatorioEstoqueBaixo,
 };
