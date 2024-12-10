@@ -111,4 +111,26 @@ router.get('/funcionario/:id/:imageName', (req, res) => {
         res.json({ image: base64Image, mimeType });
     });
 });
+router.get('/funcionarioExt/:id/:imageName', (req, res) => {
+    const imageName = req.params.imageName;
+    const idCliente = req.params.id;
+
+    // Função para sanitizar o nome do arquivo, removendo caracteres inválidos
+    const sanitizeFileName = (filename) => filename.replace(/[\/\?<>\\:\*\|"]/g, '-').replace(/ /g, '_');
+
+    // Caminho completo para a imagem
+    const imagePath = path.join(__dirname, '../uploads/funcionarios', idCliente.toString(), sanitizeFileName(imageName.toString()));
+
+    // Verifica se o arquivo existe antes de tentar enviá-lo
+    fs.access(imagePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            //logQuery('error', `Erro ao acessar a imagem ${imageName} para o cliente ${idCliente}`, 'Falha', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
+            return res.status(404).json({ error: 'Imagem não encontrada' });
+        }
+        //logQuery('info', `Imagem ${imageName} acessada com sucesso para o cliente ${idCliente}`, 'Sucesso', 'Acesso à Imagem', idCliente, null, 'SELECT IMAGE FILE', { imagePath });
+
+        // Envia a imagem diretamente
+        res.sendFile(imagePath);
+    });
+});
 module.exports = router;

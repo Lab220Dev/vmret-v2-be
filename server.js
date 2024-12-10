@@ -30,6 +30,7 @@ const FichasRoutes = require('./src/routes/relatorios/FichasRoutes');
 const EstoqueDMRoutes = require('./src/routes/relatorios/EstoqueDMRoutes');
 const ItensNaoAlocadosRoutes = require('./src/routes/cadastros/ItensNaoAlocadosRoutes');
 const { autenticarToken, autorizarRoles } = require('./src/middleware/authMiddleware');
+const DashboardRoutes = require('./src/routes/DashboardRoutes')
 const eventoRoutes = require('./src/routes/evento');
 const history = require('connect-history-api-fallback');
 const cors = require('cors');
@@ -140,6 +141,7 @@ app.use('/api/key',autenticarToken, apiKeyRoutes);
 // Rotas de cliente para admin
 app.use('/api/admin/cliente',autenticarToken, autorizarRoles(['Administrador','Master','Operador' ]), ClienteRoute);
 
+app.use('/api/dashboard',autenticarToken, autorizarRoles(['Administrador','Master','Operador' ]), DashboardRoutes);
 
 app.get('*', (req, res) => {
     const accept = req.headers.accept || '';

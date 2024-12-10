@@ -140,7 +140,7 @@ async function relatorioEstoqueBaixo(request, response) {
   }
 }
 async function HomeOperador(req, res) {
-  console.log(req);
+  //console.log(req);
   const { id_cliente } = req.body;
   try {
     let query = `
