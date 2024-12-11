@@ -61,7 +61,7 @@ async function relatorio(request, response) {
             query += ' AND r.ID_Funcionario = @id_funcionario';
             params.id_funcionario = id_funcionario;
         }
-
+        
         if (data_inicio && data_final) {
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
             params.data_inicio = new Date(data_inicio).toISOString();
@@ -94,7 +94,7 @@ async function relatorio(request, response) {
           Matricula: row.matricula,
           Nome: row.nome,
           Email: row.email,
-          Dia: row.Dia.toISOString(),
+          Dia: new Date(row.Dia).toDateString(),
           ProdutoID: row.ProdutoID,
           ProdutoNome: row.ProdutoNome,
           ProdutoSKU: row.ProdutoSKU,
