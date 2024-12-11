@@ -17,6 +17,7 @@ const planasRoutes = require('./src/routes/cadastros/plantaRoutes');
 const ClienteRoute = require('./src/routes/cadastros/ClienteRoutes');
 const DMRoute = require('./src/routes/cadastros/DMRoutes');
 const TermoRoutes = require('./src/routes/cadastros/TermoRoutes');
+const HistoricoAbastecimentoRoute = require('./src/routes/relatorios/HistoricoAbastecimentooRoutes')
 const UDMRoute = require('./src/routes/cadastros/UsuarioDMRoutes');
 const ImportRoute = require('./src/routes/cadastros/ImportRoute');
 // const ConsultaStatusRoutes = require('./src/routes/cadastros/ConsultaStatusRoutes');
@@ -77,7 +78,8 @@ app.use('/api/produtos', autenticarToken, produtoRoutes);
 
 // Rotas de recuperação de Imagem
 app.use('/api/image',imageRoutes);
-// Rotas de recuperação de Imagem
+
+// Rotas de recuperação de Video
 app.use('/api/video',videoRoutes);
 //Rotas de Evento
 app.use('/api/evento',eventoRoutes);
@@ -126,6 +128,9 @@ app.use('/api/liberacaoavulsa',autenticarToken, LiberacaoAvulsaRoutes);
 
 //Rotas de Relatorio Items mais Retirados
 app.use('/api/Estoque', autenticarToken, autorizarRoles(['Master', 'Operador']), EstoqueDMRoutes);
+
+//Rotas de Relatorio Historico Abastecimento
+app.use('/api/HistoricoAbastecimento', autenticarToken, autorizarRoles(['Master', 'Operador']), HistoricoAbastecimentoRoute);
 
 // Rotas de Texto
 app.use('/api/termo',autenticarToken,autorizarRoles(['Master']), TermoRoutes);

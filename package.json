@@ -1,6 +1,6 @@
 {
   "name": "vmret-v2-be",
-  "version": "1.0.0",
+  "version": "2.1.62",
   "main": "index.js",
   "scripts": {
     "start": "node --inspect server.js",
