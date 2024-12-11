@@ -12,20 +12,26 @@ async function relatorio(request, response) {
       return response.status(401).json("ID da DM não enviado");
     }
 
-    const currentDate = dia ? new Date(dia) : new Date();
-    const formattedDate = currentDate.toISOString().split("T")[0];
-
+    const currentDate = new Date(dia);
+    currentDate.setHours(currentDate.getHours() - 3);
+    const startOfDay = new Date(currentDate);
+    startOfDay.setHours(0, 0, 0, 0);  
+    const endOfDay = new Date(currentDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    startOfDay.setHours(startOfDay.getHours() - 3); 
+    endOfDay.setHours(endOfDay.getHours() - 3);  
     let query;
     const dbRequest = new sql.Request();
     dbRequest.input("id_cliente", sql.Int, id_cliente);
-    dbRequest.input("dia", sql.Date, formattedDate);
-
+    // dbRequest.input("dia", sql.Date, formattedDate);
+    dbRequest.input("startOfDay", sql.DateTime, startOfDay);
+    dbRequest.input("endOfDay", sql.DateTime, endOfDay);
     if (id_dm === null) {
       query =
         "SELECT * FROM DM_status WHERE  id_cliente = @id_cliente AND CONVERT(date, dataHora) = @dia";
     } else {
       query =
-        "SELECT DISTINCT ds.ID_DM, d.Identificacao, ds.dataHora, ds.status FROM DM_Status ds INNER JOIN DMs d ON ds.id_dm = d.ID_DM WHERE ds.id_cliente = @id_cliente AND CONVERT(date, ds.dataHora) = @dia";
+        "SELECT DISTINCT ds.ID_DM, d.Identificacao, ds.dataHora, ds.status FROM DM_Status ds INNER JOIN DMs d ON ds.id_dm = d.ID_DM WHERE ds.id_cliente = @id_cliente AND ds.dataHora BETWEEN @startOfDay AND @endOfDay";
       dbRequest.input("ID_DM", sql.Int, id_dm);
     }
 

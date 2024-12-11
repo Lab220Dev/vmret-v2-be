@@ -32,10 +32,10 @@ async function listarFuncionarios(request, response) {
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     const funcionariosResult = await sqlRequest.query(queryFuncionarios);
-    const funcionarios = funcionariosResult.recordset.map(funcionarios => ({
+    const funcionarios = funcionariosResult.recordset.map((funcionarios) => ({
       ...funcionarios,
-      senha: 'senhaAntiga' // Oculta a senha real
-  }));
+      senha: "senhaAntiga", // Oculta a senha real
+    }));
 
     if (!funcionarios.length) {
       return response.status(200).json([]);
@@ -389,7 +389,11 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("RG", sql.VarChar, RG);
     sqlRequest.input("CPF", sql.VarChar, CPF);
     sqlRequest.input("CTPS", sql.VarChar, CTPS);
-    sqlRequest.input("id_planta", sql.Int, id_planta ? parseInt(id_planta, 10) : 0);
+    sqlRequest.input(
+      "id_planta",
+      sql.Int,
+      id_planta ? parseInt(id_planta, 10) : 0
+    );
     sqlRequest.input("foto", sql.VarChar, nomeFuncionario);
     sqlRequest.input("data_admissao", sql.DateTime, data_admissao);
     sqlRequest.input("hora_inicial", sql.Time, hora_inicial);
@@ -742,78 +746,111 @@ async function atualizarFuncionario(request, response) {
 
 async function adicionarItem(request, response) {
   try {
-    const { id_produto, id_funcionario, id_cliente, quantidade, deleted } = request.body;
+    let { id_produto, id_funcionario, id_cliente, quantidade, deleted } = request.body;
 
-    if (id_produto && id_funcionario && id_cliente) {
-      const requestDb = new sql.Request();
-
-      const queryProduto = `
-        SELECT codigo AS sku, nome, imagem1
-        FROM Produtos
-        WHERE id_produto = @id_produto AND Deleted = 0
-      `;
-      requestDb.input("id_produto", sql.Int, id_produto);
-      const produtoResult = await requestDb.query(queryProduto);
-
-      if (produtoResult.recordset.length > 0) {
-        const { sku, nome: nomeProduto, imagem1 } = produtoResult.recordset[0];
-
-        const queryCheckExistente = `
-          SELECT id_item_funcionario, quantidade
-          FROM Ret_Item_Funcionario
-          WHERE id_produto = @id_produto AND id_funcionario = @id_funcionario AND Deleted = 0
-        `;
-        requestDb.input("id_funcionario", sql.Int, id_funcionario);
-        const checkResult = await requestDb.query(queryCheckExistente);
-
-        if (checkResult.recordset.length > 0) {
-          // Item já existe, vamos atualizar a quantidade
-          const { id_item_funcionario, quantidade: qtdExistente } = checkResult.recordset[0];
-          const novaQuantidade = qtdExistente + quantidade; 
-
-          const updateQuery = `
-            UPDATE Ret_Item_Funcionario
-            SET quantidade = @novaQuantidade
-            WHERE id_item_funcionario = @id_item_funcionario
-          `;
-          const updateRequest = new sql.Request();
-          updateRequest.input("novaQuantidade", sql.Int, novaQuantidade);
-          updateRequest.input("id_item_funcionario", sql.Int, id_item_funcionario);
-
-          await updateRequest.query(updateQuery);
-
-          response.status(200).json({ message: "Quantidade do item atualizada com sucesso" });
-        } else {
-          // Item não existe, vamos inserir um novo item
-          const queryMaxId = `
-            SELECT ISNULL(MAX(id_item_funcionario), 0) + 1 
-            FROM Ret_Item_Funcionario
-          `;
-          const idResult = await requestDb.query(queryMaxId);
-
-          const insertQuery = `
-            INSERT INTO Ret_Item_Funcionario (id_funcionario, id_produto, sku, nome_produto, quantidade, deleted)
-            VALUES (@id_funcionario, @id_produto, @sku, @nome_produto, @quantidade, @deleted)
-          `;
-          const insertRequest = new sql.Request();
-          insertRequest.input("id_funcionario", sql.Int, id_funcionario);
-          insertRequest.input("id_produto", sql.Int, id_produto);
-          insertRequest.input("sku", sql.NVarChar, sku);
-          insertRequest.input("nome_produto", sql.NVarChar, nomeProduto);
-          insertRequest.input("quantidade", sql.Int, quantidade);
-          insertRequest.input("deleted", sql.Bit, deleted || 0);  // Usa o valor de `deleted` ou 0 por padrão
-
-          await insertRequest.query(insertQuery);
-
-          response.status(201).json({ message: "Item adicionado com sucesso" });
-        }
-      } else {
-        response.status(404).json({ message: "Produto não encontrado" });
-      }
-      return;
+    if (!id_produto || !id_cliente) {
+      return response.status(400).json({ message: "ID do produto e cliente são obrigatórios" });
     }
 
-    response.status(400).json({ message: "ID do cliente, produto ou funcionário não enviado" });
+    const requestDb = new sql.Request();
+    requestDb.input("id_produto", sql.Int, id_produto);
+    requestDb.input("id_cliente", sql.Int, id_cliente);
+
+    if (!id_funcionario) {
+      const queryUltimoFuncionario = `
+        SELECT TOP 1 id_funcionario
+        FROM Funcionarios
+        WHERE id_cliente = @id_cliente
+        ORDER BY id_funcionario DESC
+      `;
+      const funcionarioResult = await requestDb.query(queryUltimoFuncionario);
+
+      if (funcionarioResult.recordset.length === 0) {
+        return response.status(400).json({ message: "Nenhum funcionário encontrado para o id_cliente fornecido." });
+      }
+
+      id_funcionario = funcionarioResult.recordset[0].id_funcionario + 1;
+    }
+
+    const queryProduto = `
+      SELECT codigo AS sku, nome, imagem1
+      FROM Produtos
+      WHERE id_produto = @id_produto AND Deleted = 0
+    `;
+    const produtoResult = await requestDb.query(queryProduto);
+
+    if (produtoResult.recordset.length === 0) {
+      return response.status(404).json({ message: "Produto não encontrado" });
+    }
+
+    const { sku, nome: nomeProduto, imagem1 } = produtoResult.recordset[0];
+
+    const queryCheckExistente = `
+      SELECT id_item_funcionario, quantidade
+      FROM Ret_Item_Funcionario
+      WHERE id_produto = @id_produto AND id_funcionario = @id_funcionario AND Deleted = 0
+    `;
+    requestDb.input("id_funcionario", sql.Int, id_funcionario);
+    const checkResult = await requestDb.query(queryCheckExistente);
+
+    if (checkResult.recordset.length > 0) {
+      const { id_item_funcionario, quantidade: qtdExistente } = checkResult.recordset[0];
+      const novaQuantidade = Number(qtdExistente) + Number(quantidade);
+
+      const updateQuery = `
+        UPDATE Ret_Item_Funcionario
+        SET quantidade = @novaQuantidade
+        WHERE id_item_funcionario = @id_item_funcionario
+      `;
+      const updateRequest = new sql.Request();
+      updateRequest.input("novaQuantidade", sql.Int, novaQuantidade);
+      updateRequest.input("id_item_funcionario", sql.Int, id_item_funcionario);
+
+      const RESULT = await updateRequest.query(updateQuery);
+
+      if (RESULT.rowsAffected[0] > 0) {
+        const listarRequest = new sql.Request();
+        const queryItensFuncionario = `
+          SELECT *
+          FROM Ret_Item_Funcionario 
+          WHERE id_funcionario = @id_funcionario 
+            AND deleted = 0
+        `;
+        listarRequest.input("id_funcionario", sql.Int, id_funcionario);
+        const result = await listarRequest.query(queryItensFuncionario);
+        return response.status(201).json({ dados: result.recordsets, message: "Item adicionado com sucesso" });
+      }
+    } else {
+      const queryMaxId = `SELECT ISNULL(MAX(id_item_funcionario), 0) + 1 FROM Ret_Item_Funcionario`;
+      const idResult = await requestDb.query(queryMaxId);
+
+      const insertQuery = `
+        INSERT INTO Ret_Item_Funcionario (id_funcionario, id_produto, sku, nome_produto, quantidade, deleted)
+        VALUES (@id_funcionario, @id_produto, @sku, @nome_produto, @quantidade, @deleted)
+      `;
+      const insertRequest = new sql.Request();
+      insertRequest.input("id_funcionario", sql.Int, id_funcionario);
+      insertRequest.input("id_produto", sql.Int, id_produto);
+      insertRequest.input("sku", sql.NVarChar, sku);
+      insertRequest.input("nome_produto", sql.NVarChar, nomeProduto);
+      insertRequest.input("quantidade", sql.Int, quantidade);
+      insertRequest.input("deleted", sql.Bit, deleted || 0);
+
+      const insertResult = await insertRequest.query(insertQuery);
+
+      if (insertResult.rowsAffected[0] > 0) {
+        const listarRequest = new sql.Request();
+        const queryItensFuncionario = `
+          SELECT *
+          FROM Ret_Item_Funcionario 
+          WHERE id_funcionario = @id_funcionario 
+            AND deleted = 0
+        `;
+        listarRequest.input("id_funcionario", sql.Int, id_funcionario);
+        const result = await listarRequest.query(queryItensFuncionario);
+        return response.status(201).json({ dados: result.recordsets, message: "Item adicionado com sucesso" });
+      }
+    }
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
@@ -840,6 +877,58 @@ async function listarOperadores(request, response) {
   }
 }
 
+async function deleteItem(request, response) {
+  const { id_produto, id_funcionario, id_cliente, quantidade } = request.body;
+
+  if (!id_produto) {
+    return response.status(400).json({ error: "ID do Item não foi enviado" });
+  }
+
+  const deleteQuery = `
+    UPDATE Ret_Item_Funcionario 
+    SET deleted = 1 
+    WHERE id_produto = @id_produto AND id_funcionario = @id_funcionario
+  `;
+
+  const fetchItemsQuery = `
+    SELECT * 
+    FROM Ret_Item_Funcionario 
+    WHERE id_funcionario = @id_funcionario 
+      AND deleted = 0
+  `;
+
+  try {
+    const sqlRequest = new sql.Request();
+
+    sqlRequest.input("id_produto", sql.Int, id_produto);
+    sqlRequest.input("id_funcionario", sql.Int, id_funcionario);
+
+    // Executar exclusão
+    const deleteResult = await sqlRequest.query(deleteQuery);
+
+    if (deleteResult.rowsAffected[0] > 0) {
+      const fetchRequest = new sql.Request();
+      fetchRequest.input("id_funcionario", sql.Int, id_funcionario);
+
+      const result = await fetchRequest.query(fetchItemsQuery);
+
+      return response.status(200).json({
+        message: "Item deletado com sucesso!",
+        items: result.recordset, 
+      });
+    } else {
+      return response
+        .status(400)
+        .json({ error: "Nenhuma alteração foi feita no item." });
+    }
+  } catch (error) {
+    console.error("Erro ao excluir:", error.message);
+    return response
+      .status(500)
+      .json({ error: `Erro ao excluir item: ${error.message}` });
+  }
+}
+
 module.exports = {
   upload,
   foto,
@@ -855,4 +944,5 @@ module.exports = {
   listarOperadores,
   adiconarFuncionarioExt,
   adicionarItem,
+  deleteItem
 };

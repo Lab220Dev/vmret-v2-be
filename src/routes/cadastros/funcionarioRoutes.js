@@ -14,4 +14,6 @@ router.post('/listarplanta', funcionarioController.listarPlanta);
 router.post('/deleteFuncionario', funcionarioController.deleteFuncionario);
 router.post('/listarOperarios', funcionarioController.listarOperadores);
 router.post('/adicionarItem', funcionarioController.adicionarItem);
+router.post('/deleteItem', funcionarioController.deleteItem);
+
 module.exports = router;
