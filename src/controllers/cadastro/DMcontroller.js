@@ -1,4 +1,5 @@
 const sql = require("mssql");
+
 /**
  * Função para obter o próximo ID disponível para um item na tabela DM_itens.
  *
@@ -8,7 +9,7 @@ async function obterProximoIdItem() {
   const sqlRequest = new sql.Request();
   const query = `SELECT ISNULL(MAX(id_item), 0) + 1 AS NextIdItem FROM DM_itens`;
   const result = await sqlRequest.query(query);
-  return result.recordset[0].NextIdItem;
+  return result.recordset[0].NextIdItem; // Retorna o próximo ID disponível para a inserção.
 }
 
 /**
@@ -21,11 +22,12 @@ async function obterProximoIdItem() {
  */
 const listarDM = async (request, response) => {
   try {
-    const id_cliente = request.body.id_cliente;
+    const id_cliente = request.body.id_cliente; // Obtém o ID do cliente da requisição
 
     let query;
-    let sqlRequest = new sql.Request();
+    let sqlRequest = new sql.Request(); // Prepara a requisição SQL
 
+    // Se o ID do cliente não for fornecido, recupera todos os DMs.
     if (!id_cliente) {
       query = `
         SELECT 
@@ -47,6 +49,7 @@ const listarDM = async (request, response) => {
         WHERE 
           DMS.Deleted = 0`;
     } else {
+      // Se o ID do cliente for fornecido, recupera DMs associadas ao cliente.
       query = `
         SELECT 
           DMS.*, 
@@ -68,25 +71,30 @@ const listarDM = async (request, response) => {
           DMS.ID_Cliente = @id_cliente 
           AND DMS.Deleted = 0`;
 
-      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+      sqlRequest.input("id_cliente", sql.Int, id_cliente); // Adiciona o parâmetro do cliente à consulta SQL
     }
 
+    // Executa a consulta SQL para recuperar os DMs.
     const result = await sqlRequest.query(query);
 
     // Agrupa as DMs com suas respectivas controladoras
     const dmsMap = new Map();
     result.recordset.forEach((row) => {
-      const dmId = row.ID_DM;
+      const dmId = row.ID_DM; // Obtém o ID da DM
+
+      // Se ainda não existe um item para esse DM no mapa, cria um novo.
       if (!dmsMap.has(dmId)) {
         dmsMap.set(dmId, {
           ...row,
-          Controladoras: [],
+          Controladoras: [], // Inicializa a lista de controladoras para esse DM
         });
       }
 
+      // Se a linha contém uma controladora associada, processa essa controladora.
       if (row.ControladoraID) {
         let controladoraExistente;
 
+        // Verifica a existência da controladora com base no tipo
         if (
           row.Tipo_Controladora === "2023" ||
           row.Tipo_Controladora === "Locker"
@@ -100,8 +108,8 @@ const listarDM = async (request, response) => {
             .Controladoras.find((ctrl) => ctrl.Placa === row.Placa);
         }
 
+        // Se a controladora já existe, atualiza as listas conforme o tipo.
         if (controladoraExistente) {
-          // Atualiza as listas dependendo do tipo da controladora
           if (row.Tipo_Controladora === "2023") {
             controladoraExistente.Andar = [
               ...new Set([...controladoraExistente.Andar, row.Andar]),
@@ -126,6 +134,7 @@ const listarDM = async (request, response) => {
             ];
           }
         } else {
+          // Se a controladora não existir, cria uma nova entrada para ela.
           dmsMap.get(dmId).Controladoras.push({
             ID: row.ControladoraID,
             Tipo_Controladora: row.Tipo_Controladora,
@@ -139,11 +148,13 @@ const listarDM = async (request, response) => {
         }
       }
     });
+
+    // Converte o mapa de DMs em um array e envia a resposta.
     const dmsArray = Array.from(dmsMap.values());
-    response.status(200).json(dmsArray);
+    response.status(200).json(dmsArray); // Retorna a lista de DMs com suas controladoras.
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
+    response.status(500).send("Erro ao executar consulta"); // Em caso de erro no banco de dados, retorna erro 500
   }
 };
 
@@ -168,17 +179,19 @@ const listarDMResumido = async (request, response) => {
         Deleted = 0
     `;
 
+    // Se um ID de cliente for fornecido, filtra pelas DMs desse cliente.
     if (id_cliente) {
       query += ` AND id_cliente = @id_cliente`;
-      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+      sqlRequest.input("id_cliente", sql.Int, id_cliente); // Adiciona o parâmetro do cliente à consulta SQL
     }
     query += ` ORDER BY id_dm`;
 
+    // Executa a consulta SQL para obter a lista resumida de DMs.
     const result = await sqlRequest.query(query);
-    response.status(200).json(result.recordset);
+    response.status(200).json(result.recordset); // Retorna a lista de DMs resumida
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta no banco de dados.");
+    response.status(500).send("Erro ao executar consulta no banco de dados."); // Em caso de erro, retorna erro 500
   }
 };
 
@@ -210,7 +223,7 @@ async function inserirControladoraGenerica(
       sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest2.input("ID_DM", sql.Int, dmId);
       sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
-      sqlRequest2.input("Sincronizado", sql.Int, 0);
+      sqlRequest2.input("Sincronizado", sql.Int, 0); // Controladora ainda não sincronizada
       sqlRequest2.input("Deleted", sql.Bit, false);
       sqlRequest2.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest2.input("Mola1", sql.Int, mola);
@@ -374,12 +387,12 @@ async function adicionar(request, response) {
 
     // Confirma a transação no banco de dados.
     await transaction.commit();
-    response.status(201).send("DM e Controladoras criadas com sucesso!");
+    response.status(201).send("DM e Controladoras criadas com sucesso!"); // Resposta de sucesso
   } catch (error) {
     // Em caso de erro, desfaz a transação e retorna uma mensagem de erro.
     if (transaction) await transaction.rollback();
     console.error("Erro ao adicionar DM:", error);
-    response.status(500).send("Erro ao adicionar DM");
+    response.status(500).send("Erro ao adicionar DM"); // Resposta de erro
   }
 }
 
@@ -388,8 +401,8 @@ async function adicionar(request, response) {
  *
  * @async
  * @function adicionar
- * @param {object} request - O objeto de solicitação HTTP.
- * @param {object} response - O objeto de resposta HTTP.
+ * @param {object} request - O objeto de solicitação HTTP contendo os dados da DM a ser adicionada.
+ * @param {object} response - O objeto de resposta HTTP, utilizado para retornar o status da operação.
  * @returns {void} Retorna uma resposta HTTP com status de sucesso ou erro.
  */
 async function adicionar(request, response) {
@@ -428,12 +441,12 @@ async function adicionar(request, response) {
     VALUES (
       @ID_Cliente, @Numero, @Devolucao, @Identificacao, @Ativo, @Deleted, @Created, @Updated, @Versao, @Enviada, 
       @OP_Senha, @OP_Biometria, @OP_Facial, @Integracao, @ClienteID, @ClienteNome, @UserID, @Chave, @ID_CR_Usuario, 
-      @URL, @Sincronizado, @ChaveAPI)`;
+      @URL, @Sincronizado, @ChaveAPI)`; // Inserção dos dados da DM com a obtenção do ID gerado (OUTPUT).
 
   let transaction;
 
   try {
-    // Verifica se o 'IDcliente' foi enviado na requisição. Se não, retorna erro.
+    // Verifica se o 'IDcliente' foi enviado na requisição. Se não, retorna erro 401.
     if (!IDcliente) {
       return response.status(401).json("ID do cliente não enviado");
     }
@@ -442,7 +455,7 @@ async function adicionar(request, response) {
     transaction = new sql.Transaction();
     await transaction.begin();
 
-    // Prepara a consulta SQL com os dados fornecidos.
+    // Prepara a consulta SQL com os dados fornecidos na requisição.
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input("ID_Cliente", sql.Int, IDcliente);
     sqlRequest.input("Numero", sql.VarChar, Numero);
@@ -450,10 +463,10 @@ async function adicionar(request, response) {
     sqlRequest.input("Identificacao", sql.NVarChar, Identificacao);
     sqlRequest.input("ChaveAPI", sql.NVarChar, ChaveAPI);
     sqlRequest.input("Ativo", sql.Bit, Ativo);
-    sqlRequest.input("Deleted", sql.Bit, false);
-    sqlRequest.input("Created", sql.DateTime, new Date());
-    sqlRequest.input("Updated", sql.DateTime, "1900-01-01 00:00:00.000");
-    sqlRequest.input("Versao", sql.Int, Versao || 1);
+    sqlRequest.input("Deleted", sql.Bit, false); // Marca como não deletado.
+    sqlRequest.input("Created", sql.DateTime, new Date()); // Define a data de criação como a data atual.
+    sqlRequest.input("Updated", sql.DateTime, "1900-01-01 00:00:00.000"); // Data inicial de atualização.
+    sqlRequest.input("Versao", sql.Int, Versao || 1); // Se não enviado, assume versão 1.
     sqlRequest.input("Enviada", sql.Bit, Enviada);
     sqlRequest.input("OP_Senha", sql.Bit, OP_Senha);
     sqlRequest.input("OP_Biometria", sql.Bit, OP_Biometria);
@@ -464,17 +477,17 @@ async function adicionar(request, response) {
     sqlRequest.input("UserID", sql.VarChar, UserID);
     sqlRequest.input("Chave", sql.NVarChar, Chave);
     sqlRequest.input("ID_CR_Usuario", sql.Int, id_usuario);
-    sqlRequest.input("Sincronizado", sql.Int, 0);
+    sqlRequest.input("Sincronizado", sql.Int, 0); // Define o valor de "Sincronizado" como 0 (não sincronizado).
 
-    // Define a URL a ser inserida, dependendo se a integração é ativada.
+    // Define a URL a ser inserida, dependendo se a integração está ativada ou não.
     const urlToInsert = Integracao
-      ? "https://api.mobsolucoesdigitais.com.br"
-      : URL;
+      ? "https://api.mobsolucoesdigitais.com.br" // URL de integração ativa
+      : URL; // URL customizada fornecida pela requisição.
     sqlRequest.input("URL", sql.NVarChar, urlToInsert);
 
     // Executa a consulta SQL para inserir a DM e obter o ID da DM inserida.
     const resultDM = await sqlRequest.query(queryDM);
-    const dmId = resultDM.recordset[0].ID_DM;
+    const dmId = resultDM.recordset[0].ID_DM; // Captura o ID da DM inserida.
 
     // Se houver controladoras, insere cada uma delas associada à DM criada.
     if (Controladoras && Controladoras.length > 0) {
@@ -488,14 +501,14 @@ async function adicionar(request, response) {
       }
     }
 
-    // Confirma a transação no banco de dados.
+    // Confirma a transação no banco de dados após a inserção bem-sucedida.
     await transaction.commit();
-    response.status(201).send("DM e Controladoras criadas com sucesso!");
+    response.status(201).send("DM e Controladoras criadas com sucesso!"); // Retorna status 201 indicando sucesso na criação.
   } catch (error) {
-    // Em caso de erro, desfaz a transação e retorna uma mensagem de erro.
-    if (transaction) await transaction.rollback();
+    // Em caso de erro, desfaz a transação e retorna uma mensagem de erro com status 500.
+    if (transaction) await transaction.rollback(); // Rollback da transação em caso de erro.
     console.error("Erro ao adicionar DM:", error);
-    response.status(500).send("Erro ao adicionar DM");
+    response.status(500).send("Erro ao adicionar DM"); // Retorna erro genérico de falha na operação.
   }
 }
 
@@ -504,8 +517,8 @@ async function adicionar(request, response) {
  *
  * @async
  * @function atualizar
- * @param {object} request - O objeto de solicitação HTTP.
- * @param {object} response - O objeto de resposta HTTP.
+ * @param {object} request - O objeto de solicitação HTTP contendo os dados da DM a ser atualizada.
+ * @param {object} response - O objeto de resposta HTTP, utilizado para retornar o status da operação.
  * @returns {void} Retorna uma resposta HTTP com status de sucesso ou erro.
  */
 async function atualizar(request, response) {
@@ -560,11 +573,11 @@ async function atualizar(request, response) {
   let transaction;
 
   try {
-    // Verifica se os campos 'ID_DM' e 'IDcliente' foram enviados.
+    // Verifica se os campos 'ID_DM' e 'IDcliente' foram enviados na requisição.
     if (!ID_DM || !IDcliente) {
       return response
         .status(400)
-        .json({ message: "ID_DM e IDcliente são obrigatórios." });
+        .json({ message: "ID_DM e IDcliente são obrigatórios." }); // Retorna erro 400 se algum dos campos estiver ausente.
     }
 
     // Cria e inicia uma nova transação SQL.
@@ -592,7 +605,7 @@ async function atualizar(request, response) {
           ChaveAPI = @ChaveAPI,
           Devolucao = @Devolucao,
           Sincronizado = 0
-      WHERE ID_DM = @ID_DM AND ID_Cliente = @ID_Cliente`;
+      WHERE ID_DM = @ID_DM AND ID_Cliente = @ID_Cliente`; // Atualiza a DM com os novos dados.
 
     const requestDM = new sql.Request(transaction);
     requestDM.input("ID_DM", sql.Int, ID_DM);
@@ -602,7 +615,7 @@ async function atualizar(request, response) {
     requestDM.input("Ativo", sql.Bit, Ativo);
     requestDM.input("Deleted", sql.Bit, Deleted);
     requestDM.input("Created", sql.DateTime, Created);
-    requestDM.input("Updated", sql.DateTime, Updated || new Date());
+    requestDM.input("Updated", sql.DateTime, Updated || new Date()); // Se não enviado, define como data atual.
     requestDM.input("Versao", sql.Int, Versao);
     requestDM.input("Enviada", sql.Bit, Enviada);
     requestDM.input("OP_Senha", sql.Bit, OP_Senha);
@@ -630,12 +643,12 @@ async function atualizar(request, response) {
     const existingControladorasMap = new Map();
     resultControladoras.recordset.forEach((ctrl) => {
       if (ctrl.Tipo_Controladora === "2018") {
-        existingControladorasMap.set(ctrl.Placa, ctrl); // Mapeia por placa
+        existingControladorasMap.set(ctrl.Placa, ctrl); // Mapeia controladoras de tipo 2018 pela placa.
       } else if (
         ctrl.Tipo_Controladora === "2023" ||
         ctrl.Tipo_Controladora === "Locker"
       ) {
-        existingControladorasMap.set(ctrl.DIP, ctrl); // Mapeia por DIP
+        existingControladorasMap.set(ctrl.DIP, ctrl); // Mapeia controladoras de tipo 2023 e Locker pelo DIP.
       }
     });
 
@@ -791,12 +804,17 @@ async function atualizarControladora2024(
   clienteId,
   existingControladora
 ) {
+  // Cria um Set para as molas novas do tipo 1
   const novasMolas1 = new Set(controladora.dados.mola1);
+  // Cria um Set para as molas existentes do tipo 1
   const molasExistentes1 = new Set(existingControladora.Mola1);
+
+  // Cria um Set para as molas novas do tipo 2
   const novasMolas2 = new Set(controladora.dados.mola2);
+  // Cria um Set para as molas existentes do tipo 2
   const molasExistentes2 = new Set(existingControladora.Mola2);
 
-  // Remove molas 1 antigas
+  // Remove molas 1 antigas que não estão mais presentes nas novas molas
   for (const mola1 of molasExistentes1) {
     if (!novasMolas1.has(mola1)) {
       const sqlRequest = new sql.Request(transaction);
@@ -805,11 +823,13 @@ async function atualizarControladora2024(
 
       sqlRequest.input("ID_DM", sql.Int, dmId);
       sqlRequest.input("Mola1", sql.Int, mola1);
+
+      // Executa a query de remoção da mola 1
       await sqlRequest.query(query);
     }
   }
 
-  // Remove molas 2 antigas
+  // Remove molas 2 antigas que não estão mais presentes nas novas molas
   for (const mola2 of molasExistentes2) {
     if (!novasMolas2.has(mola2)) {
       const sqlRequest = new sql.Request(transaction);
@@ -818,11 +838,13 @@ async function atualizarControladora2024(
 
       sqlRequest.input("ID_DM", sql.Int, dmId);
       sqlRequest.input("Mola2", sql.Int, mola2);
+
+      // Executa a query de remoção da mola 2
       await sqlRequest.query(query);
     }
   }
 
-  // Insere novas molas 1
+  // Insere novas molas do tipo 1 que não existem nas controladoras
   for (const mola1 of novasMolas1) {
     if (!molasExistentes1.has(mola1)) {
       const sqlRequest = new sql.Request(transaction);
@@ -836,11 +858,12 @@ async function atualizarControladora2024(
       sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest.input("Mola1", sql.Int, mola1);
 
+      // Executa a query de inserção da nova mola 1
       await sqlRequest.query(query);
     }
   }
 
-  // Insere novas molas 2
+  // Insere novas molas do tipo 2 que não existem nas controladoras
   for (const mola2 of novasMolas2) {
     if (!molasExistentes2.has(mola2)) {
       const sqlRequest = new sql.Request(transaction);
@@ -849,6 +872,8 @@ async function atualizarControladora2024(
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola2, 0, 0)`;
 
       sqlRequest.input("Mola2", sql.Int, mola2);
+
+      // Executa a query de inserção da nova mola 2
       await sqlRequest.query(query);
     }
   }
@@ -875,10 +900,12 @@ async function atualizarControladoraLocker(
   clienteId,
   existingControladora
 ) {
+  // Cria um Set para as novas posições
   const novasPosicoes = new Set(controladora.dados.posicao);
+  // Cria um Set para as posições existentes
   const posicoesExistentes = new Set(existingControladora.Posicao);
 
-  // Remove posições antigas
+  // Remove posições antigas que não estão mais presentes nas novas posições
   for (const posicao of posicoesExistentes) {
     if (!novasPosicoes.has(posicao)) {
       const sqlRequest = new sql.Request(transaction);
@@ -888,11 +915,12 @@ async function atualizarControladoraLocker(
       sqlRequest.input("ID_DM", sql.Int, dmId);
       sqlRequest.input("Posicao", sql.Int, posicao);
 
+      // Executa a query de remoção da posição
       await sqlRequest.query(query);
     }
   }
 
-  // Insere novas posições
+  // Insere novas posições que não existem nas controladoras
   for (const posicao of novasPosicoes) {
     if (!posicoesExistentes.has(posicao)) {
       const sqlRequest = new sql.Request(transaction);
@@ -906,6 +934,7 @@ async function atualizarControladoraLocker(
       sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
       sqlRequest.input("Posicao", sql.Int, posicao);
 
+      // Executa a query de inserção da nova posição
       await sqlRequest.query(query);
     }
   }
@@ -932,12 +961,17 @@ async function atualizarControladora2023(
   clienteId,
   existingControladora
 ) {
+  // Cria um Set para as novas posições
   const novasPosicoes = new Set(controladora.dados.posicao);
+  // Cria um Set para os novos andares
   const novasAndares = new Set(controladora.dados.andar);
+
+  // Cria um Set para as posições existentes
   const posicoesExistentes = new Set(existingControladora.Posicao);
+  // Cria um Set para os andares existentes
   const andaresExistentes = new Set(existingControladora.Andar);
 
-  // Remove posições antigas
+  // Remove posições antigas que não estão mais presentes nas novas posições
   for (const posicao of posicoesExistentes) {
     if (!novasPosicoes.has(posicao)) {
       const sqlRequestUpdate = new sql.Request(transaction);
@@ -947,11 +981,12 @@ async function atualizarControladora2023(
       sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
       sqlRequestUpdate.input("Posicao", sql.Int, posicao);
 
+      // Executa a query de remoção da posição
       await sqlRequestUpdate.query(updateQuery);
     }
   }
 
-  // Remove andares antigos
+  // Remove andares antigos que não estão mais presentes nos novos andares
   for (const andar of andaresExistentes) {
     if (!novasAndares.has(andar)) {
       const sqlRequestUpdate = new sql.Request(transaction);
@@ -961,11 +996,12 @@ async function atualizarControladora2023(
       sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
       sqlRequestUpdate.input("Andar", sql.Int, andar);
 
+      // Executa a query de remoção do andar
       await sqlRequestUpdate.query(updateQuery);
     }
   }
 
-  // Insere novas posições e andares
+  // Insere novas posições e andares que não existem nas controladoras
   for (const posicao of novasPosicoes) {
     if (!posicoesExistentes.has(posicao)) {
       const sqlRequestInsert = new sql.Request(transaction);
@@ -981,9 +1017,10 @@ async function atualizarControladora2023(
         controladora.tipo
       );
       sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequestInsert.input("Andar", sql.Int, [...novasAndares][0]);
+      sqlRequestInsert.input("Andar", sql.Int, [...novasAndares][0]); // Apenas um andar será usado
       sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
+      // Executa a query de inserção de nova posição e andar
       await sqlRequestInsert.query(insertQuery);
     }
   }
@@ -1010,10 +1047,12 @@ async function atualizarControladora2018(
   clienteId,
   existingControladora
 ) {
+  // Cria um Set para as novas molas
   const novasMolas = new Set(controladora.dados.molas);
+  // Cria um Set para as molas existentes
   const molasExistentes = new Set(existingControladora.Mola1);
 
-  // Remove molas antigas
+  // Remove molas antigas que não estão mais presentes nas novas molas
   for (const mola of molasExistentes) {
     if (!novasMolas.has(mola)) {
       const sqlRequest = new sql.Request(transaction);
@@ -1023,17 +1062,16 @@ async function atualizarControladora2018(
       sqlRequest.input("ID_DM", sql.Int, dmId);
       sqlRequest.input("Mola1", sql.Int, mola);
 
+      // Executa a query de remoção da mola
       await sqlRequest.query(query);
     }
   }
 
-  // Insere novas molas
+  // Insere novas molas que não existem nas controladoras
   for (const mola of novasMolas) {
     if (!molasExistentes.has(mola)) {
       const sqlRequest = new sql.Request(transaction);
-
       const query = `
-      
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, 0, 0)`;
 
@@ -1043,6 +1081,7 @@ async function atualizarControladora2018(
       sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest.input("Mola1", sql.Int, mola);
 
+      // Executa a query de inserção da nova mola
       await sqlRequest.query(query);
     }
   }
@@ -1101,10 +1140,10 @@ async function adicionarControladora2024(
 /**
  * Função para adicionar controladoras do tipo Locker no banco de dados.
  *
- * @param {Object} transaction A transação SQL usada para a execução da query.
- * @param {Object} controladora O objeto que contém os dados da controladora a ser inserida.
- * @param {number} dmId O ID do dispositivo de monitoramento (DM) associado.
- * @param {number} clienteId O ID do cliente associado.
+ * @param {Object} transaction - A transação SQL usada para a execução da query.
+ * @param {Object} controladora - O objeto que contém os dados da controladora a ser inserida.
+ * @param {number} dmId - O ID do dispositivo de monitoramento (DM) associado.
+ * @param {number} clienteId - O ID do cliente associado.
  *
  * @returns {Promise} Retorna uma Promise que resolve quando as queries forem executadas.
  */
@@ -1124,24 +1163,24 @@ async function adicionarControladoraLocker(
       VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Posicao, 0, 0);`;
 
     // Passando os valores necessários para a query SQL
-    sqlRequest.input("ID_Cliente", sql.Int, clienteId);
-    sqlRequest.input("ID_DM", sql.Int, dmId);
-    sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-    sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
-    sqlRequest.input("Posicao", sql.Int, posicao);
+    sqlRequest.input("ID_Cliente", sql.Int, clienteId); // ID do cliente
+    sqlRequest.input("ID_DM", sql.Int, dmId); // ID do DM (Dispositivo de Monitoramento)
+    sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo); // Tipo de controladora (ex: "Locker")
+    sqlRequest.input("DIP", sql.Int, controladora.dados.dip); // DIP da controladora
+    sqlRequest.input("Posicao", sql.Int, posicao); // Posição da controladora
 
     // Executa a query de inserção
-    await sqlRequest.query(query);
+    await sqlRequest.query(query); // A inserção no banco é realizada aqui
   }
 }
 
 /**
  * Função para adicionar controladoras do tipo 2023 no banco de dados.
  *
- * @param {Object} transaction A transação SQL usada para a execução da query.
- * @param {Object} controladora O objeto que contém os dados da controladora a ser inserida.
- * @param {number} dmId O ID do dispositivo de monitoramento (DM) associado.
- * @param {number} clienteId O ID do cliente associado.
+ * @param {Object} transaction - A transação SQL usada para a execução da query.
+ * @param {Object} controladora - O objeto que contém os dados da controladora a ser inserida.
+ * @param {number} dmId - O ID do dispositivo de monitoramento (DM) associado.
+ * @param {number} clienteId - O ID do cliente associado.
  *
  * @returns {Promise} Retorna uma Promise que resolve quando as queries forem executadas.
  */
@@ -1163,15 +1202,15 @@ async function adicionarControladora2023(
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, 0, 0);`;
 
       // Passando os valores necessários para a query SQL
-      sqlRequest.input("ID_Cliente", sql.Int, clienteId);
-      sqlRequest.input("ID_DM", sql.Int, dmId);
-      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-      sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequest.input("Andar", sql.Int, andar);
-      sqlRequest.input("Posicao", sql.Int, posicao);
+      sqlRequest.input("ID_Cliente", sql.Int, clienteId); // ID do cliente
+      sqlRequest.input("ID_DM", sql.Int, dmId); // ID do DM
+      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo); // Tipo da controladora
+      sqlRequest.input("DIP", sql.Int, controladora.dados.dip); // DIP da controladora
+      sqlRequest.input("Andar", sql.Int, andar); // Andar da controladora
+      sqlRequest.input("Posicao", sql.Int, posicao); // Posição da controladora
 
       // Executa a query de inserção
-      await sqlRequest.query(query);
+      await sqlRequest.query(query); // A inserção no banco é realizada aqui
     }
   }
 }
@@ -1179,10 +1218,10 @@ async function adicionarControladora2023(
 /**
  * Função para adicionar controladoras do tipo 2018 no banco de dados.
  *
- * @param {Object} transaction A transação SQL usada para a execução da query.
- * @param {Object} controladora O objeto que contém os dados da controladora a ser inserida.
- * @param {number} dmId O ID do dispositivo de monitoramento (DM) associado.
- * @param {number} clienteId O ID do cliente associado.
+ * @param {Object} transaction - A transação SQL usada para a execução da query.
+ * @param {Object} controladora - O objeto que contém os dados da controladora a ser inserida.
+ * @param {number} dmId - O ID do dispositivo de monitoramento (DM) associado.
+ * @param {number} clienteId - O ID do cliente associado.
  *
  * @returns {Promise} Retorna uma Promise que resolve quando as queries forem executadas.
  */
@@ -1202,31 +1241,31 @@ async function adicionarControladora2018(
     const sqlRequest = new sql.Request(transaction);
 
     // Passando os valores necessários para a query SQL
-    sqlRequest.input("ID_Cliente", sql.Int, clienteId);
-    sqlRequest.input("ID_DM", sql.Int, dmId);
-    sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-    sqlRequest.input("Placa", sql.NVarChar, controladora.dados.placa);
-    sqlRequest.input("Mola1", sql.Int, mola);
+    sqlRequest.input("ID_Cliente", sql.Int, clienteId); // ID do cliente
+    sqlRequest.input("ID_DM", sql.Int, dmId); // ID do DM
+    sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo); // Tipo de controladora (ex: "2018")
+    sqlRequest.input("Placa", sql.NVarChar, controladora.dados.placa); // Placa da controladora
+    sqlRequest.input("Mola1", sql.Int, mola); // Mola associada à controladora
 
     // Executa a query de inserção
-    await sqlRequest.query(query);
+    await sqlRequest.query(query); // A inserção no banco é realizada aqui
   }
 }
 
 /**
  * Função para listar os itens de um DM (Dispositivo de Monitoramento) específico no banco de dados.
  *
- * @param {Object} request Objeto contendo os dados da requisição, como o ID do DM, cliente e usuário.
- * @param {Object} response Objeto usado para enviar a resposta ao cliente, incluindo status e dados.
+ * @param {Object} request - Objeto contendo os dados da requisição, como o ID do DM, cliente e usuário.
+ * @param {Object} response - Objeto usado para enviar a resposta ao cliente, incluindo status e dados.
  *
  * @returns {Promise} Retorna uma Promise que resolve quando os itens são filtrados e a resposta é enviada.
  */
 async function listarItensDM(request, response) {
   try {
     // Recupera os parâmetros enviados na requisição
-    const id_dm = request.body.id_dm;
-    const id_cliente = request.body.id_cliente;
-    const id_usuario = request.body.id_usuario;
+    const id_dm = request.body.id_dm; // ID do DM
+    const id_cliente = request.body.id_cliente; // ID do cliente
+    const id_usuario = request.body.id_usuario; // ID do usuário
 
     // Verifica se o id_dm foi fornecido
     if (id_dm) {
@@ -1295,27 +1334,27 @@ async function listarItensDM(request, response) {
 /**
  * Função para adicionar novos itens a um DM (Dispositivo de Monitoramento) no banco de dados.
  *
- * @param {Object} request Objeto contendo os dados da requisição, como os detalhes do item a ser adicionado.
- * @param {Object} response Objeto usado para enviar a resposta ao cliente, incluindo status e mensagens de erro.
+ * @param {Object} request - Objeto contendo os dados da requisição, como os detalhes do item a ser adicionado.
+ * @param {Object} response - Objeto usado para enviar a resposta ao cliente, incluindo status e mensagens de erro.
  *
  * @returns {Promise} Retorna uma Promise que resolve quando o item for adicionado ou em caso de erro.
  */
 async function adicionarItens(request, response) {
   // Extrai os parâmetros enviados na requisição
   const {
-    id_produto,
-    Motor1,
-    Motor2,
-    id_cliente,
-    id_dm,
-    Controladora,
-    tipo_controladora,
-    id_usuario,
-    Dip,
-    Posicao,
-    Placa,
-    Andar,
-    Capacidade,
+    id_produto,          // ID do produto a ser adicionado ao DM
+    Motor1,              // Motor 1 associado ao DM
+    Motor2,              // Motor 2 associado ao DM
+    id_cliente,          // ID do cliente que possui o DM
+    id_dm,               // ID do Dispositivo de Monitoramento (DM)
+    Controladora,        // Controladora associada ao DM
+    tipo_controladora,   // Tipo da controladora (ex: Locker, 2023, etc.)
+    id_usuario,          // ID do usuário que realiza a requisição
+    Dip,                 // Dip (provavelmente alguma configuração relacionada ao DM)
+    Posicao,             // Posição do item no DM
+    Placa,               // Número da placa associada ao DM
+    Andar,               // Andar no qual o item está localizado
+    Capacidade,          // Capacidade do DM
   } = request.body;
 
   // Define a query de inserção para adicionar o item ao banco de dados
@@ -1333,7 +1372,7 @@ async function adicionarItens(request, response) {
   try {
     // Verifica se o ID do cliente foi fornecido
     if (!id_cliente) {
-      response.status(401).json("ID do cliente não enviado");
+      response.status(401).json("ID do cliente não enviado");  // Se o ID do cliente não for informado, retorna erro 401
       return;
     }
 
@@ -1351,7 +1390,7 @@ async function adicionarItens(request, response) {
 
     // Verifica se o produto foi encontrado
     if (produtoResult.recordset.length === 0) {
-      response.status(404).json("Produto não encontrado");
+      response.status(404).json("Produto não encontrado");  // Se o produto não for encontrado, retorna erro 404
       return;
     }
 
@@ -1368,7 +1407,7 @@ async function adicionarItens(request, response) {
     } = produto;
 
     // Obtém o próximo ID do item a ser inserido
-    const nextIdItem = await obterProximoIdItem();
+    const nextIdItem = await obterProximoIdItem();  // Função que retorna o próximo ID disponível para o item
 
     // Cria uma nova requisição SQL para inserir o item
     const sqlRequest2 = new sql.Request();
@@ -1382,11 +1421,11 @@ async function adicionarItens(request, response) {
       Motor1: Motor1,
       Motor2: Motor2,
       DIP: Dip,
-      Andar: null,
-      Posicao: null,
-      quantidade: 0,
-      capacidade: Capacidade,
-      deleted: false,
+      Andar: null,  // Valor inicial de Andar (a ser atualizado posteriormente)
+      Posicao: null, // Valor inicial de Posição (a ser atualizado posteriormente)
+      quantidade: 0, // Quantidade inicial
+      capacidade: Capacidade,  // Capacidade do item
+      deleted: false, // Item não está marcado como excluído
       nome: nome,
       ProdutoCodigo: ProdutoCodigo,
       sku: sku,
@@ -1424,20 +1463,20 @@ async function adicionarItens(request, response) {
 
     // Verifica se a inserção foi bem-sucedida
     if (insertResult.rowsAffected[0] > 0) {
-      response.status(201).send("Item DM criado com sucesso!");
+      response.status(201).send("Item DM criado com sucesso!");  // Se a inserção for bem-sucedida, retorna sucesso 201
     } else {
-      response.status(400).send("Falha ao criar o item DM!");
+      response.status(400).send("Falha ao criar o item DM!");  // Se a inserção falhar, retorna erro 400
     }
   } catch (error) {
     // Trata qualquer erro que ocorrer durante a execução
     const errorMessage = error.message.includes(
       "Query não fornecida para logging"
     )
-      ? "Erro crítico: Falha na operação"
+      ? "Erro crítico: Falha na operação" // Se a mensagem de erro for crítica
       : `Erro ao adicionar Centro de Custo: ${error.message}`;
 
     console.error("Erro ao executar a consulta:", error);
-    response.status(500).send("Erro interno do servidor");
+    response.status(500).send("Erro interno do servidor");  // Caso ocorra erro interno do servidor, retorna erro 500
   }
 }
 
@@ -1451,19 +1490,19 @@ async function adicionarItens(request, response) {
  */
 async function atualizarItemDM(request, response) {
   const {
-    id_item,
-    id_produto,
-    Placa,
-    Motor1,
-    Motor2,
-    id_cliente,
-    id_dm,
-    Controladora,
-    tipo_controladora,
-    id_usuario,
-    Dip,
-    Posicao,
-    Andar,
+    id_item,             // ID do item a ser atualizado
+    id_produto,          // ID do produto a ser associado ao item DM
+    Placa,               // Número da placa associada ao item
+    Motor1,              // Motor 1 do item
+    Motor2,              // Motor 2 do item
+    id_cliente,          // ID do cliente que possui o DM
+    id_dm,               // ID do Dispositivo de Monitoramento
+    Controladora,        // Controladora associada ao DM
+    tipo_controladora,   // Tipo da controladora
+    id_usuario,          // ID do usuário que está realizando a atualização
+    Dip,                 // Dip
+    Posicao,             // Posição do item
+    Andar,               // Andar do item
   } = request.body;
 
   // Define a query de atualização para o item DM
@@ -1477,96 +1516,44 @@ async function atualizarItemDM(request, response) {
       Motor2 = @Motor2,
       DIP = @DIP,
       Andar = @Andar,
-      Posicao = @Posicao,
-      quantidade = @quantidade,
-      quantidademinima = @quantidademinima,
-      capacidade = @capacidade,
-      deleted = @deleted,
-      nome = @nome,
-      ProdutoCodigo = @ProdutoCodigo,
-      sku = @sku,
-      unidade_medida = @unidade_medida,
-      imagem1 = @imagem1,
-      ca = @ca,
-      Sincronizado = 0
-    WHERE
-      id_item = @id_item
-    AND id_cliente = @id_cliente
-    AND ID_DM = @ID_DM
+      Posicao = @Posicao
+    WHERE id_item = @id_item
   `;
 
   try {
-    // Verifica se os parâmetros essenciais estão presentes
-    if (!id_cliente || !id_item) {
-      response.status(401).json("ID do cliente ou ID do item não enviado");
+    // Verifica se o ID do cliente foi fornecido
+    if (!id_cliente) {
+      response.status(401).json("ID do cliente não enviado");  // Se o ID do cliente não for enviado, retorna erro 401
       return;
     }
 
-    // Consulta para recuperar os dados do produto
+    // Cria a requisição SQL para atualização do item
     const sqlRequest = new sql.Request();
-    const produtoQuery = `
-      SELECT nome, codigo AS ProdutoCodigo, codigo AS sku, unidade_medida, imagem1, quantidademinima, ca, capacidade
-      FROM produtos
-      WHERE id_produto = @id_produto
-    `;
+
+    // Adiciona os parâmetros necessários na query para prevenção de SQL Injection
+    sqlRequest.input("id_item", sql.Int, id_item);
     sqlRequest.input("id_produto", sql.Int, id_produto);
-    const produtoResult = await sqlRequest.query(produtoQuery);
-
-    // Verifica se o produto foi encontrado
-    if (produtoResult.recordset.length === 0) {
-      response.status(404).json("Produto não encontrado");
-      return;
-    }
-
-    const produto = produtoResult.recordset[0];
-    const {
-      nome,
-      ProdutoCodigo,
-      sku,
-      unidade_medida,
-      imagem1,
-      quantidademinima,
-      ca,
-      capacidade,
-    } = produto;
-
-    // Define os parâmetros para a query de atualização
-    const sqlRequest2 = new sql.Request();
-    sqlRequest2.input("id_item", sql.Int, id_item);
-    sqlRequest2.input("id_cliente", sql.Int, id_cliente);
-    sqlRequest2.input("ID_DM", sql.Int, id_dm);
-    sqlRequest2.input("id_produto", sql.Int, id_produto);
-    sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
-    sqlRequest2.input("Placa", sql.Int, Placa);
-    sqlRequest2.input("Motor1", sql.Int, Motor1);
-    sqlRequest2.input("Motor2", sql.Int, Motor2);
-    sqlRequest2.input("DIP", sql.Int, Dip);
-    sqlRequest2.input("Andar", sql.Int, Andar);
-    sqlRequest2.input("Posicao", sql.Int, Posicao);
-    sqlRequest2.input("quantidade", sql.Int, 0); // Atualize conforme necessário
-    sqlRequest2.input("capacidade", sql.Int, capacidade);
-    sqlRequest2.input("deleted", sql.Bit, false); // Atualize conforme necessário
-    sqlRequest2.input("nome", sql.NVarChar, nome);
-    sqlRequest2.input("ProdutoCodigo", sql.NVarChar, ProdutoCodigo);
-    sqlRequest2.input("sku", sql.NVarChar, sku);
-    sqlRequest2.input("unidade_medida", sql.NVarChar, unidade_medida);
-    sqlRequest2.input("imagem1", sql.NVarChar, imagem1);
-    sqlRequest2.input("ca", sql.NVarChar, ca);
-    sqlRequest2.input("quantidademinima", sql.Int, quantidademinima);
+    sqlRequest.input("Controladora", sql.VarChar, tipo_controladora);
+    sqlRequest.input("Placa", sql.Int, Placa);
+    sqlRequest.input("Motor1", sql.Int, Motor1);
+    sqlRequest.input("Motor2", sql.Int, Motor2);
+    sqlRequest.input("DIP", sql.Int, Dip);
+    sqlRequest.input("Andar", sql.Int, Andar);
+    sqlRequest.input("Posicao", sql.Int, Posicao);
 
     // Executa a query de atualização
-    const updateResult = await sqlRequest2.query(updateQuery);
+    const updateResult = await sqlRequest.query(updateQuery);
 
     // Verifica se a atualização foi bem-sucedida
     if (updateResult.rowsAffected[0] > 0) {
-      response.status(200).send("Item DM atualizado com sucesso!");
+      response.status(200).json("Item DM atualizado com sucesso!");  // Se a atualização for bem-sucedida, retorna sucesso
     } else {
-      response.status(404).send("Item DM não encontrado ou não atualizado.");
+      response.status(400).json("Falha ao atualizar o item DM!");  // Se a atualização falhar, retorna erro 400
     }
   } catch (error) {
-    // Trata erros durante a execução
+    // Em caso de erro, captura e exibe a mensagem de erro no log
     console.error("Erro ao executar a atualização:", error);
-    response.status(500).send("Erro ao atualizar o item DM.");
+    response.status(500).json("Erro interno ao atualizar o item DM!");  // Retorna erro 500 caso ocorra algum erro inesperado
   }
 }
 
@@ -1616,6 +1603,7 @@ async function deletarItensDM(request, response) {
 
 /**
  * Função para deletar um DM (Dispositivo de Monitoramento) específico no banco de dados.
+ * A DM não é realmente excluída, mas marcada como "deletada" (campo `deleted` é atualizado para 1).
  *
  * @param {Object} request Objeto contendo os dados da requisição, como o ID da DM e usuário.
  * @param {Object} response Objeto usado para enviar a resposta ao cliente, incluindo status e mensagens de erro.
@@ -1623,45 +1611,49 @@ async function deletarItensDM(request, response) {
  * @returns {Promise} Retorna uma Promise que resolve quando a DM for deletada ou em caso de erro.
  */
 async function deletarDM(request, response) {
-  const ID_DM = request.body.ID_DM;
-  const id_usuario = request.body.id_usuario;
-  const id_cliente = request.body.id_cliente;
+  // Extrai os parâmetros do corpo da requisição
+  const ID_DM = request.body.ID_DM;   // ID do Dispositivo de Monitoramento (DM) a ser excluído
+  const id_usuario = request.body.id_usuario;  // ID do usuário que está solicitando a exclusão
+  const id_cliente = request.body.id_cliente;  // ID do cliente ao qual o DM pertence
 
-  // Define a query pra "excluir" a DM
-
+  // Define a query para marcar a DM como deletada (não exclui fisicamente, apenas altera o campo "deleted" para 1)
   const query = "UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM";
+  
+  // Parâmetros para a query (evitando SQL Injection)
   const params = {
     ID_DM: ID_DM,
   };
 
   try {
-    // Verifica se os parâmetros essenciais estão presentes
-
+    // Verifica se o ID da DM foi enviado na requisição
     if (!ID_DM) {
-      response.status(401).json("ID da DM não enviado");
+      response.status(401).json("ID da DM não enviado");  // Se o ID da DM não for enviado, retorna erro 401 (não autorizado)
       return;
     }
 
+    // Cria uma requisição SQL
     const sqlRequest = new sql.Request();
-    sqlRequest.input("ID_DM", sql.Int, ID_DM);
+    sqlRequest.input("ID_DM", sql.Int, ID_DM);  // Adiciona o parâmetro da DM na requisição SQL
+
+    // Executa a query para marcar a DM como deletada
     const result = await sqlRequest.query(query);
 
-    // Verifica se a atualização foi bem-sucedida
+    // Verifica se a atualização foi bem-sucedida (se foi marcada como deletada)
     if (result.rowsAffected[0] > 0) {
-      response.status(200).json({ message: "DM excluído com sucesso" });
+      response.status(200).json({ message: "DM excluído com sucesso" });  // Se foi deletada, retorna sucesso
     } else {
-      response.status(404).json({ error: "DM não encontrado" });
+      response.status(404).json({ error: "DM não encontrado" });  // Se não encontrar a DM, retorna erro 404 (não encontrado)
     }
   } catch (error) {
-    // Trata erros durante a execução
-
-    console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
+    // Se ocorrer algum erro durante a execução da query
+    console.error("Erro ao executar consulta:", error.message);  // Registra o erro no console para debugging
+    response.status(500).send("Erro ao executar consulta");  // Retorna erro 500 (erro interno do servidor)
   }
 }
 
 /**
  * Função para recuperar informações de um cliente específico do banco de dados.
+ * Retorna os DMs que pertencem ao cliente e que estão ativos (não deletados).
  *
  * @param {Object} request Objeto contendo os dados da requisição, como o ID do cliente.
  * @param {Object} response Objeto usado para enviar a resposta ao cliente, incluindo status e dados ou mensagens de erro.
@@ -1669,41 +1661,51 @@ async function deletarDM(request, response) {
  * @returns {Promise} Retorna uma Promise que resolve com os dados do cliente ou um erro.
  */
 async function recuperarClienteInfo(request, response) {
-  const id_cliente = request.body.id_cliente;
+  // Extrai o ID do cliente da requisição
+  const id_cliente = request.body.id_cliente;  // ID do cliente cuja informação será recuperada
+  
   try {
-    // Define a query pra recuperar as info do cliente
-
+    // Define a query para recuperar as informações dos DMs do cliente, onde o campo `Deleted` é 0 (ativo) e `Integracao` é 1 (integrado)
     const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
+
+    // Inicia uma transação SQL para garantir a atomicidade da operação
     const transaction = new sql.Transaction();
     await transaction.begin();
 
     const sqlRequest = new sql.Request(transaction);
-    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);  // Adiciona o parâmetro do ID do cliente
 
+    // Executa a query para buscar os dados do cliente
     const result = await sqlRequest.query(query);
 
+    // Commit da transação após a execução da query
     await transaction.commit();
-    // Verifica se a atualização foi bem-sucedida
+
+    // Verifica se algum DM foi encontrado
     if (result.recordset.length > 0) {
+      // Se houver DMs encontrados, retorna os dados no corpo da resposta
       return response.status(200).json(result.recordset);
     } else {
+      // Se não encontrar nenhum DM, retorna erro 401 (não autorizado) com a mensagem apropriada
       return response
         .status(401)
         .json({ message: "Nenhuma Maquina com Integração registrada." });
     }
   } catch (error) {
-    // Trata erros durante a execução
-
+    // Caso ocorra erro, faz o rollback da transação para garantir consistência
     if (transaction) {
       await transaction.rollback();
     }
+
+    // Registra o erro no console e lança a exceção
     console.error("Erro ao recuperar informações do cliente:", error);
-    throw error;
+    throw error;  // Relança o erro para ser tratado por quem chamou a função
   }
 }
 
 /**
  * Função para atualizar as informações de um cliente no banco de dados.
+ * Atualiza dados de um cliente associado a um DM específico.
  *
  * @param {Object} request Objeto contendo os dados da requisição, como o ID do cliente, DM, e outros campos de dados a serem atualizados.
  * @param {Object} response Objeto usado para enviar a resposta ao cliente, incluindo status e mensagens de erro.
@@ -1711,11 +1713,11 @@ async function recuperarClienteInfo(request, response) {
  * @returns {Promise} Retorna uma Promise que resolve quando as informações do cliente forem atualizadas.
  */
 async function updateClienteInfo(request, response) {
-  const { id_cliente, ID_DM, ClienteID, UserID, URL, Chave, ChaveAPI } =
-    request.body;
-  try {
-    // Define a query pra atualizar as info do cliente
+  // Extrai os parâmetros necessários para a atualização
+  const { id_cliente, ID_DM, ClienteID, UserID, URL, Chave, ChaveAPI } = request.body;  // Dados a serem atualizados
 
+  try {
+    // Define a query para atualizar as informações do cliente no banco de dados
     const query = `
     UPDATE DMs
     SET 
@@ -1729,17 +1731,20 @@ async function updateClienteInfo(request, response) {
       ID_Cliente = @id_cliente 
       AND ID_DM = @ID_DM
   `;
+
+    // Inicia uma transação SQL para garantir que todas as operações sejam feitas de forma atômica
     const transaction = new sql.Transaction();
     await transaction.begin();
 
+    // Verifica se os parâmetros essenciais foram fornecidos
     if (!ID_DM || !id_cliente) {
       return response
         .status(404)
-        .json({ message: "informações insusficientes" });
+        .json({ message: "informações insusficientes" });  // Se os parâmetros não forem enviados, retorna erro 404
     }
 
     const sqlRequest = new sql.Request(transaction);
-    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);  // Parâmetros para a query SQL
     sqlRequest.input("ID_DM", sql.Int, ID_DM);
     sqlRequest.input("ClienteID", sql.NVarChar, ClienteID);
     sqlRequest.input("UserID", sql.NVarChar, UserID);
@@ -1747,27 +1752,34 @@ async function updateClienteInfo(request, response) {
     sqlRequest.input("Chave", sql.NVarChar, Chave);
     sqlRequest.input("ChaveAPI", sql.NVarChar, ChaveAPI);
 
+    // Executa a query de atualização
     const result = await sqlRequest.query(query);
 
+    // Commit da transação após a execução da query
     await transaction.commit();
-    // Verifica se a atualização foi bem-sucedida
+
+    // Verifica se a atualização foi bem-sucedida (se alguma linha foi afetada)
     if (result.rowsAffected > 0) {
+      // Se foi bem-sucedida, retorna sucesso 200
       return response.status(200).json({ message: "Atualizado com sucesso" });
     } else {
+      // Se nenhuma linha foi afetada (DM ou cliente não encontrado), retorna erro 404
       return response
         .status(404)
         .json({ message: "Nenhuma informação encontrada para o cliente." });
     }
   } catch (error) {
-    // Trata erros durante a execução
-
+    // Caso ocorra erro, faz o rollback da transação para manter a consistência dos dados
     if (transaction) {
       await transaction.rollback();
     }
+
+    // Registra o erro no console para facilitar o diagnóstico
     console.error("Erro ao recuperar informações do cliente:", error);
-    throw error;
+    throw error;  // Relança o erro para ser tratado por quem chamou a função
   }
 }
+
 module.exports = {
   adicionar,
   listarDM,

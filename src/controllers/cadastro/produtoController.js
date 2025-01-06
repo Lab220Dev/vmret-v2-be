@@ -74,7 +74,7 @@ async function listarProdutos(request, response) {
 async function listarProdutosResumo(request, response) {
   try {
     // Consulta SQL para buscar id_produto, código e nome dos produtos
-    let query = "SELECT id_produto, codigo, nome FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY codigo";
+    let query = `SELECT id_produto, codigo, nome FROM produtos WHERE id_cliente = '${request.body.id_cliente}' AND deleted = 0 ORDER BY codigo`;
     const result = await new sql.Request().query(query); // Executa a consulta no banco de dados
     response.status(200).json(result.recordset); // Retorna os dados dos produtos
   } catch (error) {

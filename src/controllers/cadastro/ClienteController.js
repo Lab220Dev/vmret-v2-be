@@ -165,6 +165,7 @@ async function inserirSubmenu(
     );
     return submenuId;
   } else {
+    // Caso não tenha subsubmenus, insere o submenu com ID_Sub_Item 0.
     await sqlRequest.query(`
             INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
             VALUES (@ID_Item, 0, @Cod_Cli, @Nome, @Perfil, @to)
