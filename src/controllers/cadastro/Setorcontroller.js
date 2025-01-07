@@ -230,12 +230,10 @@ async function deletarProduto(request, response) {
         response.status(404).json({ message: "Item não encontrado" });
       }
     } else {
-      response
-        .status(400)
-        .json({
-          message:
-            "Dados incompletos: id_produto, id_cliente ou id_setor não fornecidos",
-        });
+      response.status(400).json({
+        message:
+          "Dados incompletos: id_produto, id_cliente ou id_setor não fornecidos",
+      });
     }
   } catch (error) {
     console.error("Erro ao executar a consulta de deleção:", error.message);
@@ -294,12 +292,10 @@ async function atualizarproduto(request, response) {
           .json({ message: "Erro ao atualizar a quantidade" });
       }
     } else {
-      return response
-        .status(400)
-        .json({
-          message:
-            "Dados incompletos: id_produto, id_cliente, id_setor ou qtd_limite não fornecidos",
-        });
+      return response.status(400).json({
+        message:
+          "Dados incompletos: id_produto, id_cliente, id_setor ou qtd_limite não fornecidos",
+      });
     }
   } catch (error) {
     console.error("Erro ao executar a consulta de atualização:", error.message);
@@ -400,34 +396,37 @@ async function atualizar(request, response) {
     response.status(500).send("Erro ao atualizar registro");
   }
 }
-
 async function deleteFuncao(request, response) {
-  let query = "UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor";
+  const query = "UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor";
   const id_setor = request.body.id_setor;
   const id_cliente = request.body.id_cliente;
   const id_usuario = request.body.id_usuario;
-  const params = {
-    id_setor: id_setor,
-  };
+
+  const params = { id_setor };
+
   try {
-    if (id_setor) {
-      const sqlRequest = new sql.Request();
-      sqlRequest.input("id_setor", sql.Int, id_setor);
-      const result = await sqlRequest.query(query);
-      if (result.rowsAffected[0] > 0) {
-        // logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
-        response.status(200).json(result.recordset);
-      } else {
-        //  logQuery('error', `Erro ao excluir: ${id_setor} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-        response
-          .status(400)
-          .send("Nenhuma alteração foi feita no centro de custo.");
-      }
+    if (!id_setor || typeof id_setor !== "number") {
+      response.status(400).json("ID do Setor inválido");
+      return;
     }
-    response.status(401).json("ID do Setor não foi enviado");
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_setor", sql.Int, id_setor);
+
+    const result = await sqlRequest.query(query);
+
+    if (result.rowsAffected[0] > 0) {
+      logQuery("info",`O usuário ${id_usuario} deletou o Centro de Custo ${id_setor}`,"sucesso","DELETE", id_cliente,id_usuario,query,params);
+      response.status(200).json(result.recordset);
+      return;
+    } else {
+      logQuery("error",`Erro ao excluir: ${id_setor} não encontrado.`,"erro","DELETE",id_cliente,id_usuario,query,params);
+      response.status(400).send("Nenhuma alteração foi feita no centro de custo.");
+      return;
+    }
   } catch (error) {
-    console.error("Erro ao excluir:", error.message);
-    response.status(500).send("Erro ao excluir");
+    console.error("Erro ao excluir setor:", error.message);
+    response.status(500).send("Erro interno no servidor");
   }
 }
 

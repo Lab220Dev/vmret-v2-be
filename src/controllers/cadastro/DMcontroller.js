@@ -23,7 +23,8 @@ const listarDM = async (request, response) => {
           Controladoras.Andar, 
           Controladoras.Posicao, 
           Controladoras.Mola1, 
-          Controladoras.Mola2
+          Controladoras.Mola2, 
+          Controladoras.Deleted as ControladoraDeleted
         FROM 
           DMS
         LEFT JOIN 
@@ -43,7 +44,8 @@ const listarDM = async (request, response) => {
           Controladoras.Andar, 
           Controladoras.Posicao, 
           Controladoras.Mola1, 
-          Controladoras.Mola2
+          Controladoras.Mola2, 
+          Controladoras.Deleted as ControladoraDeleted
         FROM 
           DMS
         LEFT JOIN 
@@ -69,7 +71,6 @@ const listarDM = async (request, response) => {
           Controladoras: [],
         });
       }
-
       if (row.ControladoraID) {
         let controladoraExistente;
 
@@ -87,29 +88,31 @@ const listarDM = async (request, response) => {
         }
 
         if (controladoraExistente) {
-          // Atualiza as listas dependendo do tipo da controladora
-          if (row.Tipo_Controladora === "2023") {
-            controladoraExistente.Andar = [
-              ...new Set([...controladoraExistente.Andar, row.Andar]),
-            ];
-            controladoraExistente.Posicao = [
-              ...new Set([...controladoraExistente.Posicao, row.Posicao]),
-            ];
-          } else if (row.Tipo_Controladora === "2018") {
-            controladoraExistente.Mola1 = [
-              ...new Set([...controladoraExistente.Mola1, row.Mola1]),
-            ];
-          } else if (row.Tipo_Controladora === "2024") {
-            controladoraExistente.Mola1 = [
-              ...new Set([...controladoraExistente.Mola1, row.Mola1]),
-            ];
-            controladoraExistente.Mola2 = [
-              ...new Set([...controladoraExistente.Mola2, row.Mola2]),
-            ];
-          } else if (row.Tipo_Controladora === "Locker") {
-            controladoraExistente.Mola1 = [
-              ...new Set([...controladoraExistente.Mola1, row.Posicao]),
-            ];
+          if (row.ControladoraDeleted === false) {
+            // Atualiza as listas dependendo do tipo da controladora
+            if (row.Tipo_Controladora === "2023") {
+              controladoraExistente.Andar = [
+                ...new Set([...controladoraExistente.Andar, row.Andar]),
+              ];
+              controladoraExistente.Posicao = [
+                ...new Set([...controladoraExistente.Posicao, row.Posicao]),
+              ];
+            } else if (row.Tipo_Controladora === "2018") {
+              controladoraExistente.Mola1 = [
+                ...new Set([...controladoraExistente.Mola1, row.Mola1]),
+              ];
+            } else if (row.Tipo_Controladora === "2024") {
+              controladoraExistente.Mola1 = [
+                ...new Set([...controladoraExistente.Mola1, row.Mola1]),
+              ];
+              controladoraExistente.Mola2 = [
+                ...new Set([...controladoraExistente.Mola2, row.Mola2]),
+              ];
+            } else if (row.Tipo_Controladora === "Locker") {
+              controladoraExistente.Mola1 = [
+                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+              ];
+            }
           }
         } else {
           dmsMap.get(dmId).Controladoras.push({
@@ -117,10 +120,10 @@ const listarDM = async (request, response) => {
             Tipo_Controladora: row.Tipo_Controladora,
             Placa: row.Placa,
             DIP: row.DIP,
-            Andar: row.Andar ? [row.Andar] : [],
-            Posicao: row.Posicao ? [row.Posicao] : [],
-            Mola1: row.Mola1 ? [row.Mola1] : [],
-            Mola2: row.Mola2 ? [row.Mola2] : [],
+            Andar:  row.ControladoraDeleted === false && row.Andar ? [row.Andar] : [],
+            Posicao: row.ControladoraDeleted === false && row.Posicao ? [row.Posicao] : [],
+            Mola1:  row.ControladoraDeleted === false && row.Mola1 ? [row.Mola1] : [],
+            Mola2:  row.ControladoraDeleted === false && row.Mola2 ? [row.Mola2] : [],
           });
         }
       }
@@ -176,8 +179,8 @@ async function inserirControladoraGenerica(
       sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest2.input("ID_DM", sql.Int, dmId);
       sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
-      sqlRequest2.input("Sincronizado", sql.Int, 0); 
-      sqlRequest2.input("Deleted", sql.Bit, false); 
+      sqlRequest2.input("Sincronizado", sql.Int, 0);
+      sqlRequest2.input("Deleted", sql.Bit, false);
       sqlRequest2.input("Placa", sql.Int, controladora.dados.placa);
       sqlRequest2.input("Mola1", sql.Int, mola);
       await sqlRequest2.query(queryControladora2018);
@@ -192,7 +195,7 @@ async function inserirControladoraGenerica(
         sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
         sqlRequest2.input("ID_DM", sql.Int, dmId);
         sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
-        sqlRequest2.input("Sincronizado", sql.Int, 0); 
+        sqlRequest2.input("Sincronizado", sql.Int, 0);
         sqlRequest2.input("Deleted", sql.Bit, false);
         sqlRequest2.input("DIP", sql.Int, controladora.dados.dip);
         sqlRequest2.input("Andar", sql.Int, andar);
@@ -209,7 +212,7 @@ async function inserirControladoraGenerica(
       sqlRequest2.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest2.input("ID_DM", sql.Int, dmId);
       sqlRequest2.input("Tipo_Controladora", sql.NVarChar, tipoControladora);
-      sqlRequest2.input("Sincronizado", sql.Int, 0); 
+      sqlRequest2.input("Sincronizado", sql.Int, 0);
       sqlRequest2.input("Deleted", sql.Bit, false);
       sqlRequest2.input("DIP", sql.Int, controladora.dados.dip);
       sqlRequest2.input("Posicao", sql.Int, posicao);
@@ -443,26 +446,65 @@ async function atualizar(request, response) {
     );
     // Mapeia as controladoras existentes com base no identificador único (placa, DIP)
     const existingControladorasMap = new Map();
+
     resultControladoras.recordset.forEach((ctrl) => {
-      if (ctrl.Tipo_Controladora === "2018") {
-        existingControladorasMap.set(ctrl.Placa, ctrl); // Mapeia por placa
-      } else if (
-        ctrl.Tipo_Controladora === "2023" ||
-        ctrl.Tipo_Controladora === "Locker"
-      ) {
-        existingControladorasMap.set(ctrl.DIP, ctrl); // Mapeia por DIP
+      // Define o identificador único
+      const identificador =
+        ctrl.Tipo_Controladora === "2018" || ctrl.Tipo_Controladora === "2024"
+          ? ctrl.Placa
+          : ctrl.DIP;
+
+      // Inicializa o grupo se não existir
+      if (!existingControladorasMap.has(identificador)) {
+        existingControladorasMap.set(identificador, {
+          Tipo_Controladora: ctrl.Tipo_Controladora,
+          Placa: ctrl.Placa,
+          DIP: ctrl.DIP,
+          Andar: [],
+          Posicao: [],
+          Mola1: [],
+          Mola2: [],
+        });
+      }
+
+      // Adiciona os valores únicos aos arrays correspondentes
+      const agrupado = existingControladorasMap.get(identificador);
+
+      if (ctrl.Andar && !agrupado.Andar.includes(ctrl.Andar)) {
+        agrupado.Andar.push(ctrl.Andar);
+      }
+      if (ctrl.Posicao && !agrupado.Posicao.includes(ctrl.Posicao)) {
+        agrupado.Posicao.push(ctrl.Posicao);
+      }
+      if (ctrl.Mola1 && !agrupado.Mola1.includes(ctrl.Mola1)) {
+        agrupado.Mola1.push(ctrl.Mola1);
+      }
+      if (ctrl.Mola2 && !agrupado.Mola2.includes(ctrl.Mola2)) {
+        agrupado.Mola2.push(ctrl.Mola2);
       }
     });
 
     // Atualiza ou insere controladoras com base no tipo
     for (const controladora of Controladoras) {
-      if (controladora.tipo === "2018") {
-        const existingControladora = existingControladorasMap.get(
+      let existingControladora;
+
+      // Busca a controladora no Map com base no tipo
+      if (controladora.tipo === "2018" || controladora.tipo === "2024") {
+        existingControladora = existingControladorasMap.get(
           controladora.dados.placa
         );
+      } else if (
+        controladora.tipo === "2023" ||
+        controladora.tipo === "Locker"
+      ) {
+        existingControladora = existingControladorasMap.get(
+          controladora.dados.dip
+        );
+      }
 
-        if (existingControladora) {
-          // Atualiza a controladora existente
+      if (existingControladora) {
+        // Atualiza a controladora existente
+        if (controladora.tipo === "2018") {
           await atualizarControladora2018(
             transaction,
             controladora,
@@ -470,21 +512,7 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else {
-          console.log(controladora);
-          await adicionarControladora2018(
-            transaction,
-            controladora,
-            ID_DM,
-            IDcliente
-          );
-        }
-      } else if (controladora.tipo === "2023") {
-        const existingControladora = existingControladorasMap.get(
-          controladora.dados.dip
-        );
-
-        if (existingControladora) {
+        } else if (controladora.tipo === "2023") {
           await atualizarControladora2023(
             transaction,
             controladora,
@@ -492,20 +520,7 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else {
-          await adicionarControladora2023(
-            transaction,
-            controladora,
-            ID_DM,
-            IDcliente
-          );
-        }
-      } else if (controladora.tipo === "Locker") {
-        const existingControladora = existingControladorasMap.get(
-          controladora.dados.dip
-        );
-
-        if (existingControladora) {
+        } else if (controladora.tipo === "Locker") {
           await atualizarControladoraLocker(
             transaction,
             controladora,
@@ -513,20 +528,7 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else {
-          await adicionarControladoraLocker(
-            transaction,
-            controladora,
-            ID_DM,
-            IDcliente
-          );
-        }
-      } else if (controladora.tipo === "2024") {
-        const existingControladora = existingControladorasMap.get(
-          controladora.dados.placa
-        );
-
-        if (existingControladora) {
+        } else if (controladora.tipo === "2024") {
           await atualizarControladora2024(
             transaction,
             controladora,
@@ -534,7 +536,31 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else {
+        }
+      } else {
+        // Insere a nova controladora
+        if (controladora.tipo === "2018") {
+          await adicionarControladora2018(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        } else if (controladora.tipo === "2023") {
+          await adicionarControladora2023(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        } else if (controladora.tipo === "Locker") {
+          await adicionarControladoraLocker(
+            transaction,
+            controladora,
+            ID_DM,
+            IDcliente
+          );
+        } else if (controladora.tipo === "2024") {
           await adicionarControladora2024(
             transaction,
             controladora,
@@ -923,7 +949,7 @@ async function listarItensDM(request, response) {
           Posicao: posicao,
           modelo: modeloControladora,
           mola: row.Motor1,
-          Capacidade: row.capacidade
+          Capacidade: row.capacidade,
         };
       });
 
@@ -951,7 +977,7 @@ async function adicionarItens(request, response) {
     Posicao,
     Placa,
     Andar,
-    Capacidade
+    Capacidade,
   } = request.body;
 
   const insertQuery = `INSERT INTO DM_itens (
@@ -1258,31 +1284,34 @@ async function deletarDM(request, response) {
 async function recuperarClienteInfo(request, response) {
   const id_cliente = request.body.id_cliente;
   try {
-  const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
-  const transaction = new sql.Transaction(); 
-    await transaction.begin(); 
+    const query = `SELECT ID_DM, Identificacao, ClienteID, UserID, URL, Chave, ChaveAPI FROM DMs WHERE ID_Cliente = @id_cliente AND Deleted = 0 AND Integracao = 1`;
+    const transaction = new sql.Transaction();
+    await transaction.begin();
 
     const sqlRequest = new sql.Request(transaction);
-    sqlRequest.input('id_cliente', sql.Int, id_cliente);
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     const result = await sqlRequest.query(query);
-    
+
     await transaction.commit();
     if (result.recordset.length > 0) {
       return response.status(200).json(result.recordset);
     } else {
-      return response.status(401).json({ message: "Nenhuma Maquina com Integração registrada." });
+      return response
+        .status(401)
+        .json({ message: "Nenhuma Maquina com Integração registrada." });
     }
   } catch (error) {
     if (transaction) {
-      await transaction.rollback(); 
+      await transaction.rollback();
     }
     console.error("Erro ao recuperar informações do cliente:", error);
-    throw error; 
+    throw error;
   }
 }
 async function updateClienteInfo(request, response) {
-  const {id_cliente,ID_DM,ClienteID,UserID,URL,Chave ,ChaveAPI} = request.body;
+  const { id_cliente, ID_DM, ClienteID, UserID, URL, Chave, ChaveAPI } =
+    request.body;
   try {
     const query = `
     UPDATE DMs
@@ -1297,34 +1326,38 @@ async function updateClienteInfo(request, response) {
       ID_Cliente = @id_cliente 
       AND ID_DM = @ID_DM
   `;
-  const transaction = new sql.Transaction(); 
-    await transaction.begin(); 
-    if(!ID_DM || !id_cliente){
-      return response.status(404).json({ message: "informações insusficientes" });
+    const transaction = new sql.Transaction();
+    await transaction.begin();
+    if (!ID_DM || !id_cliente) {
+      return response
+        .status(404)
+        .json({ message: "informações insusficientes" });
     }
     const sqlRequest = new sql.Request(transaction);
-    sqlRequest.input('id_cliente', sql.Int, id_cliente);
-    sqlRequest.input('ID_DM', sql.Int, ID_DM);
-    sqlRequest.input('ClienteID', sql.NVarChar, ClienteID);
-    sqlRequest.input('UserID', sql.NVarChar, UserID);
-    sqlRequest.input('URL', sql.NVarChar, URL);
-    sqlRequest.input('Chave', sql.NVarChar, Chave);
-    sqlRequest.input('ChaveAPI', sql.NVarChar, ChaveAPI);
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    sqlRequest.input("ID_DM", sql.Int, ID_DM);
+    sqlRequest.input("ClienteID", sql.NVarChar, ClienteID);
+    sqlRequest.input("UserID", sql.NVarChar, UserID);
+    sqlRequest.input("URL", sql.NVarChar, URL);
+    sqlRequest.input("Chave", sql.NVarChar, Chave);
+    sqlRequest.input("ChaveAPI", sql.NVarChar, ChaveAPI);
 
     const result = await sqlRequest.query(query);
-    
+
     await transaction.commit();
     if (result.rowsAffected > 0) {
       return response.status(200).json({ message: "Atualizado com sucesso" });
     } else {
-      return response.status(404).json({ message: "Nenhuma informação encontrada para o cliente." });
+      return response
+        .status(404)
+        .json({ message: "Nenhuma informação encontrada para o cliente." });
     }
   } catch (error) {
     if (transaction) {
-      await transaction.rollback(); 
+      await transaction.rollback();
     }
     console.error("Erro ao recuperar informações do cliente:", error);
-    throw error; 
+    throw error;
   }
 }
 module.exports = {
@@ -1338,5 +1371,5 @@ module.exports = {
   deletarDM,
   listarDMResumido,
   recuperarClienteInfo,
-  updateClienteInfo
+  updateClienteInfo,
 };
