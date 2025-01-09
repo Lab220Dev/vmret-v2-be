@@ -94,7 +94,40 @@ router.post('/upload',autenticarToken,autorizarRoles(['Master','Administrador'])
         }
     }
 );
+router.post('/delete',autenticarToken,autorizarRoles(['Master','Administrador']), async (req, res) => {
+        let transaction;
 
+        try {
+            const { dmId } = req.body;
+            if (!dmId) {
+                return res.status(400).json({ error: 'Dados da DM não foram enviadas' });
+            }
+            const deleteVideoQuery = `
+                UPDATE DMs
+                SET Video = 'N', Sincronizado = 0
+                WHERE ID_DM = @ID_DM
+            `;
+
+            transaction = new sql.Transaction();
+            await transaction.begin();
+
+            const request = new sql.Request(transaction);
+            request.input("ID_DM", sql.Int, dmId);
+
+            await request.query(deleteVideoQuery);
+
+            await transaction.commit();
+
+            res.status(200).json({ message: 'Vídeo removido com sucesso!' });
+        } catch (error) {
+            if (transaction) {
+                await transaction.rollback();
+            }
+            console.error('Erro ao remover vídeo:', error);
+            res.status(500).json({ error: 'Erro ao remover vídeo.' });
+        }
+    }
+);
 router.get('/:Identificacao', async (req, res) => {
     const identificacao = req.params.Identificacao;
 
