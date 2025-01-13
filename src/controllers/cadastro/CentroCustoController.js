@@ -165,7 +165,7 @@ async function adicionar(request, response) {
  * @returns {void} - Retorna um status indicando o sucesso ou falha da operação.
  */
 async function deleteCentro(request, response) {
-  const { id_usuario, id_cliente, ID_CentroCusto } = request.body;  // Extrai os dados necessários da requisição.
+  const { ID_CentroCusto } = request.body;  // Extrai os dados necessários da requisição.
 
   try {
     // Verifica se o ID do Centro de Custo foi fornecido. Caso contrário, retorna erro 401.

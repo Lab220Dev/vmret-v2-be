@@ -200,6 +200,40 @@ async function atualizar(request, response) {
     }
 }
 
+async function deletePlanta(request, response) {
+    let query =
+        "UPDATE Plantas SET deleted = 1 WHERE id_planta = @id_planta";
+    const id_planta = request.body.id_planta;
+  
+    console.log("Recebido no corpo da requisição:", id_planta);  // Log para ver o conteúdo da requisição
+
+    if (!id_planta || !request.body.id_planta) {
+        console.log("ID da planta não encontrado no corpo da requisição");
+        return response.status(400).send("ID da planta não foi enviado");
+    }
+
+    const params = {
+          id_planta: id_planta,
+      };
+    try {
+      if (id_planta) {
+        const sqlRequest = new sql.Request();
+        sqlRequest.input("id_planta", sql.Int, id_planta);
+        const result = await sqlRequest.query(query);
+        if (result.rowsAffected[0] > 0) {
+          // logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${id_setor}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
+          response.status(200).json(result.recordset);
+        } else {
+          //  logQuery('error', `Erro ao excluir: ${id_setor} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+          response
+            .status(400)
+            .send("Nenhuma alteração foi feita no centro de custo.");
+        }
+      }
+    } catch (error) {
+      response.status(500).send("Erro ao excluir");
+    }
+  }
 /**
  * Exporta as funções para que possam ser usadas em outros módulos.
  */
@@ -207,5 +241,6 @@ module.exports = {
     adicionar,  // Função para adicionar uma nova planta.
     listar,     // Função para listar as plantas.
     atualizar,  // Função para atualizar uma planta.
-    listaSimlpes // Função para listar plantas de forma simplificada.
+    listaSimlpes, // Função para listar plantas de forma simplificada.
+    deletePlanta
 };

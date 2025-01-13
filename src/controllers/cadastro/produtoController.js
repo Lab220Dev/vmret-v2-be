@@ -4,7 +4,8 @@ const fs = require("fs").promises; // Importa o módulo 'fs' para manipulação 
 const multer = require("multer"); // Importa o módulo 'multer' para o processamento de uploads de arquivos
 const { logQuery } = require("../../utils/logUtils"); // Importa a função logQuery para registrar logs de consultas no banco de dados
 const storage = multer.memoryStorage(); // Define o armazenamento de arquivos na memória
-const upload = multer({ storage: storage }).fields([ // Configura o multer para aceitar múltiplos arquivos de diferentes campos
+const upload = multer({ storage: storage }).fields([
+  // Configura o multer para aceitar múltiplos arquivos de diferentes campos
   { name: "file_principal", maxCount: 1 }, // Define que o campo 'file_principal' pode ter no máximo 1 arquivo
   { name: "file_secundario", maxCount: 1 }, // Define que o campo 'file_secundario' pode ter no máximo 1 arquivo
   { name: "file_info", maxCount: 1 }, // Define que o campo 'file_info' pode ter no máximo 1 arquivo
@@ -13,7 +14,7 @@ const upload = multer({ storage: storage }).fields([ // Configura o multer para 
 /**
  * Função responsável por listar os produtos do banco de dados.
  * Recebe a requisição e retorna os produtos paginados com base nos parâmetros de busca.
- * 
+ *
  * @param {Object} request - O objeto da requisição que contém os parâmetros.
  * @param {Object} response - O objeto de resposta para enviar a resposta ao cliente.
  */
@@ -67,7 +68,7 @@ async function listarProdutos(request, response) {
 
 /**
  * Função responsável por listar os produtos de forma resumida.
- * 
+ *
  * @param {Object} request - O objeto da requisição.
  * @param {Object} response - O objeto de resposta.
  */
@@ -84,7 +85,7 @@ async function listarProdutosResumo(request, response) {
 }
 /**
  * Função para adicionar um novo produto no banco de dados.
- * 
+ *
  * @param {Object} request - O objeto da requisição que contém os dados do produto.
  * @param {Object} response - O objeto de resposta para enviar a resposta ao cliente.
  */
@@ -110,14 +111,15 @@ async function adicionarProdutos(request, response) {
     INSERT INTO produtos
     (id_cliente, id_categoria, nome, descricao, validadedias,
     imagem1, imagem2, imagemdetalhe, deleted, codigo,
-    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida, Sincronizado)
+    quantidademinima, capacidade, ca, id_planta, id_tipoProduto, unidade_medida,Sincronizado)
     VALUES
     (@id_cliente, @id_categoria, @nome, @descricao, @validadedias,
     @imagem1, @imagem2, @imagemdetalhe, @deleted, @codigo,
-    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida, @Sincronizado)
-  `;
+    @quantidademinima, @capacidade, @ca, @id_planta, @id_tipoProduto, @unidade_medida,@Sincronizado)
+`;
 
-  const params = { // Parâmetros que serão passados para a query SQL
+  const params = {
+    // Parâmetros que serão passados para a query SQL
     id_cliente: id_cliente,
     id_categoria: id_categoria,
     nome: nome,
@@ -126,7 +128,7 @@ async function adicionarProdutos(request, response) {
     imagem1: imagem1,
     imagem2: imagem2,
     imagemdetalhe: imagemdetalhe,
-    deleted: false, // Produto não está marcado como deletado
+    deleted: false,
     codigo: codigo,
     quantidademinima: 0,
     capacidade: 0,
@@ -164,9 +166,24 @@ async function adicionarProdutos(request, response) {
     };
 
     // Diretórios de upload com id_cliente antes da pasta principal
-    const uploadPathPrincipal = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "principal");
-    const uploadPathSecundario = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "secundario");
-    const uploadPathInfoAdicional = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "info");
+    const uploadPathPrincipal = path.join(
+      __dirname,
+      "../../uploads/produtos",
+      id_cliente.toString(),
+      "principal"
+    );
+    const uploadPathSecundario = path.join(
+      __dirname,
+      "../../uploads/produtos",
+      id_cliente.toString(),
+      "secundario"
+    );
+    const uploadPathInfoAdicional = path.join(
+      __dirname,
+      "../../uploads/produtos",
+      id_cliente.toString(),
+      "info"
+    );
 
     // Cria os diretórios se eles não existirem
     await fs.mkdir(uploadPathPrincipal, { recursive: true });
@@ -201,27 +218,39 @@ async function adicionarProdutos(request, response) {
       await fs.writeFile(imagemdetalhePath, file.buffer); // Salva o arquivo no sistema de arquivos
     }
 
-    // Atualiza os parâmetros com os caminhos dos arquivos
-    params.imagem1 = imagem1Path;
-    params.imagem2 = imagem2Path;
-    params.imagemdetalhe = imagemdetalhePath;
+    const requestSql = new sql.Request();
+    requestSql.input("id_cliente", sql.Int, id_cliente);
+    requestSql.input("id_categoria", sql.Int, id_categoria);
+    requestSql.input("nome", sql.VarChar, nome);
+    requestSql.input("descricao", sql.VarChar, descricao);
+    requestSql.input("validadedias", sql.Int, validadedias);
+    requestSql.input("imagem1", sql.VarChar, sanitizeFileName(imagem1));
+    requestSql.input("imagem2", sql.VarChar, sanitizeFileName(imagem2)); // Imagem secundária única
+    requestSql.input(
+      "imagemdetalhe",
+      sql.VarChar,
+      sanitizeFileName(imagemdetalhe)
+    );
+    requestSql.input("deleted", sql.Bit, false);
+    requestSql.input("Sincronizado", sql.Bit, 0);
+    requestSql.input("codigo", sql.VarChar, codigo);
+    requestSql.input("quantidademinima", sql.Int, 0);
+    requestSql.input("capacidade", sql.Int, 0);
+    requestSql.input("ca", sql.NVarChar, "");
+    requestSql.input("id_planta", sql.Int, id_planta);
+    requestSql.input("id_tipoProduto", sql.BigInt, id_tipoProduto);
+    requestSql.input("unidade_medida", sql.VarChar, unidade_medida);
 
-    // Executa a query SQL de inserção do novo produto
-    await new sql.Request().input("id_cliente", sql.Int, id_cliente)
-      .input("id_categoria", sql.Int, id_categoria)
-      .input("nome", sql.NVarChar, nome)
-      .input("descricao", sql.NVarChar, descricao)
-      .input("validadedias", sql.Int, validadedias)
-      .input("codigo", sql.NVarChar, codigo)
-      .input("id_planta", sql.Int, id_planta)
-      .input("id_tipoProduto", sql.Int, id_tipoProduto)
-      .input("unidade_medida", sql.NVarChar, unidade_medida)
-      .input("imagem1", sql.NVarChar, imagem1Path)
-      .input("imagem2", sql.NVarChar, imagem2Path)
-      .input("imagemdetalhe", sql.NVarChar, imagemdetalhePath)
-      .query(query); // Executa a query com os dados
+    const result = await requestSql.query(query);
 
-    response.status(200).send("Produto adicionado com sucesso!"); // Retorna sucesso para o cliente
+    if (result.rowsAffected[0] > 0) {
+      // logQuery('info', Usuário ${id_usuario} criou um novo Centro de Custo, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(201).json("Produto registrado com sucesso");
+      // Retorna sucesso para o cliente
+    } else {
+      //logQuery('error', Usuário ${id_usuario} falhou ao criar Centro de Custo, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      response.status(400).json("Erro ao registrar o Produto");
+    }
   } catch (error) {
     console.error("Erro ao adicionar produto:", error.message); // Log de erro no console
     response.status(500).send("Erro ao adicionar produto!"); // Retorna um erro ao cliente
@@ -235,7 +264,7 @@ async function adicionarProdutos(request, response) {
  */
 async function imagem1(request, response) {
   console.log(request.body); // Exibe os dados do corpo da requisição no console para fins de depuração.
-  
+
   // Verifica se algum arquivo foi enviado na requisição.
   if (!request.files) {
     return response.status(400).send("Nenhum arquivo foi enviado."); // Retorna erro caso não haja arquivos.
@@ -249,7 +278,7 @@ async function imagem1(request, response) {
  */
 async function imagem2(request, response) {
   console.log(request.body); // Exibe os dados do corpo da requisição no console para fins de depuração.
-  
+
   // Verifica se algum arquivo foi enviado na requisição.
   if (!request.files) {
     return response.status(400).send("Nenhum arquivo foi enviado."); // Retorna erro caso não haja arquivos.
@@ -263,7 +292,7 @@ async function imagem2(request, response) {
  */
 async function imagemdetalhe(request, response) {
   console.log(request.body); // Exibe os dados do corpo da requisição no console para fins de depuração.
-  
+
   // Verifica se algum arquivo foi enviado na requisição.
   if (!request.files) {
     return response.status(400).send("Nenhum arquivo foi enviado."); // Retorna erro caso não haja arquivos.
@@ -286,7 +315,7 @@ async function listarPlanta(request, response) {
       response.status(200).json(result.recordset); // Retorna as plantas encontradas no banco de dados.
       return;
     }
-    
+
     // Se o id_cliente não for fornecido, retorna erro 401 (não autorizado).
     response.status(401).json("ID do cliente não enviado");
   } catch (error) {
@@ -320,7 +349,9 @@ async function deleteProduto(request, response) {
         return response.status(200).json(result.recordset); // Retorna a resposta com os resultados da consulta.
       } else {
         // logQuery('error', `Erro ao excluir: ${id_produto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params); // Log comentado de erro.
-        return response.status(400).send("Nenhuma alteração foi feita no centro de custo."); // Retorna erro caso nenhum produto tenha sido deletado.
+        return response
+          .status(400)
+          .send("Nenhuma alteração foi feita no centro de custo."); // Retorna erro caso nenhum produto tenha sido deletado.
       }
     } else {
       return response.status(401).json("ID do produto não foi enviado"); // Retorna erro caso o id_produto não tenha sido fornecido.
@@ -354,7 +385,7 @@ async function atualizarProduto(request, response) {
     imagem2,
     imagemdetalhe,
   } = request.body; // Desestrutura os dados da requisição.
-  
+
   // Consulta SQL para atualizar os dados de um produto no banco de dados.
   const query = `
     UPDATE produtos
@@ -392,7 +423,7 @@ async function atualizarProduto(request, response) {
 
   try {
     const files = request.files; // Acessa os arquivos enviados na requisição.
-    
+
     // Verifica se o id_produto foi fornecido.
     if (!id_produto) {
       response.status(401).json("ID do produto não enviado"); // Retorna erro caso o id_produto não tenha sido enviado.
@@ -416,7 +447,7 @@ async function atualizarProduto(request, response) {
           .replace(/[\u0300-\u036f]/g, "") // Remove acentos.
           .replace(/[^a-zA-Z0-9 _]/g, "-") // Substitui caracteres especiais por '-'.
           .replace(/ /g, "_"); // Substitui espaços por '_'.
-        
+
         return `${nameWithoutExtension}${extension}`; // Retorna o nome sanitizado.
       } else {
         console.error("Filename is not a string:", filename); // Exibe erro caso o nome do arquivo não seja uma string.
