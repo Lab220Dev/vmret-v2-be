@@ -1,3 +1,4 @@
+
 const { logQuery } = require("../../utils/logUtils");
 const sql = require("mssql");
 
@@ -25,7 +26,7 @@ async function listaSimples(request, response) {
     const id_cliente = request.body.id_cliente;
     if (id_cliente) {
       const query =
-        "SELECT * FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
+        "SELECT id_setor,nome  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
       request = new sql.Request();
       request.input("id_cliente", sql.Int, id_cliente);
       const result = await request.query(query);
@@ -399,11 +400,10 @@ async function atualizar(request, response) {
 async function deleteFuncao(request, response) {
   const query = "UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor";
   const id_setor = request.body.id_setor;
-  const id_cliente = request.body.id_cliente;
-  const id_usuario = request.body.id_usuario;
 
-  const params = { id_setor };
-
+  const params = {
+    id_setor: id_setor,
+  };
   try {
     if (!id_setor || typeof id_setor !== "number") {
       response.status(400).json("ID do Setor inválido");

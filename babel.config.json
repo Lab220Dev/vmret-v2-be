@@ -1,9 +1,35 @@
 {
-    "presets": [],
-    "env": {
-      "production": {
-        "plugins": ["transform-remove-console"]
-      }
+  /**
+   * A configuração do Babel que define os presets e os plugins a serem usados no processo de transpiração do código.
+   */
+  "presets": [
+    // Um array vazio, o que significa que não estão sendo usados presets específicos.
+    // Presets são conjuntos de configurações que determinam como o código será transpilado. Neste caso, nenhum preset foi especificado.
+  ],
+
+  /**
+   * Configurações específicas para diferentes ambientes, como 'production' neste caso.
+   * O Babel pode usar essas configurações para aplicar plugins ou configurações diferentes dependendo do ambiente.
+   */
+  "env": {
+    /**
+     * Configuração para o ambiente de produção (produção de código).
+     * Aqui você pode definir configurações específicas para quando o código estiver em produção.
+     */
+    "production": {
+      
+      /**
+       * Lista de plugins a serem aplicados durante o processo de transpiração.
+       * Os plugins podem modificar o comportamento da transpiração de código.
+       */
+      "plugins": [
+        
+        /**
+         * O plugin 'transform-remove-console' é usado para remover todas as chamadas a `console.log`, `console.warn`, `console.error`, etc.
+         * Este plugin é geralmente utilizado para garantir que não haja logs de depuração no código final de produção.
+         */
+        "transform-remove-console" 
+      ]
     }
   }
-  
+}

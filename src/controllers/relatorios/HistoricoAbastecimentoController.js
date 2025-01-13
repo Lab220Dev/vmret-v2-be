@@ -1,3 +1,4 @@
+
 const sql = require("mssql");
 
 async function relatorio(request, response) {
@@ -41,7 +42,7 @@ async function relatorio(request, response) {
         a.id_cliente = @id_cliente
 `;
     if (id_dm && id_dm !== "") {
-        query += ' AND id_dm = @id_dm';
+        query += ' AND dm.id_dm = @id_dm';
         params.id_dm = id_dm;
       }
   
