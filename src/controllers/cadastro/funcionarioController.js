@@ -94,6 +94,87 @@ async function listarFuncionariosSimples(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function listarFuncionarios(request, response) {
+  try {
+    if (!request.body.id_cliente) {
+      return response.status(401).json({ error: "ID do cliente não enviado" });
+    }
+
+    const id_cliente = request.body.id_cliente;
+
+    const queryFuncionarios = `
+            SELECT *
+            FROM funcionarios 
+            WHERE id_cliente = @id_cliente 
+            AND deleted = 0
+        `;
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    const funcionariosResult = await sqlRequest.query(queryFuncionarios);
+    const funcionarios = funcionariosResult.recordset.map((funcionarios) => ({
+      ...funcionarios,
+      senha: "senhaAntiga", // Oculta a senha real
+    }));
+
+    if (!funcionarios.length) {
+      return response.status(200).json([]);
+    }
+    const queryItensFuncionario = `
+        SELECT *
+        FROM Ret_Item_Funcionario 
+        WHERE id_funcionario = @id_funcionario 
+        AND deleted = 0
+    `;
+    for (let funcionario of funcionarios) {
+      const sqlRequestItens = new sql.Request();
+      sqlRequestItens.input(
+        "id_funcionario",
+        sql.Int,
+        funcionario.id_funcionario
+      );
+
+      const itensResult = await sqlRequestItens.query(queryItensFuncionario);
+      const itens = itensResult.recordset;
+      funcionario.itens = itens;
+    }
+    response.status(200).json(funcionarios);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+async function listarFuncionariosRelatorio(request, response) {
+  try {
+    if (!request.body.id_cliente) {
+      return response.status(401).json({ error: "ID do cliente não enviado" });
+    }
+
+    const id_cliente = request.body.id_cliente;
+
+    const queryFuncionarios = `
+            SELECT id_funcionario,nome,id_setor,id_funcao,id_planta,id_centro_custo
+            FROM funcionarios 
+            WHERE id_cliente = @id_cliente 
+            AND deleted = 0
+        `;
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    const funcionariosResult = await sqlRequest.query(queryFuncionarios);
+    const funcionarios = funcionariosResult.recordset;
+
+    if (!funcionarios.length) {
+      return response.status(200).json([]);
+    }
+    response.status(200).json(funcionarios);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
 async function adiconarFuncionarioExt(request, response) {
   let transaction;
   // Resgatando os campos relevantes do form-data
@@ -934,6 +1015,7 @@ module.exports = {
   foto,
   listarFuncionarios,
   listarFuncionariosSimples,
+  listarFuncionariosRelatorio,
   adicionarFuncionarios,
   listarCentroCusto,
   listarSetorDiretoria,
