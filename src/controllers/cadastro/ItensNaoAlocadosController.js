@@ -265,7 +265,7 @@ async function inserirOuAtualizarProdutos(
     // Verifica se o produto já existe no banco de dados
     const checkProductRequest = new sql.Request(transaction);
     checkProductRequest.input("id_cliente", sql.Int, id_cliente);
-    checkProductRequest.input("codigo", sql.VarChar, produto.codigo);
+    checkProductRequest.input("codigo", sql.VarChar, produto.codigo.toString());
 
     const existingProduct = await checkProductRequest.query(`
             SELECT codigo, imagem1 FROM Produtos WHERE id_cliente = @id_cliente AND codigo = @codigo
@@ -297,7 +297,7 @@ async function inserirOuAtualizarProdutos(
         const produtoRequest = new sql.Request(transaction);
         produtoRequest
           .input("id_cliente", sql.Int, id_cliente)
-          .input("codigo", sql.VarChar, produto.codigo)
+          .input("codigo", sql.VarChar, produto.codigo.toString())
           .input("id_categoria", sql.Int, 1)
           .input("nome", sql.VarChar, produto.nome)
           .input("descricao", sql.VarChar, produto.descricao || "")
@@ -330,7 +330,7 @@ async function inserirOuAtualizarProdutos(
         const produtoRequest = new sql.Request(transaction);
         produtoRequest
           .input("id_cliente", sql.Int, id_cliente)
-          .input("codigo", sql.VarChar, produto.codigo)
+          .input("codigo", sql.VarChar, produto.codigo.toString())
           .input("id_categoria", sql.Int, 1)
           .input("nome", sql.VarChar, produto.nome)
           .input("descricao", sql.VarChar, produto.descricao || "")
@@ -376,7 +376,7 @@ async function inserirOuAtualizarProdutos(
       const produtoRequest = new sql.Request(transaction);
       produtoRequest
         .input("id_cliente", sql.Int, id_cliente)
-        .input("codigo", sql.VarChar, produto.codigo)
+        .input("codigo", sql.VarChar,produto.codigo.toString())
         .input("id_categoria", sql.Int, 1)
         .input("nome", sql.VarChar, produto.nome)
         .input("descricao", sql.VarChar, produto.descricao || "")
