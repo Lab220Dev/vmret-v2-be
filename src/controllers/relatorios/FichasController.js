@@ -87,12 +87,6 @@ async function relatorio(request, response) {
 
     const params = { id_cliente }; // Cria um objeto com o parâmetro 'id_cliente'.
 
-    // Se 'id_dm' foi fornecido, adiciona o filtro para 'ID_DM' à consulta.
-    if (id_dm) {
-      query1 += " AND r.ID_DM = @id_dm"; // Adiciona o filtro para 'ID_DM'.
-      params.id_dm = id_dm; // Adiciona o valor de 'id_dm' aos parâmetros.
-    }
-
     // Se 'id_funcionario' foi fornecido, adiciona o filtro para 'ID_Funcionario'.
     if (id_funcionario) {
       query1 += " AND r.ID_Funcionario = @id_funcionario"; // Adiciona o filtro para 'ID_Funcionario'.
@@ -120,7 +114,6 @@ async function relatorio(request, response) {
 
     const requestSql = await criarRequest(); // Cria uma nova requisição SQL.
     requestSql.input("id_cliente", sql.Int, params.id_cliente); // Adiciona o parâmetro 'id_cliente' à requisição SQL.
-    if (params.id_dm) requestSql.input("id_dm", sql.Int, params.id_dm); // Adiciona o parâmetro 'id_dm' à requisição SQL, se aplicável.
     if (params.id_funcionario) requestSql.input("id_funcionario", sql.Int, params.id_funcionario); // Adiciona o parâmetro 'id_funcionario' à requisição SQL, se aplicável.
     if (params.data_inicio) requestSql.input("data_inicio", sql.DateTime, params.data_inicio); // Adiciona o parâmetro 'data_inicio' à requisição SQL, se aplicável.
     if (params.data_final) requestSql.input("data_final", sql.DateTime, params.data_final); // Adiciona o parâmetro 'data_final' à requisição SQL, se aplicável.

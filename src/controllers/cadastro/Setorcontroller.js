@@ -26,7 +26,7 @@ async function listaSimples(request, response) {
     const id_cliente = request.body.id_cliente;
     if (id_cliente) {
       const query =
-        "SELECT id_setor,nome  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
+        "SELECT id_setor,nome,id_centro_custo  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
       request = new sql.Request();
       request.input("id_cliente", sql.Int, id_cliente);
       const result = await request.query(query);

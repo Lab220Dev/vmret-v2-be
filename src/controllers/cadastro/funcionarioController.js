@@ -243,7 +243,7 @@ async function listarFuncionariosRelatorio(request, response) {
     const id_cliente = request.body.id_cliente;
 
     const queryFuncionarios = `
-            SELECT id_funcionario,nome,id_setor,id_funcao,id_planta,id_centro_custo
+            SELECT id_funcionario,nome,id_setor,id_funcao,id_planta,id_centro_custo,data_admissao,matricula
             FROM funcionarios 
             WHERE id_cliente = @id_cliente 
             AND deleted = 0

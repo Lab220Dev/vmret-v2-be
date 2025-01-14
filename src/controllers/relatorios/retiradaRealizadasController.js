@@ -115,7 +115,7 @@ async function relatorio(request, response) {
           Matricula: row.matricula,
           Nome: row.nome,
           Email: row.email,
-          Dia: new Date(row.Dia).toDateString(), // Converte a data para um formato legível
+          Dia: new Date(row.Dia).toISOString(), // Converte a data para um formato legível
           ProdutoID: row.ProdutoID,
           ProdutoNome: row.ProdutoNome,
           ProdutoSKU: row.ProdutoSKU,

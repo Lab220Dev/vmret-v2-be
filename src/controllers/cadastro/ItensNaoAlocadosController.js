@@ -265,7 +265,7 @@ async function inserirOuAtualizarProdutos(
     // Verifica se o produto já existe no banco de dados
     const checkProductRequest = new sql.Request(transaction);
     checkProductRequest.input("id_cliente", sql.Int, id_cliente);
-    checkProductRequest.input("codigo", sql.Int, produto.codigo);
+    checkProductRequest.input("codigo", sql.VarChar, produto.codigo);
 
     const existingProduct = await checkProductRequest.query(`
             SELECT codigo, imagem1 FROM Produtos WHERE id_cliente = @id_cliente AND codigo = @codigo
@@ -297,11 +297,11 @@ async function inserirOuAtualizarProdutos(
         const produtoRequest = new sql.Request(transaction);
         produtoRequest
           .input("id_cliente", sql.Int, id_cliente)
-          .input("codigo", sql.Int, produto.codigo)
+          .input("codigo", sql.VarChar, produto.codigo)
           .input("id_categoria", sql.Int, 1)
           .input("nome", sql.VarChar, produto.nome)
           .input("descricao", sql.VarChar, produto.descricao || "")
-          .input("ca", sql.VarChar, produto.ca || "")
+          .input("ca", sql.NVarChar, produto.ca || "")
           .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
           .input("imagem1", sql.VarChar, path.basename(imagemNova)) // Atualiza a imagem no banco.
           .input("quantidadeMinima", sql.Int, produto.estoqueMinimo || 0)
@@ -330,11 +330,11 @@ async function inserirOuAtualizarProdutos(
         const produtoRequest = new sql.Request(transaction);
         produtoRequest
           .input("id_cliente", sql.Int, id_cliente)
-          .input("codigo", sql.Int, produto.codigo)
+          .input("codigo", sql.VarChar, produto.codigo)
           .input("id_categoria", sql.Int, 1)
           .input("nome", sql.VarChar, produto.nome)
           .input("descricao", sql.VarChar, produto.descricao || "")
-          .input("ca", sql.VarChar, produto.ca || "")
+          .input("ca", sql.NVarChar, produto.ca || "")
           .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
           .input("quantidadeMinima", sql.Int, produto.estoqueMinimo || 0)
           .input("id_planta", sql.Int, produto.codigoPlantaEpi || null)
@@ -376,11 +376,11 @@ async function inserirOuAtualizarProdutos(
       const produtoRequest = new sql.Request(transaction);
       produtoRequest
         .input("id_cliente", sql.Int, id_cliente)
-        .input("codigo", sql.Int, produto.codigo)
+        .input("codigo", sql.VarChar, produto.codigo)
         .input("id_categoria", sql.Int, 1)
         .input("nome", sql.VarChar, produto.nome)
         .input("descricao", sql.VarChar, produto.descricao || "")
-        .input("ca", sql.VarChar, produto.ca || "")
+        .input("ca", sql.NVarChar, produto.ca || "")
         .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
         .input("imagem1", sql.VarChar, path.basename(imagemNova))
         .input("quantidadeMinima", sql.Int, produto.estoqueMinimo || 0)
