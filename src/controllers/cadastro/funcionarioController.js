@@ -564,6 +564,25 @@ async function adicionarFuncionarios(request, response) {
   try {
     // Gerenciamento de arquivos enviados na requisição
     const files = request.files; // Obtém os arquivos enviados
+
+// Função para sanitizar o nome do arquivo (retirar caracteres especiais e acentos)
+const sanitizeFileName = (filename) => {
+  if (typeof filename === "string") {
+    const parts = filename.split("."); // Divide o nome do arquivo em partes (nome + extensão)
+    const extension = parts.length > 1 ? `.${parts.pop()}` : ""; // Pega a extensão do arquivo
+    const nameWithoutExtension = parts
+      .join(".")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+      .replace(/[^a-zA-Z0-9 _]/g, "-") // Substitui caracteres especiais por '-'
+      .replace(/ /g, "_"); // Substitui espaços por '_'
+    return `${nameWithoutExtension}${extension}`; // Retorna o nome do arquivo sanitizado
+  } else {
+    console.error("Filename is not a string:", filename); // Log do erro se o nome do arquivo não for string
+    return "unknown_filename"; // Retorna um nome padrão se não for string
+  }
+};
+
     const uploadPath = path.join(
       __dirname, // Caminho do diretório atual
       "../../uploads/funcionarios", // Diretório para upload de fotos
@@ -577,7 +596,7 @@ async function adicionarFuncionarios(request, response) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]; // Obtém o arquivo atual
       const fileExtension = path.extname(file.originalname); // Obtém a extensão do arquivo
-      nomeFuncionario = `${nome}${fileExtension}`; // Define o nome do arquivo com a extensão
+      nomeFuncionario = sanitizeFileName(`${nome}${fileExtension}`); // Sanitiza o nome do arquivo
       const filePath = path.join(uploadPath, nomeFuncionario); // Caminho completo do arquivo
       await fs.writeFile(filePath, file.buffer); // Salva o arquivo no sistema
     }
@@ -1145,8 +1164,8 @@ async function adicionarItem(request, response) {
 
     // Se o item já existe, atualiza a quantidade do item.
     if (checkResult.recordset.length > 0) {
-      const { id_item_funcionario, quantidade: qtdExistente } = checkResult.recordset[0];
-      const novaQuantidade = Number(qtdExistente) + Number(quantidade);
+      const { id_item_funcionario} = checkResult.recordset[0];
+      const novaQuantidade = Number(quantidade);
 
       const updateQuery = `
         UPDATE Ret_Item_Funcionario
