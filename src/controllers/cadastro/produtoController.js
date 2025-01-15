@@ -3,7 +3,8 @@ const path = require("path"); // Importa o módulo 'path' para manipulação de 
 const fs = require("fs").promises; // Importa o módulo 'fs' para manipulação de arquivos com promessas
 const multer = require("multer"); // Importa o módulo 'multer' para o processamento de uploads de arquivos
 const { logQuery } = require("../../utils/logUtils"); // Importa a função logQuery para registrar logs de consultas no banco de dados
-const storage = multer.memoryStorage(); // Define o armazenamento de arquivos na memória
+const storage = multer.memoryStorage();
+// Define o armazenamento de arquivos na memória
 const upload = multer({ storage: storage }).fields([
   // Configura o multer para aceitar múltiplos arquivos de diferentes campos
   { name: "file_principal", maxCount: 1 }, // Define que o campo 'file_principal' pode ter no máximo 1 arquivo

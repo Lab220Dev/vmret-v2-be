@@ -79,7 +79,7 @@ async function adicionar(request, response) {
     
     // Recupera o ID do cliente e ID do usuário da requisição.
     const id_cliente = request.body.id_cliente;
-    const id_usuario = request.body.id_cliente;  // Parece haver um erro aqui, o id_usuario deveria provavelmente vir de request.body.id_usuario.
+    const id_usuario = request.body.id_usuario;  
 
     // Query SQL para inserir uma nova planta no banco de dados.
     const query = `INSERT INTO plantas (id_cliente, codigo, nome, userId, senha, urlapi, clientid , deleted)
@@ -115,18 +115,16 @@ async function adicionar(request, response) {
 
         // Se a planta for adicionada com sucesso, retorna uma resposta de sucesso.
         if (result.rowsAffected[0] > 0) {
-            // logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
             response.status(201).send('Planta criada com sucesso!');
             return;
         } else {
-            // logQuery('error', `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
-            response.status(400).send('Falha ao criar o Centro de Custo');
+            response.status(400).send('Falha ao criar a Planta');
         }
     } catch (error) {
         // Se houver um erro, exibe a mensagem de erro no console e retorna um erro 500.
         const errorMessage = error.message.includes('Query não fornecida para logging')
             ? 'Erro crítico: Falha na operação'
-            : `Erro ao adicionar Centro de Custo: ${error.message}`;
+            : `Erro ao adicionar Planta: ${error.message}`;
         // logQuery('error', errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
         console.error('Erro ao adicionar Planta:', error.message);
         response.status(500).send('Erro ao adicionar Planta');
