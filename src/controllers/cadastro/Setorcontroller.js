@@ -126,16 +126,16 @@ async function adicionarItem(request, response) {
 
         if (checkResult.recordset.length > 0) {
           // Item já existe, vamos atualizar a quantidade
-          const { id_item_setor, qtd_limite } = checkResult.recordset[0];
-          const novaQuantidade = qtd_limite + quantidade; // Somando a quantidade existente com a nova quantidade
-
+          const { id_item_setor } = checkResult.recordset[0];
+          //const novaQuantidade = qtd_limite + quantidade; // Somando a quantidade existente com a nova quantidade
+          
           const updateQuery = `
             UPDATE Ret_Itens_setor
             SET qtd_limite = @novaQuantidade
             WHERE id_item_setor = @id_item_setor
           `;
           const updateRequest = new sql.Request();
-          updateRequest.input("novaQuantidade", sql.Int, novaQuantidade);
+          updateRequest.input("novaQuantidade", sql.Int, quantidade);
           updateRequest.input("id_item_setor", sql.Int, id_item_setor);
 
           await updateRequest.query(updateQuery);
@@ -400,6 +400,7 @@ async function atualizar(request, response) {
 async function deleteFuncao(request, response) {
   const query = "UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor";
   const id_setor = request.body.id_setor;
+  const id_usuario = request.body.id_usuario;
 
   const params = {
     id_setor: id_setor,
@@ -416,11 +417,9 @@ async function deleteFuncao(request, response) {
     const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logQuery("info",`O usuário ${id_usuario} deletou o Centro de Custo ${id_setor}`,"sucesso","DELETE", id_cliente,id_usuario,query,params);
       response.status(200).json(result.recordset);
       return;
     } else {
-      logQuery("error",`Erro ao excluir: ${id_setor} não encontrado.`,"erro","DELETE",id_cliente,id_usuario,query,params);
       response.status(400).send("Nenhuma alteração foi feita no centro de custo.");
       return;
     }
