@@ -553,7 +553,7 @@ async function atualizar(request, response) {
             ID_DM,
             IDcliente
           );
-        } else if (controladora.tipo === "Locker") {
+        } else if (controladora.tipo === "Locker-Padrao"||controladora.tipo === "Locker-Ker") {
           await adicionarControladoraLocker(
             transaction,
             controladora,
@@ -847,9 +847,10 @@ async function adicionarControladoraLocker(
   dmId,
   clienteId
 ) {
-  const sqlRequest = new sql.Request(transaction);
 
   for (const posicao of controladora.dados.posicao) {
+  const sqlRequest = new sql.Request(transaction);
+    
     const query = `
       INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
       VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Posicao, 0, 0)`;
