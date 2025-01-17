@@ -1,4 +1,3 @@
-
 const { logQuery } = require("../../utils/logUtils");
 const sql = require("mssql");
 
@@ -15,6 +14,73 @@ async function listar(request, response) {
       return;
     }
     response.status(401).json("ID do cliente não enviado");
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+async function listarPaginado(request, response) {
+  try {
+    const {
+      id_cliente,
+      first = 0,
+      rows = 10,
+      sortField = "id",
+      sortOrder = "ASC",
+      filters = {},
+    } = request.body;
+
+    if (!id_cliente) {
+      response.status(401).json("ID do cliente não enviado");
+      return;
+    }
+
+    const sqlRequest = new sql.Request();
+
+    // Query inicial
+    let query = `
+      SELECT 
+        COUNT(*) OVER() AS TotalRecords, 
+        Setores.*
+      FROM 
+        Setores
+      WHERE 
+        id_cliente = @id_cliente AND Deleted = 0
+    `;
+
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    if (filters.nome) {
+      query += ` AND nome LIKE @nome`;
+      sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
+    }
+    if (filters.codigo) {
+      query += ` AND nome LIKE @codigo`;
+      sqlRequest.input("codigo", sql.NVarChar, `%${filters.codigo.value}%`);
+    }
+    if (filters.id_centro_custo) {
+      query += ` AND nome LIKE @id_centro_custo`;
+      sqlRequest.input("nome", sql.Int, `%${filters.id_centro_custo.value}%`);
+    }
+
+    // Ordenação e Paginação
+    query += `
+      ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
+      OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+    `;
+
+    sqlRequest.input("first", sql.Int, first);
+    sqlRequest.input("rows", sql.Int, rows);
+
+    // Executa a consulta
+    const result = await sqlRequest.query(query);
+
+    // Extrai os dados paginados e o total de registros
+    const setores = result.recordset;
+    const totalRecords = setores.length > 0 ? setores[0].TotalRecords : 0;
+
+    // Retorna os dados paginados e o total de registros
+    response.status(200).json({ setores, totalRecords });
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
@@ -128,7 +194,7 @@ async function adicionarItem(request, response) {
           // Item já existe, vamos atualizar a quantidade
           const { id_item_setor } = checkResult.recordset[0];
           //const novaQuantidade = qtd_limite + quantidade; // Somando a quantidade existente com a nova quantidade
-          
+
           const updateQuery = `
             UPDATE Ret_Itens_setor
             SET qtd_limite = @novaQuantidade
@@ -420,7 +486,9 @@ async function deleteFuncao(request, response) {
       response.status(200).json(result.recordset);
       return;
     } else {
-      response.status(400).send("Nenhuma alteração foi feita no centro de custo.");
+      response
+        .status(400)
+        .send("Nenhuma alteração foi feita no centro de custo.");
       return;
     }
   } catch (error) {
@@ -432,6 +500,7 @@ async function deleteFuncao(request, response) {
 module.exports = {
   adicionar,
   listar,
+  listarPaginado,
   atualizar,
   deleteFuncao,
   listarItensSetor,

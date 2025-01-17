@@ -520,6 +520,104 @@ async function listarComMenu(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function listarComMenuPaginado(request, response) {
+  try {
+    const {
+      first = 0,
+      rows = 10,
+      sortField = "id_cliente",
+      sortOrder = "ASC",
+      filters = {},
+    } = request.body;
+
+    // Consulta inicial para listar os clientes com paginação
+    let queryClientes = `
+      SELECT 
+        COUNT(*) OVER() AS TotalRecords, 
+        clientes.*
+      FROM 
+        clientes
+      WHERE 
+        deleted = 0
+    `;
+
+    const sqlRequest = new sql.Request();
+
+    // Adiciona filtros dinâmicos, se presentes
+    if (filters.nome) {
+      queryClientes += ` AND nome LIKE @nome`;
+      sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
+    }
+
+    // Adiciona ordenação e paginação
+    queryClientes += `
+      ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
+      OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+    `;
+
+    sqlRequest.input("first", sql.Int, first);
+    sqlRequest.input("rows", sql.Int, rows);
+
+    // Executa a consulta para obter os clientes paginados
+    const resultClientes = await sqlRequest.query(queryClientes);
+
+    // Extrai os clientes e o total de registros
+    const clientes = resultClientes.recordset;
+    const totalRecords = clientes.length > 0 ? clientes[0].TotalRecords : 0;
+
+    // Lista para armazenar os clientes com menus
+    const clientesComMenu = [];
+
+    // Itera sobre os clientes retornados para buscar menus e itens de menu
+    for (const cliente of clientes) {
+      const id_cliente = cliente.id_cliente;
+
+      // Consulta para recuperar os menus do cliente
+      const queryMenu = `
+        SELECT * 
+        FROM Menu
+        WHERE Cod_cli = @id_cliente
+      `;
+
+      // Consulta para recuperar os itens de menu do cliente
+      const queryMenuItem = `
+        SELECT * 
+        FROM menu_itens
+        WHERE Cod_cli = @id_cliente
+      `;
+
+      // Prepara a requisição SQL
+      const requestSql = new sql.Request();
+      requestSql.input("id_cliente", sql.Int, id_cliente);
+
+      // Executa as consultas para obter os menus e itens
+      const menuResult = await requestSql.query(queryMenu);
+      const menuItemResult = await requestSql.query(queryMenuItem);
+
+      const menus = menuResult.recordset;
+      const menuItens = menuItemResult.recordset;
+
+      // Constrói a árvore de menus para o cliente atual
+      const menuTree =
+        menus.length > 0 || menuItens.length > 0
+          ? buildMenuTree(menus, menuItens)
+          : [];
+      menuTree.forEach(cleanItems);
+
+      // Adiciona o cliente e seus menus à lista
+      clientesComMenu.push({
+        ...cliente,
+        menus: menuTree,
+      });
+    }
+
+    // Retorna os clientes paginados com seus menus e o total de registros
+    response.status(200).json({ clientesComMenu, totalRecords });
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
 
 /**
  * Função que constrói uma árvore de menus a partir dos menus principais e itens de menu.

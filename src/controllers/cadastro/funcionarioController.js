@@ -119,7 +119,11 @@ async function listarFuncionarios(request, response) {
     for (let funcionario of funcionarios) {
       const sqlRequestItens = new sql.Request();
       // Passa o ID do funcionário para a consulta de itens
-      sqlRequestItens.input("id_funcionario", sql.Int, funcionario.id_funcionario);
+      sqlRequestItens.input(
+        "id_funcionario",
+        sql.Int,
+        funcionario.id_funcionario
+      );
 
       // Executa a consulta de itens
       const itensResult = await sqlRequestItens.query(queryItensFuncionario);
@@ -132,6 +136,98 @@ async function listarFuncionarios(request, response) {
     response.status(200).json(funcionarios);
   } catch (error) {
     // Em caso de erro, registra no console e retorna erro 500
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+async function listarFuncionariosPagianda(request, response) {
+  try {
+    const {
+      id_cliente,
+      first = 0,
+      rows = 10,
+      sortField = "id_funcionario",
+      sortOrder = "ASC",
+      filters = {},
+    } = request.body;
+
+    if (!id_cliente) {
+      return response.status(401).json({ error: "ID do cliente não enviado" });
+    }
+
+    const sqlRequest = new sql.Request();
+
+    // Query inicial com filtros básicos
+    let queryFuncionarios = `
+      SELECT 
+        COUNT(*) OVER() AS TotalRecords, 
+        funcionarios.*
+      FROM 
+        funcionarios
+      WHERE 
+        id_cliente = @id_cliente AND deleted = 0
+    `;
+
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    // Filtros dinâmicos
+    if (filters.nome) {
+      queryFuncionarios += ` AND nome LIKE @nome`;
+      sqlRequest.input("nome", sql.VarChar, `%${filters.nome.value}%`);
+    }
+    if (filters.email) {
+      queryFuncionarios += ` AND matricula LIKE @matricula`;
+      sqlRequest.input(
+        "matricula",
+        sql.VarChar,
+        `%${filters.matricula.value}%`
+      );
+    }
+
+    // Ordenação e Paginação
+    queryFuncionarios += `
+      ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
+      OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+    `;
+
+    sqlRequest.input("first", sql.Int, first);
+    sqlRequest.input("rows", sql.Int, rows);
+
+    // Executa a consulta de funcionários
+    const funcionariosResult = await sqlRequest.query(queryFuncionarios);
+
+    // Extrai os dados paginados e o total de registros
+    const funcionarios = funcionariosResult.recordset.map((funcionarios) => ({
+      ...funcionarios,
+      senha: "senhaAntiga", // Oculta a senha real
+    }));
+    const totalRecords =
+      funcionarios.length > 0 ? funcionarios[0].TotalRecords : 0;
+    if (!funcionarios.length) {
+      return response.status(200).json([]);
+    }
+    const queryItensFuncionario = `
+    SELECT *
+    FROM Ret_Item_Funcionario 
+    WHERE id_funcionario = @id_funcionario 
+    AND deleted = 0
+`;
+    // Itera sobre cada funcionário para buscar seus itens
+    for (let funcionario of funcionarios) {
+      const sqlRequestItens = new sql.Request();
+      // Passa o ID do funcionário para a consulta de itens
+      sqlRequestItens.input( "id_funcionario", sql.Int, funcionario.id_funcionario);
+
+      // Executa a consulta de itens
+      const itensResult = await sqlRequestItens.query(queryItensFuncionario);
+      // Adiciona os itens ao funcionário
+      const itens = itensResult.recordset;
+      funcionario.itens = itens;
+    }
+
+    // Retorna os dados paginados e o total de registros
+    response.status(200).json({ funcionarios, totalRecords });
+  } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
@@ -277,7 +373,7 @@ async function adiconarFuncionarioExt(request, response) {
           INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
           VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
       `;
-  
+
   try {
     // Inicia a transação no banco de dados
     transaction = new sql.Transaction();
@@ -478,33 +574,33 @@ const enviarMensagem = async (telefone, id_usuario) => {
 async function adicionarFuncionarios(request, response) {
   // Desestruturando os dados do corpo da requisição para variáveis
   const {
-    id_setor,        // ID do setor do funcionário
-    id_funcao,       // ID da função do funcionário
-    nome,            // Nome do funcionário
-    matricula,       // Matrícula do funcionário
-    biometria,       // Biometria do funcionário
-    RG,              // RG do funcionário
-    CPF,             // CPF do funcionário
-    CTPS,            // CTPS do funcionário
-    id_planta,       // ID da planta (local onde o funcionário trabalha)
-    data_admissao,   // Data de admissão do funcionário
-    hora_inicial,    // Hora inicial de trabalho
-    hora_final,      // Hora final de trabalho
-    segunda,         // Booleano que indica se o funcionário trabalha na segunda-feira
-    terca,           // Booleano que indica se o funcionário trabalha na terça-feira
-    quarta,          // Booleano que indica se o funcionário trabalha na quarta-feira
-    quinta,          // Booleano que indica se o funcionário trabalha na quinta-feira
-    sexta,           // Booleano que indica se o funcionário trabalha na sexta-feira
-    sabado,          // Booleano que indica se o funcionário trabalha no sábado
-    domingo,         // Booleano que indica se o funcionário trabalha no domingo
-    ordem,           // Ordem do funcionário na lista
+    id_setor, // ID do setor do funcionário
+    id_funcao, // ID da função do funcionário
+    nome, // Nome do funcionário
+    matricula, // Matrícula do funcionário
+    biometria, // Biometria do funcionário
+    RG, // RG do funcionário
+    CPF, // CPF do funcionário
+    CTPS, // CTPS do funcionário
+    id_planta, // ID da planta (local onde o funcionário trabalha)
+    data_admissao, // Data de admissão do funcionário
+    hora_inicial, // Hora inicial de trabalho
+    hora_final, // Hora final de trabalho
+    segunda, // Booleano que indica se o funcionário trabalha na segunda-feira
+    terca, // Booleano que indica se o funcionário trabalha na terça-feira
+    quarta, // Booleano que indica se o funcionário trabalha na quarta-feira
+    quinta, // Booleano que indica se o funcionário trabalha na quinta-feira
+    sexta, // Booleano que indica se o funcionário trabalha na sexta-feira
+    sabado, // Booleano que indica se o funcionário trabalha no sábado
+    domingo, // Booleano que indica se o funcionário trabalha no domingo
+    ordem, // Ordem do funcionário na lista
     id_centro_custo, // ID do centro de custo associado ao funcionário
-    status,          // Status do funcionário (ativo/inativo)
-    senha,           // Senha do funcionário
-    biometria2,      // Segunda biometria do funcionário
-    email,           // E-mail do funcionário
-    face,            // Foto do rosto do funcionário
-    id_usuario,      // ID do usuário que está criando o funcionário
+    status, // Status do funcionário (ativo/inativo)
+    senha, // Senha do funcionário
+    biometria2, // Segunda biometria do funcionário
+    email, // E-mail do funcionário
+    face, // Foto do rosto do funcionário
+    id_usuario, // ID do usuário que está criando o funcionário
   } = request.body;
 
   // Obtendo o id_cliente (cliente) do corpo da requisição
@@ -531,20 +627,20 @@ async function adicionarFuncionarios(request, response) {
   // Parâmetros que serão usados na consulta SQL
   const params = {
     id_cliente, // ID do cliente
-    id_setor,   // ID do setor
-    id_funcao,  // ID da função
-    nome,       // Nome do funcionário
-    matricula,  // Matrícula do funcionário
-    biometria,  // Biometria
-    RG,         // RG
-    CPF,        // CPF
-    CTPS,       // CTPS
-    id_planta,  // ID da planta
+    id_setor, // ID do setor
+    id_funcao, // ID da função
+    nome, // Nome do funcionário
+    matricula, // Matrícula do funcionário
+    biometria, // Biometria
+    RG, // RG
+    CPF, // CPF
+    CTPS, // CTPS
+    id_planta, // ID da planta
     foto: nomeFuncionario, // Foto do funcionário (nome do arquivo)
     data_admissao, // Data de admissão
-    hora_inicial,  // Hora inicial de trabalho
-    hora_final,    // Hora final de trabalho
-    segunda: convertToBoolean(segunda),  // Converte os valores "true" ou "false" para booleano
+    hora_inicial, // Hora inicial de trabalho
+    hora_final, // Hora final de trabalho
+    segunda: convertToBoolean(segunda), // Converte os valores "true" ou "false" para booleano
     terca: convertToBoolean(terca),
     quarta: convertToBoolean(quarta),
     quinta: convertToBoolean(quinta),
@@ -552,36 +648,36 @@ async function adicionarFuncionarios(request, response) {
     sabado: convertToBoolean(sabado),
     domingo: convertToBoolean(domingo),
     deleted: false, // Definindo que o funcionário não está excluído
-    ordem,  // Ordem do funcionário na lista
+    ordem, // Ordem do funcionário na lista
     id_centro_custo, // Centro de custo
     status, // Status do funcionário
-    senha,  // Senha do funcionário
+    senha, // Senha do funcionário
     biometria2, // Segunda biometria
-    email,  // E-mail do funcionário
-    face,   // Foto do rosto do funcionário
+    email, // E-mail do funcionário
+    face, // Foto do rosto do funcionário
   };
 
   try {
     // Gerenciamento de arquivos enviados na requisição
     const files = request.files; // Obtém os arquivos enviados
 
-// Função para sanitizar o nome do arquivo (retirar caracteres especiais e acentos)
-const sanitizeFileName = (filename) => {
-  if (typeof filename === "string") {
-    const parts = filename.split("."); // Divide o nome do arquivo em partes (nome + extensão)
-    const extension = parts.length > 1 ? `.${parts.pop()}` : ""; // Pega a extensão do arquivo
-    const nameWithoutExtension = parts
-      .join(".")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove acentos
-      .replace(/[^a-zA-Z0-9 _]/g, "-") // Substitui caracteres especiais por '-'
-      .replace(/ /g, "_"); // Substitui espaços por '_'
-    return `${nameWithoutExtension}${extension}`; // Retorna o nome do arquivo sanitizado
-  } else {
-    console.error("Filename is not a string:", filename); // Log do erro se o nome do arquivo não for string
-    return "unknown_filename"; // Retorna um nome padrão se não for string
-  }
-};
+    // Função para sanitizar o nome do arquivo (retirar caracteres especiais e acentos)
+    const sanitizeFileName = (filename) => {
+      if (typeof filename === "string") {
+        const parts = filename.split("."); // Divide o nome do arquivo em partes (nome + extensão)
+        const extension = parts.length > 1 ? `.${parts.pop()}` : ""; // Pega a extensão do arquivo
+        const nameWithoutExtension = parts
+          .join(".")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+          .replace(/[^a-zA-Z0-9 _]/g, "-") // Substitui caracteres especiais por '-'
+          .replace(/ /g, "_"); // Substitui espaços por '_'
+        return `${nameWithoutExtension}${extension}`; // Retorna o nome do arquivo sanitizado
+      } else {
+        console.error("Filename is not a string:", filename); // Log do erro se o nome do arquivo não for string
+        return "unknown_filename"; // Retorna um nome padrão se não for string
+      }
+    };
 
     const uploadPath = path.join(
       __dirname, // Caminho do diretório atual
@@ -615,7 +711,11 @@ const sanitizeFileName = (filename) => {
     sqlRequest.input("RG", sql.VarChar, RG); // Adiciona o parâmetro RG
     sqlRequest.input("CPF", sql.VarChar, CPF); // Adiciona o parâmetro CPF
     sqlRequest.input("CTPS", sql.VarChar, CTPS); // Adiciona o parâmetro CTPS
-    sqlRequest.input("id_planta", sql.Int, id_planta ? parseInt(id_planta, 10) : 0); // Adiciona o parâmetro id_planta
+    sqlRequest.input(
+      "id_planta",
+      sql.Int,
+      id_planta ? parseInt(id_planta, 10) : 0
+    ); // Adiciona o parâmetro id_planta
     sqlRequest.input("foto", sql.VarChar, nomeFuncionario); // Adiciona o parâmetro foto (nome do arquivo)
     sqlRequest.input("data_admissao", sql.DateTime, data_admissao); // Adiciona o parâmetro data_admissao
     sqlRequest.input("hora_inicial", sql.Time, hora_inicial); // Adiciona o parâmetro hora_inicial
@@ -649,7 +749,9 @@ const sanitizeFileName = (filename) => {
     }
   } catch (error) {
     // Caso ocorra algum erro durante o processo, responde com erro
-    const errorMessage = error.message.includes("Query não fornecida para logging")
+    const errorMessage = error.message.includes(
+      "Query não fornecida para logging"
+    )
       ? "Erro crítico: Falha na operação"
       : `Erro ao adicionar funcionário: ${error.message}`;
     console.error("Erro ao inserir funcionário:", error.message); // Registra o erro no console
@@ -785,10 +887,10 @@ async function listarHierarquia(request, response) {
 
 /**
  * Função para listar as plantas associadas a um cliente.
- * 
+ *
  * Esta função consulta o banco de dados para obter as plantas (id_planta) de
  * funcionários relacionados ao id_cliente fornecido na requisição.
- * 
+ *
  * @async
  * @function listarPlanta
  * @param {Object} request - Objeto contendo os dados enviados pelo cliente.
@@ -807,12 +909,12 @@ async function listarPlanta(request, response) {
 
       // Executa a consulta SQL
       const result = await new sql.Request().query(query);
-      
+
       // Retorna os resultados da consulta no formato JSON
       response.status(200).json(result.recordset);
       return;
     }
-    
+
     // Se o id_cliente não foi fornecido, retorna erro 401
     response.status(401).json("id do cliente não enviado");
   } catch (error) {
@@ -824,7 +926,7 @@ async function listarPlanta(request, response) {
 
 /**
  * Função para excluir um funcionário.
- * 
+ *
  * Esta função marca um funcionário como excluído (definindo `deleted = 1`)
  * no banco de dados, com base no id_funcionario fornecido na requisição.
  *
@@ -845,7 +947,8 @@ async function deleteFuncionario(request, response) {
   }
 
   // Consulta SQL para marcar o funcionário como excluído
-  const query = "UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario";
+  const query =
+    "UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario";
   const params = id_funcionario;
 
   try {
@@ -853,28 +956,34 @@ async function deleteFuncionario(request, response) {
     const sqlRequest = new sql.Request();
     // Define o parâmetro para a consulta SQL
     sqlRequest.input("id_funcionario", sql.Int, id_funcionario);
-    
+
     // Executa a consulta de exclusão
     const result = await sqlRequest.query(query);
 
     // Verifica se a exclusão foi bem-sucedida
     if (result.rowsAffected[0] > 0) {
       // Se foi, retorna uma mensagem de sucesso
-      return response.status(200).json({ message: "Funcionário deletado com sucesso!" });
+      return response
+        .status(200)
+        .json({ message: "Funcionário deletado com sucesso!" });
     } else {
       // Caso não tenha ocorrido alteração, retorna erro 400
-      return response.status(400).send("Nenhuma alteração foi feita no funcionário.");
+      return response
+        .status(400)
+        .send("Nenhuma alteração foi feita no funcionário.");
     }
   } catch (error) {
     // Caso ocorra algum erro, imprime no console e retorna erro 500
     console.error("Erro ao excluir:", error.message);
-    return response.status(500).send(`Erro ao excluir funcionário: ${error.message}`);
+    return response
+      .status(500)
+      .send(`Erro ao excluir funcionário: ${error.message}`);
   }
 }
 
 /**
  * Função para atualizar os dados de um funcionário.
- * 
+ *
  * Esta função recebe os dados atualizados de um funcionário e os insere
  * ou atualiza no banco de dados. Caso a foto ou outros arquivos sejam
  * enviados, eles também são processados e salvos no sistema.
@@ -1031,7 +1140,7 @@ async function atualizarFuncionario(request, response) {
     // Verifica se a atualização foi bem-sucedida
     if (result.rowsAffected[0] > 0) {
       let itensAlterados = false;
-      
+
       // Se houver itens para alterar, processa cada um
       if (itens && itens.length > 0) {
         for (const item of itens) {
@@ -1056,7 +1165,11 @@ async function atualizarFuncionario(request, response) {
               WHERE id_item_funcionario = @id_item_funcionario
             `;
             const updateRequest = new sql.Request();
-            updateRequest.input("id_item_funcionario", sql.Int, item.id_item_funcionario);
+            updateRequest.input(
+              "id_item_funcionario",
+              sql.Int,
+              item.id_item_funcionario
+            );
             updateRequest.input("quantidade", sql.Int, item.quantidade);
             await updateRequest.query(updateQuery);
             itensAlterados = true;
@@ -1067,7 +1180,11 @@ async function atualizarFuncionario(request, response) {
               WHERE id_item_funcionario = @id_item_funcionario
             `;
             const deleteRequest = new sql.Request();
-            deleteRequest.input("id_item_funcionario", sql.Int, item.id_item_funcionario);
+            deleteRequest.input(
+              "id_item_funcionario",
+              sql.Int,
+              item.id_item_funcionario
+            );
             await deleteRequest.query(deleteQuery);
             itensAlterados = true;
           }
@@ -1076,7 +1193,9 @@ async function atualizarFuncionario(request, response) {
 
       // Retorna resposta dependendo se houve alterações nos itens
       if (itensAlterados) {
-        response.status(200).json({ message: "Funcionário e itens atualizados com sucesso!" });
+        response
+          .status(200)
+          .json({ message: "Funcionário e itens atualizados com sucesso!" });
       } else {
         response.status(200).json({
           message: "Funcionário atualizado, sem alterações nos itens.",
@@ -1094,9 +1213,9 @@ async function atualizarFuncionario(request, response) {
 
 /**
  * Função para adicionar um item a um funcionário.
- * 
+ *
  * Esta função insere um novo item no banco de dados ou atualiza a quantidade de um item existente.
- * 
+ *
  * @async
  * @function adicionarItem
  * @param {Object} request - Objeto com os dados enviados pelo cliente.
@@ -1106,11 +1225,14 @@ async function atualizarFuncionario(request, response) {
 async function adicionarItem(request, response) {
   try {
     // Extrai os dados do corpo da requisição.
-    let { id_produto, id_funcionario, id_cliente, quantidade, deleted } = request.body;
+    let { id_produto, id_funcionario, id_cliente, quantidade, deleted } =
+      request.body;
 
     // Verifica se os IDs do produto e do cliente foram enviados.
     if (!id_produto || !id_cliente) {
-      return response.status(400).json({ message: "ID do produto e cliente são obrigatórios" });
+      return response
+        .status(400)
+        .json({ message: "ID do produto e cliente são obrigatórios" });
     }
 
     // Cria uma instância para a execução de consultas SQL.
@@ -1130,7 +1252,12 @@ async function adicionarItem(request, response) {
 
       // Caso não encontre nenhum funcionário, retorna erro.
       if (funcionarioResult.recordset.length === 0) {
-        return response.status(400).json({ message: "Nenhum funcionário encontrado para o id_cliente fornecido." });
+        return response
+          .status(400)
+          .json({
+            message:
+              "Nenhum funcionário encontrado para o id_cliente fornecido.",
+          });
       }
 
       // Atribui o próximo ID do funcionário para o novo item.
@@ -1164,7 +1291,7 @@ async function adicionarItem(request, response) {
 
     // Se o item já existe, atualiza a quantidade do item.
     if (checkResult.recordset.length > 0) {
-      const { id_item_funcionario} = checkResult.recordset[0];
+      const { id_item_funcionario } = checkResult.recordset[0];
       const novaQuantidade = Number(quantidade);
 
       const updateQuery = `
@@ -1190,7 +1317,12 @@ async function adicionarItem(request, response) {
         `;
         listarRequest.input("id_funcionario", sql.Int, id_funcionario);
         const result = await listarRequest.query(queryItensFuncionario);
-        return response.status(201).json({ dados: result.recordsets, message: "Item adicionado com sucesso" });
+        return response
+          .status(201)
+          .json({
+            dados: result.recordsets,
+            message: "Item adicionado com sucesso",
+          });
       }
     } else {
       // Se o item não existir, insere um novo item.
@@ -1223,7 +1355,12 @@ async function adicionarItem(request, response) {
         `;
         listarRequest.input("id_funcionario", sql.Int, id_funcionario);
         const result = await listarRequest.query(queryItensFuncionario);
-        return response.status(201).json({ dados: result.recordsets, message: "Item adicionado com sucesso" });
+        return response
+          .status(201)
+          .json({
+            dados: result.recordsets,
+            message: "Item adicionado com sucesso",
+          });
       }
     }
   } catch (error) {
@@ -1235,10 +1372,10 @@ async function adicionarItem(request, response) {
 
 /**
  * Função para listar todos os operadores de um cliente.
- * 
+ *
  * Esta função consulta o banco de dados para obter todos os operadores do cliente
  * especificado pelo ID do cliente.
- * 
+ *
  * @async
  * @function listarOperadores
  * @param {Object} request - Objeto com os dados enviados pelo cliente.
@@ -1272,9 +1409,9 @@ async function listarOperadores(request, response) {
 
 /**
  * Função para deletar um item de um funcionário.
- * 
+ *
  * Esta função marca um item como deletado no banco de dados.
- * 
+ *
  * @async
  * @function deleteItem
  * @param {Object} request - Objeto com os dados enviados pelo cliente.
@@ -1323,7 +1460,7 @@ async function deleteItem(request, response) {
 
       return response.status(200).json({
         message: "Item deletado com sucesso!",
-        items: result.recordset, 
+        items: result.recordset,
       });
     } else {
       return response
@@ -1346,6 +1483,7 @@ module.exports = {
   listarFuncionarios,
   listarFuncionariosSimples,
   listarFuncionariosRelatorio,
+  listarFuncionariosPagianda,
   adicionarFuncionarios,
   listarCentroCusto,
   listarSetorDiretoria,
@@ -1356,5 +1494,5 @@ module.exports = {
   listarOperadores,
   adiconarFuncionarioExt,
   adicionarItem,
-  deleteItem
+  deleteItem,
 };

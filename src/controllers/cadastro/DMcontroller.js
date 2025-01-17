@@ -76,7 +76,9 @@ const listarDM = async (request, response) => {
 
         if (
           row.Tipo_Controladora === "2023" ||
-          row.Tipo_Controladora === "Locker"
+          row.Tipo_Controladora === "Locker" ||
+          row.Tipo_Controladora === "Locker-Padrão" ||
+          row.Tipo_Controladora === "Locker-Ker"
         ) {
           controladoraExistente = dmsMap
             .get(dmId)
@@ -112,6 +114,14 @@ const listarDM = async (request, response) => {
               controladoraExistente.Mola1 = [
                 ...new Set([...controladoraExistente.Mola1, row.Posicao]),
               ];
+            } else if (row.Tipo_Controladora === "Locker-Padrão") {
+              controladoraExistente.Mola1 = [
+                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+              ];
+            } else if (row.Tipo_Controladora === "Locker-Ker") {
+              controladoraExistente.Mola1 = [
+                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+              ];
             }
           }
         } else {
@@ -120,10 +130,16 @@ const listarDM = async (request, response) => {
             Tipo_Controladora: row.Tipo_Controladora,
             Placa: row.Placa,
             DIP: row.DIP,
-            Andar:  row.ControladoraDeleted === false && row.Andar ? [row.Andar] : [],
-            Posicao: row.ControladoraDeleted === false && row.Posicao ? [row.Posicao] : [],
-            Mola1:  row.ControladoraDeleted === false && row.Mola1 ? [row.Mola1] : [],
-            Mola2:  row.ControladoraDeleted === false && row.Mola2 ? [row.Mola2] : [],
+            Andar:
+              row.ControladoraDeleted === false && row.Andar ? [row.Andar] : [],
+            Posicao:
+              row.ControladoraDeleted === false && row.Posicao
+                ? [row.Posicao]
+                : [],
+            Mola1:
+              row.ControladoraDeleted === false && row.Mola1 ? [row.Mola1] : [],
+            Mola2:
+              row.ControladoraDeleted === false && row.Mola2 ? [row.Mola2] : [],
           });
         }
       }
@@ -161,6 +177,206 @@ const listarDMResumido = async (request, response) => {
     response.status(500).send("Erro ao executar consulta no banco de dados.");
   }
 };
+const listarDMPaginado = async (request, response) => {
+  try {
+    const {
+      id_cliente,
+      first = 0,
+      rows = 10,
+      sortField = "Identificacao",
+      filters = {},
+    } = request.body;
+    const sortOrder = request.body.sortOrder === "DESC" ? "DESC" : "ASC";
+    let sqlRequest = new sql.Request();
+    let queryFilters = "";
+    let filterParams = [];
+
+    // Adiciona filtros dinâmicos
+    if (filters.Numero) {
+      queryFilters += ` AND DMS.Numero LIKE @numero`;
+      filterParams.push({
+        name: "numero",
+        type: sql.NVarChar,
+        value: `%${filters.Numero.value}%`,
+      });
+    }
+    if (filters.Identificacao) {
+      queryFilters += ` AND DMS.Identificacao LIKE @identificacao`;
+      filterParams.push({
+        name: "identificacao",
+        type: sql.NVarChar,
+        value: `%${filters.Identificacao.value}%`,
+      });
+    }
+    if (filters.ClienteNome) {
+      queryFilters += ` AND DMS.ClienteNome LIKE @clienteNome`;
+      filterParams.push({
+        name: "clienteNome",
+        type: sql.NVarChar,
+        value: `%${filters.ClienteNome.value}%`,
+      });
+    }
+
+    // Define a cláusula WHERE com base no cliente
+    let whereClause = "WHERE DMS.Deleted = 0";
+    if (id_cliente) {
+      whereClause += " AND DMS.ID_Cliente = @id_cliente";
+      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    }
+
+    // Adiciona os parâmetros de filtro
+    filterParams.forEach((param) => {
+      sqlRequest.input(param.name, param.type, param.value);
+    });
+
+    // Query com paginação, ordenação e filtros
+    const queryDMs = `
+    SELECT 
+    COUNT(*) OVER() AS TotalRecords,
+    DMS.*
+    FROM DMS
+    WHERE DMS.Deleted = 0
+    ORDER BY ${sortField} ${sortOrder}
+    OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+  `;
+
+    sqlRequest.input("first", sql.Int, first);
+    sqlRequest.input("rows", sql.Int, rows);
+
+    const dmsResult = await sqlRequest.query(queryDMs);
+    const totalRecords = dmsResult.recordset.length > 0 ? dmsResult.recordset[0].TotalRecords : 0;
+    const dms = dmsResult.recordset;
+    const dmIds = dms.map((dm) => dm.ID_DM);
+    const queryControladoras = `
+      SELECT *
+      FROM Controladoras
+      WHERE Controladoras.ID_DM IN (${dmIds
+        .map((_, index) => `@dmId${index}`)
+        .join(",")})
+      AND Controladoras.Deleted = 0;
+    `;
+
+    dmIds.forEach((id, index) => {
+      sqlRequest.input(`dmId${index}`, sql.Int, id);
+    });
+
+    const controladorasResult = await sqlRequest.query(queryControladoras);
+    const controladoras = controladorasResult.recordset;
+    const dmsMap = new Map();
+    dms.forEach((dm) => {
+      dmsMap.set(dm.ID_DM, { ...dm, Controladoras: [] });
+    });
+
+    controladoras.forEach((controladora) => {
+      if (dmsMap.has(controladora.ID_DM)) {
+        const dm = dmsMap.get(controladora.ID_DM);
+        let controladoraExistente;
+        if (
+          controladora.Tipo_Controladora === "2023" ||
+          controladora.Tipo_Controladora === "Locker"
+        ) {
+          controladoraExistente = dm.Controladoras.find(
+            (ctrl) => ctrl.DIP === controladora.DIP
+          );
+        } else {
+          controladoraExistente = dm.Controladoras.find(
+            (ctrl) => ctrl.Placa === controladora.Placa
+          );
+        }
+
+        if (controladoraExistente) {
+          if (controladora.Deleted === false) {
+            if (controladora.Tipo_Controladora === "2023") {
+              controladoraExistente.Andar = [
+                ...new Set([
+                  ...controladoraExistente.Andar,
+                  controladora.Andar,
+                ]),
+              ];
+              controladoraExistente.Posicao = [
+                ...new Set([
+                  ...controladoraExistente.Posicao,
+                  controladora.Posicao,
+                ]),
+              ];
+            } else if (controladora.Tipo_Controladora === "2018") {
+              controladoraExistente.Mola1 = [
+                ...new Set([
+                  ...controladoraExistente.Mola1,
+                  controladora.Mola1,
+                ]),
+              ];
+            } else if (controladora.Tipo_Controladora === "2024") {
+              controladoraExistente.Mola1 = [
+                ...new Set([
+                  ...controladoraExistente.Mola1,
+                  controladora.Mola1,
+                ]),
+              ];
+              controladoraExistente.Mola2 = [
+                ...new Set([
+                  ...controladoraExistente.Mola2,
+                  controladora.Mola2,
+                ]),
+              ];
+            } else if (controladora.Tipo_Controladora === "Locker") {
+              controladoraExistente.Mola1 = [
+                ...new Set([
+                  ...controladoraExistente.Mola1,
+                  controladora.Posicao,
+                ]),
+              ];
+            } else if (controladora.Tipo_Controladora === "Locker-Padrão") {
+              controladoraExistente.Mola1 = [
+                ...new Set([
+                  ...controladoraExistente.Mola1,
+                  controladora.Posicao,
+                ]),
+              ];
+            } else if (controladora.Tipo_Controladora === "Locker-Ker") {
+              controladoraExistente.Mola1 = [
+                ...new Set([
+                  ...controladoraExistente.Mola1,
+                  controladora.Posicao,
+                ]),
+              ];
+            }
+          }
+        } else {
+          dm.Controladoras.push({
+            ID: controladora.ID,
+            Tipo_Controladora: controladora.Tipo_Controladora,
+            Placa: controladora.Placa,
+            DIP: controladora.DIP,
+            Andar:
+              controladora.Deleted === false && controladora.Andar
+                ? [controladora.Andar]
+                : [],
+            Posicao:
+              controladora.Deleted === false && controladora.Posicao
+                ? [controladora.Posicao]
+                : [],
+            Mola1:
+              controladora.Deleted === false && controladora.Mola1
+                ? [controladora.Mola1]
+                : [],
+            Mola2:
+              controladora.Deleted === false && controladora.Mola2
+                ? [controladora.Mola2]
+                : [],
+          });
+        }
+      }
+    });
+
+    const dmsArray = Array.from(dmsMap.values());
+    response.status(200).json({dmsArray, totalRecords});
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+};
+
 async function inserirControladoraGenerica(
   transaction,
   controladora,
@@ -553,7 +769,10 @@ async function atualizar(request, response) {
             ID_DM,
             IDcliente
           );
-        } else if (controladora.tipo === "Locker-Padrao"||controladora.tipo === "Locker-Ker") {
+        } else if (
+          controladora.tipo === "Locker-Padrao" ||
+          controladora.tipo === "Locker-Ker"
+        ) {
           await adicionarControladoraLocker(
             transaction,
             controladora,
@@ -847,10 +1066,9 @@ async function adicionarControladoraLocker(
   dmId,
   clienteId
 ) {
-
   for (const posicao of controladora.dados.posicao) {
-  const sqlRequest = new sql.Request(transaction);
-    
+    const sqlRequest = new sql.Request(transaction);
+
     const query = `
       INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
       VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Posicao, 0, 0)`;
@@ -1364,6 +1582,7 @@ async function updateClienteInfo(request, response) {
 module.exports = {
   adicionar,
   listarDM,
+  listarDMPaginado,
   listarItensDM,
   adicionarItens,
   deletarItensDM,

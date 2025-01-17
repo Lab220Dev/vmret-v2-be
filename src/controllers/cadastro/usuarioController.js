@@ -104,7 +104,7 @@ async function listar(request, response) {
         // Se id_cliente foi fornecido, filtra a consulta para aquele cliente
         if (request.body.id_cliente) {
             query = `SELECT * FROM usuarios WHERE id_cliente = '${request.body.id_cliente}' AND deleted != 1`;
-        } else {
+        } else {    
             // Caso contrário, recupera todos os usuários, incluindo o nome do cliente associado
             query = `
                 SELECT usuarios.*, clientes.nome AS nome_cliente 
@@ -133,7 +133,66 @@ async function listar(request, response) {
         response.status(500).send('Erro ao executar consulta');
     }
 }
-
+async function listarPaginado(request, response) {
+    try {
+      const {
+        id_cliente,
+        first = 0,
+        rows = 10,
+        sortField = "id_usuario",
+        sortOrder = "ASC",
+        filters = {},
+      } = request.body;
+  
+      const sqlRequest = new sql.Request();
+      let query;
+      if(id_cliente){
+        query = `SELECT 
+                COUNT(*) OVER() AS TotalRecords, 
+                usuarios.*
+                FROM 
+                usuarios
+                WHERE 
+                id_cliente = @id_cliente AND deleted != 1`;
+                sqlRequest.input("id_cliente", sql.Int, id_cliente);
+      } else{
+        query = `
+                SELECT 
+                COUNT(*) OVER() AS TotalRecords,
+                usuarios.*, 
+                clientes.nome AS nome_cliente 
+                FROM usuarios 
+                LEFT JOIN clientes ON usuarios.id_cliente = clientes.id_cliente
+                WHERE usuarios.deleted != 1
+            `;
+      }
+      if (filters.nome) {
+        query += ` AND usuarios.nome LIKE @nome`;
+        sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
+      }
+      query += `
+        ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
+        OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+      `;
+  
+      sqlRequest.input("first", sql.Int, first);
+      sqlRequest.input("rows", sql.Int, rows);
+  
+      const result = await sqlRequest.query(query);
+  
+      const usuarios = result.recordset.map((usuario) => ({
+        ...usuario,
+        senha: "senhaAntiga", 
+      }));
+      const totalRecords = usuarios.length > 0 ? usuarios[0].TotalRecords : 0;
+  
+      response.status(200).json({ usuarios, totalRecords });
+    } catch (error) {
+      console.error("Erro ao executar consulta:", error.message);
+      response.status(500).send("Erro ao executar consulta");
+    }
+  }
+  
 /**
  * Função assíncrona para listar as plantas associadas a um cliente.
  * @param {Object} request - O objeto que contém os dados enviados na requisição.

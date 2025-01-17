@@ -47,6 +47,71 @@ async function listar(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function listarPaginada(request, response) {
+  try {
+    const {
+      id_cliente,
+      first = 0,
+      rows = 10,
+      sortField = "id_centro_custo",
+      sortOrder = "ASC",
+      filters = {},
+    } = request.body;
+
+    if (!id_cliente) {
+      return response.status(401).json("ID do cliente não enviado");
+    }
+
+    const sqlRequest = new sql.Request();
+
+    // Query inicial com filtros básicos
+    let query = `
+      SELECT 
+        COUNT(*) OVER() AS TotalRecords,
+        Centro_Custos.*
+      FROM 
+        Centro_Custos
+      WHERE 
+        id_cliente = @id_cliente AND Deleted = 0
+    `;
+
+    // Adiciona o ID do cliente como parâmetro
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+
+    // Filtros dinâmicos
+    if (filters.nome) {
+      query += ` AND nome LIKE @nome`;
+      sqlRequest.input("nome", sql.VarChar, `%${filters.nome.value}%`);
+    }
+    if (filters.Codigo) {
+      query += ` AND Codigo LIKE @Codigo`;
+      sqlRequest.input("Codigo", sql.VarChar, `%${filters.Codigo.value}%`);
+    }
+
+    // Ordenação e Paginação
+    query += `
+      ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
+      OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+    `;
+
+    // Adiciona os parâmetros para paginação
+    sqlRequest.input("first", sql.Int, first);
+    sqlRequest.input("rows", sql.Int, rows);
+
+    // Executa a consulta
+    const result = await sqlRequest.query(query);
+
+    // Extrai os dados paginados e o total de registros
+    const centrosCusto = result.recordset;
+    const totalRecords = centrosCusto.length > 0 ? centrosCusto[0].TotalRecords : 0;
+
+    // Retorna os dados paginados e o total de registros
+    response.status(200).json({ centrosCusto, totalRecords });
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
 
 /**
  * Função para listar os centros de custo de forma simplificada (apenas ID e Nome).
@@ -285,4 +350,5 @@ module.exports = {
   deleteCentro,
   atualizar,
   listaSimples,
+  listarPaginada
 };
