@@ -1366,16 +1366,7 @@ async function deletar(request, response) {
     const result = await sqlRequest.query(query);
 
     if (result.rowsAffected[0] > 0) {
-      logQuery(
-        "info",
-        `O usuário ${id_usuario} deletou o cliente ${id_cliente}`,
-        "sucesso",
-        "DELETE",
-        id_cliente,
-        id_usuario,
-        query,
-        params
-      );
+
       response.status(200).json({ message: "cliente excluído com sucesso" });
     } else {
       logQuery(

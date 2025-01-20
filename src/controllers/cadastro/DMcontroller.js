@@ -188,49 +188,9 @@ const listarDMPaginado = async (request, response) => {
     } = request.body;
     const sortOrder = request.body.sortOrder === "DESC" ? "DESC" : "ASC";
     let sqlRequest = new sql.Request();
-    let queryFilters = "";
-    let filterParams = [];
-
-    // Adiciona filtros dinâmicos
-    if (filters.Numero) {
-      queryFilters += ` AND DMS.Numero LIKE @numero`;
-      filterParams.push({
-        name: "numero",
-        type: sql.NVarChar,
-        value: `%${filters.Numero.value}%`,
-      });
-    }
-    if (filters.Identificacao) {
-      queryFilters += ` AND DMS.Identificacao LIKE @identificacao`;
-      filterParams.push({
-        name: "identificacao",
-        type: sql.NVarChar,
-        value: `%${filters.Identificacao.value}%`,
-      });
-    }
-    if (filters.ClienteNome) {
-      queryFilters += ` AND DMS.ClienteNome LIKE @clienteNome`;
-      filterParams.push({
-        name: "clienteNome",
-        type: sql.NVarChar,
-        value: `%${filters.ClienteNome.value}%`,
-      });
-    }
-
-    // Define a cláusula WHERE com base no cliente
-    let whereClause = "WHERE DMS.Deleted = 0";
-    if (id_cliente) {
-      whereClause += " AND DMS.ID_Cliente = @id_cliente";
-      sqlRequest.input("id_cliente", sql.Int, id_cliente);
-    }
-
-    // Adiciona os parâmetros de filtro
-    filterParams.forEach((param) => {
-      sqlRequest.input(param.name, param.type, param.value);
-    });
 
     // Query com paginação, ordenação e filtros
-    const queryDMs = `
+    let queryDMs = `
     SELECT 
     COUNT(*) OVER() AS TotalRecords,
     DMS.*
@@ -239,12 +199,33 @@ const listarDMPaginado = async (request, response) => {
     ORDER BY ${sortField} ${sortOrder}
     OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
   `;
+    if (filters.global && filters.global.value) {
+      const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+      queryDMs = `
+    SELECT 
+    COUNT(*) OVER() AS TotalRecords,
+    DMS.*
+    FROM DMS
+    WHERE DMS.Deleted = 0 
+      AND (
+        id_cliente LIKE @globalValue OR 
+        Numero LIKE @globalValue OR 
+        Identificacao LIKE @globalValue OR 
+        Updated LIKE @globalValue OR 
+        ClienteNome LIKE @globalValue
+      )
+    ORDER BY ${sortField} ${sortOrder}
+    OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
+`;
 
+      sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+    }
     sqlRequest.input("first", sql.Int, first);
     sqlRequest.input("rows", sql.Int, rows);
 
     const dmsResult = await sqlRequest.query(queryDMs);
-    const totalRecords = dmsResult.recordset.length > 0 ? dmsResult.recordset[0].TotalRecords : 0;
+    const totalRecords =
+      dmsResult.recordset.length > 0 ? dmsResult.recordset[0].TotalRecords : 0;
     const dms = dmsResult.recordset;
     const dmIds = dms.map((dm) => dm.ID_DM);
     const queryControladoras = `
@@ -370,7 +351,7 @@ const listarDMPaginado = async (request, response) => {
     });
 
     const dmsArray = Array.from(dmsMap.values());
-    response.status(200).json({dmsArray, totalRecords});
+    response.status(200).json({ dmsArray, totalRecords });
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
