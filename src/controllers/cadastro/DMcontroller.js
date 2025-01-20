@@ -196,9 +196,14 @@ const listarDMPaginado = async (request, response) => {
     DMS.*
     FROM DMS
     WHERE DMS.Deleted = 0
-    ORDER BY ${sortField} ${sortOrder}
-    OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
   `;
+  if(id_cliente){
+    queryDMs += ` AND DMS.ID_Cliente = @id_cliente`;
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+  }
+  queryDMs += `
+  ORDER BY ${sortField} ${sortOrder}
+    OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;`;
     if (filters.global && filters.global.value) {
       const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
       queryDMs = `
