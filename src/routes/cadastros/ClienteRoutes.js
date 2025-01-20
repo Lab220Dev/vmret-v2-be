@@ -9,6 +9,7 @@ router.get('/listarClienteServicos', clienteController.listarClienteComServicos)
 router.post('/salvarMenus', clienteController.salvarMenus);
 router.post('/atualizarServico', clienteController.atualizarServico);
 router.post('/listarComMenu', clienteController.listarComMenu);
+router.post('/listarComMenuPaginado', clienteController.listarComMenuPaginado);
 router.post('/atualizar', clienteController.atualizar);
 router.post('/deletar', clienteController.deletar); 
 router.post('/adicionar', clienteController.adicionar); 

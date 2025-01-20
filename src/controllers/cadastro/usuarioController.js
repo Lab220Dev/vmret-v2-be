@@ -360,5 +360,5 @@ async function atualizarUsuario(request, response) {
  * Exporta as funções para que possam ser usadas em outros módulos.
  */
 module.exports = {
-    adicionar, listar, listarPlanta, atualizarUsuario, deleteUsuario
+    adicionar, listar, listarPlanta, atualizarUsuario, deleteUsuario,listarPaginado
 };

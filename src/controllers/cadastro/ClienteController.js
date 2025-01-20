@@ -544,10 +544,16 @@ async function listarComMenuPaginado(request, response) {
     const sqlRequest = new sql.Request();
 
     // Adiciona filtros dinâmicos, se presentes
-    if (filters.nome) {
-      queryClientes += ` AND nome LIKE @nome`;
-      sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
-    }
+    if (filters.global && filters.global.value) {
+      const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+      queryClientes += ` AND (
+          id_cliente LIKE @globalValue OR 
+          nome LIKE @globalValue OR 
+          last_login LIKE @globalValue
+      )`;
+  
+      sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+  }
 
     // Adiciona ordenação e paginação
     queryClientes += `
@@ -1581,6 +1587,7 @@ module.exports = {
   salvarMenus,
   listarClienteComServicos,
   listarComMenu,
+  listarComMenuPaginado,
   adicionarServico,
   atualizarServico,
   deletarServico,
