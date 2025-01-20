@@ -70,7 +70,15 @@ async function listarPaginada(request, response) {
       WHERE 
         id_cliente = @id_cliente AND Deleted = 0
     `;
-
+if (filters.global && filters.global.value) {
+      const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+      queryFuncoes += ` AND ( 
+          nome LIKE @globalValue OR 
+          id_centro_custo LIKE @globalValue
+      )`;
+  
+      sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+  }
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     // Filtros dinâmicos

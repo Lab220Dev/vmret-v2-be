@@ -155,6 +155,17 @@ async function listarPaginado(request, response) {
                 WHERE 
                 id_cliente = @id_cliente AND deleted != 1`;
                 sqlRequest.input("id_cliente", sql.Int, id_cliente);
+                if (filters.global && filters.global.value) {
+                    const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+                    query += ` AND (
+                        usuarios.email LIKE @globalValue OR 
+                        usuarios.nome LIKE @globalValue OR 
+                        usuarios.role LIKE @globalValue OR 
+                        usuarios.last_login LIKE @globalValue
+                    )`;
+                
+                    sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+                }
       } else{
         query = `
                 SELECT 
@@ -165,11 +176,20 @@ async function listarPaginado(request, response) {
                 LEFT JOIN clientes ON usuarios.id_cliente = clientes.id_cliente
                 WHERE usuarios.deleted != 1
             `;
+            if (filters.global && filters.global.value) {
+                const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+                query += ` AND (
+                    usuarios.email LIKE @globalValue OR 
+                    usuarios.nome LIKE @globalValue OR 
+                    usuarios.role LIKE @globalValue OR 
+                    clientes.nome LIKE @globalValue OR 
+                    usuarios.last_login LIKE @globalValue
+                )`;
+            
+                sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+            }
       }
-      if (filters.nome) {
-        query += ` AND usuarios.nome LIKE @nome`;
-        sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
-      }
+      
       query += `
         ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
         OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
