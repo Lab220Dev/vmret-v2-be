@@ -2,7 +2,7 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const app = express();
-const dbConfig = require('./src/config/dbConfig');
+const { initializePool } = require('./src/config/dbConfig');
 const usuariosRoutes = require('./src/routes/cadastros/usuarioRoutes');
 const funcionarioRoutes = require('./src/routes/cadastros/funcionarioRoutes');
 const produtoRoutes = require('./src/routes/cadastros/produtoRoutes');
@@ -62,10 +62,15 @@ app.use(cors({
 
 app.options('*', cors());  
 // Conectar ao banco de dados
-dbConfig().catch(err => {
-    console.error("Erro ao conectar ao banco de dados:", err.message);
-    process.exit(1); // Encerra o processo se houver erro na conexão
-});
+(async () => {
+    try {
+        await initializePool(); // Inicializa o pool
+        console.log("Conexão ao banco de dados pronta para uso!");
+    } catch (err) {
+        console.error("Erro ao conectar ao banco de dados:", err.message);
+        process.exit(1); // Encerra o processo em caso de erro
+    }
+})();
 //Rotas de Cadastro
 // Rotas de usuario
 app.use('/api/usuarios', autenticarToken, usuariosRoutes);

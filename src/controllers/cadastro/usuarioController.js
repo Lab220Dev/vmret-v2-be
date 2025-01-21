@@ -308,6 +308,7 @@ async function atualizarUsuario(request, response) {
             telefone = @telefone,
             ativo = @ativo,
             id_planta = @id_planta,
+            email = @email,
             role = @role`;
 
     // Define os parâmetros que serão usados na query

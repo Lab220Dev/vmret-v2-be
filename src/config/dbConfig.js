@@ -6,17 +6,36 @@ const config = {
     password: process.env.DB_PASSWORD,
     server: process.env.DB_SERVER,
     database: process.env.DB_DATABASE,
+    pool: {
+        max: 10, // Número máximo de conexões simultâneas
+        min: 0,  // Número mínimo de conexões mantidas
+        idleTimeoutMillis: 30000 // Tempo máximo de inatividade antes de liberar a conexão
+    },
     options: {
-        encrypt: false ,
-        useUTC: false,
+        encrypt: false, // Use true se estiver usando TLS
+        useUTC: false,  // Usa o horário local
     }
 };
 
-module.exports = async function () {
-    try {
-        await sql.connect(config);
-        console.log("Conexão com o banco bem sucedida!");
-    } catch (err) {
-        console.error("Erro ao conectar com o Banco de Dados:", err.message);
+// Cria uma variável global para armazenar o pool de conexões
+let pool;
+
+// Inicializa o pool de conexões
+async function initializePool() {
+    if (!pool) {
+        try {
+            pool = await sql.connect(config);
+            console.log("Pool de conexão inicializado com sucesso.");
+        } catch (err) {
+            console.error("Erro ao inicializar o pool de conexão:", err.message);
+            throw err;
+        }
     }
+    return pool;
+}
+
+// Exporta o módulo sql e a função de inicialização
+module.exports = {
+    sql,
+    initializePool,
 };
