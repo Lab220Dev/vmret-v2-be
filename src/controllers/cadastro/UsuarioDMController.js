@@ -400,7 +400,7 @@ async function manipularDMOptions(id_usuario_dm, DMOptions) {
         // Insere um novo registro se a permissão ainda não existir.
         const sqlRequestdm = new sql.Request(transaction);
         sqlRequestdm.input("id_usuario_dm", sql.Int, id_usuario_dm);
-        sqlRequestdm.input("id_dm", sql.Int, dm.id_dm);
+        sqlRequestdm.input("id_dm", sql.Int, dm.value);
         await sqlRequestdm.query(`
                     INSERT INTO DM_Usuario_Permissao (id_usuario_dm, id_dm, deleted, Sincronizado)
                     VALUES (@id_usuario_dm, @id_dm, 0, 0)

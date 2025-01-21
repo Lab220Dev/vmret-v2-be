@@ -240,7 +240,7 @@ async function salvarMenus(request, response) {
   const { id_cliente, perfil, menus, id_usuario } = request.body;
   
   // Referência de cliente fixada, normalmente seria um parâmetro dinâmico
-  const referenciaCliente = 57;
+  const referenciaCliente = 81;
   let transaction;
 
   try {
@@ -1131,7 +1131,7 @@ async function reativarServico(transaction, id_cliente, servico, destinatario) {
     sql.VarChar,
     servico.metodos_notificacao.join(", ")
   );
-  sqlRequest.input("hora_notificacao", sql.Time, servico.horario_notificacao);
+  sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);
@@ -1243,7 +1243,7 @@ async function inserirNovoServico(
     sql.VarChar,
     servico.metodos_notificacao.join(", ")
   );
-  sqlRequest.input("hora_notificacao", sql.Time, servico.horario_notificacao);
+  sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);

@@ -1235,7 +1235,7 @@ VALUES (
       Controladora: tipo_controladora,
       Placa: Placa,
       Motor1: Motor1,
-      Motor2: Motor2,
+      Motor2: Motor2? Motor2 : 0,
       DIP: Dip,
       Andar: null,
       Posicao: null,
@@ -1257,7 +1257,7 @@ VALUES (
     sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
     sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
-    sqlRequest2.input("Motor2", sql.Int, Motor2);
+    sqlRequest2.input("Motor2", sql.Int, Motor2? Motor2 : 0);
     sqlRequest2.input("DIP", sql.Int, Dip);
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
@@ -1377,7 +1377,7 @@ async function atualizarItemDM(request, response) {
       Controladora: tipo_controladora,
       Placa: Placa,
       Motor1: Motor1,
-      Motor2: Motor2,
+      Motor2: Motor2? Motor2 : 0,
       DIP: Dip,
       Andar: Andar,
       Posicao: Posicao,
@@ -1400,7 +1400,7 @@ async function atualizarItemDM(request, response) {
     sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
     sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
-    sqlRequest2.input("Motor2", sql.Int, Motor2);
+    sqlRequest2.input("Motor2", sql.Int, Motor2? Motor2 : 0);
     sqlRequest2.input("DIP", sql.Int, Dip);
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
