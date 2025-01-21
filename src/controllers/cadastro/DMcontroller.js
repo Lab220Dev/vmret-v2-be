@@ -259,7 +259,9 @@ const listarDMPaginado = async (request, response) => {
         let controladoraExistente;
         if (
           controladora.Tipo_Controladora === "2023" ||
-          controladora.Tipo_Controladora === "Locker"
+          controladora.Tipo_Controladora === "Locker-Padrão"||
+          controladora.Tipo_Controladora === "Locker-Ker"
+
         ) {
           controladoraExistente = dm.Controladoras.find(
             (ctrl) => ctrl.DIP === controladora.DIP
@@ -320,9 +322,9 @@ const listarDMPaginado = async (request, response) => {
                 ]),
               ];
             } else if (controladora.Tipo_Controladora === "Locker-Ker") {
-              controladoraExistente.Mola1 = [
+              controladoraExistente.Posicao = [
                 ...new Set([
-                  ...controladoraExistente.Mola1,
+                  ...controladoraExistente.Posicao,
                   controladora.Posicao,
                 ]),
               ];
@@ -405,7 +407,7 @@ async function inserirControladoraGenerica(
         await sqlRequest2.query(queryControladora2023);
       }
     }
-  } else if (tipoControladora === "Locker") {
+  } else if (tipoControladora === "Locker"||tipoControladora === "Locker-Padrao"||tipoControladora === "Locker-Ker") {
     for (const posicao of controladora.dados.posicao) {
       const queryControladoraLocker = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
