@@ -1329,7 +1329,7 @@ async function atualizarItemDM(request, response) {
       unidade_medida = @unidade_medida,
       imagem1 = @imagem1,
       ca = @ca,
-      Sincronizado = 0
+      Sincronizado = @Sincronizado
     WHERE
       id_item = @id_item
     AND id_cliente = @id_cliente
@@ -1381,6 +1381,7 @@ async function atualizarItemDM(request, response) {
       DIP: Dip,
       Andar: Andar,
       Posicao: Posicao,
+      Sincronizado:0,
       quantidade: 0, // Atualize conforme necessário
       capacidade: capacidade,
       deleted: false, // Atualize conforme necessário
@@ -1404,6 +1405,7 @@ async function atualizarItemDM(request, response) {
     sqlRequest2.input("DIP", sql.Int, Dip);
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
+    sqlRequest2.input("Sincronizado", sql.Int, 0);
     sqlRequest2.input("quantidade", sql.Int, 0); // Atualize conforme necessário
     sqlRequest2.input("capacidade", sql.Int, capacidade);
     sqlRequest2.input("deleted", sql.Bit, false); // Atualize conforme necessário
@@ -1430,7 +1432,7 @@ async function deletarItensDM(request, response) {
   const id_item = request.body.id_item;
   const id_usuario = request.body.id_usuario;
   const id_cliente = request.body.id_cliente;
-  const query = "UPDATE DM_Itens SET deleted = 1 WHERE id_item = @id_item";
+  const query = "UPDATE DM_Itens SET deleted = 1,Sincronizado = 0 WHERE id_item = @id_item";
   const params = {
     id_item: id_item,
   };
