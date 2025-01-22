@@ -1134,16 +1134,21 @@ async function listarItensDM(request, response) {
       const itensFiltrados = result.recordset.map((row) => {
         let posicao;
         let modeloControladora;
-        console.log(row.Controladora);
-        if (row.Controladora === "2018") {
-          posicao = `${row.Controladora} / ${row.Placa} / ${row.Motor1} / ${row.Motor2}`;
-        } else if (row.Controladora === "2023") {
-          posicao = `${row.Controladora} / ${row.DIP} / ${row.Andar} / ${row.Posicao}`;
-        } else if (row.Controladora === "Locker") {
-          posicao = `${row.Controladora} / ${row.DIP} / ${row.Posicao}`;
-        } else {
-          posicao = "Posição desconhecida";
-        }
+        switch (row.Controladora) {
+          case "2018":
+              posicao = `${row.Controladora} / ${row.Placa} / ${row.Motor1} / ${row.Motor2}`;
+              break;
+          case "2023":
+              posicao = `${row.Controladora} / ${row.DIP} / ${row.Andar} / ${row.Posicao}`;
+              break;
+          case "Locker":
+          case "Locker-Padrao":
+          case "Locker-Ker":
+              posicao = `${row.Controladora} / ${row.DIP} / ${row.Posicao}`;
+              break;
+          default:
+              posicao = "Posição desconhecida";
+      }
 
         modeloControladora = `${row.Controladora}`;
 
