@@ -1110,7 +1110,7 @@ async function adicionarControladora2018(
     sqlRequest.input("ID_Cliente", sql.Int, clienteId);
     sqlRequest.input("ID_DM", sql.Int, dmId);
     sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-    sqlRequest.input("Placa", sql.NVarChar, controladora.dados.placa);
+    sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
     sqlRequest.input("Mola1", sql.Int, mola);
 
     await sqlRequest.query(query);
