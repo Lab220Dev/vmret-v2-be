@@ -1245,7 +1245,6 @@ async function adicionarItem(request, response) {
       const queryUltimoFuncionario = `
         SELECT TOP 1 id_funcionario
         FROM Funcionarios
-        WHERE id_cliente = @id_cliente
         ORDER BY id_funcionario DESC
       `;
       const funcionarioResult = await requestDb.query(queryUltimoFuncionario);
