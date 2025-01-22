@@ -20,12 +20,13 @@ const getMimeType = (fileName) => {
 };
 
 const determinarTipo = (texto) => {
-    if (texto.includes("Princ")||texto.includes("_FotoEpi")) {
+    const textoLower = texto.toLowerCase(); // Normaliza para evitar problemas com maiúsculas/minúsculas
+    if (textoLower.includes("princ") || textoLower.includes("_fotoepi")) {
         return "principal";
-    } else if (texto.includes("info")) {
+    } else if (textoLower.includes("info")) {
         return "info";
-    }else{
-        return "Secundario";
+    } else {
+        return "secundario";
     }
 };
 
