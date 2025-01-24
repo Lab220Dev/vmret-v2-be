@@ -4,6 +4,7 @@ const DMController = require('../../controllers/cadastro/DMcontroller');
 
 router.post('/listar', DMController.listarDM);
 router.post('/listarPaginado', DMController.listarDMPaginado);
+router.post('/listaDmId', DMController.listarDMResumido2);
 router.post('/listarDMResumido', DMController.listarDMResumido);
 router.post('/recuperarInfo', DMController.recuperarClienteInfo);
 router.post('/updateInfo', DMController.updateClienteInfo);

@@ -110,7 +110,7 @@ app.use('/api/UDM', autenticarToken,autorizarRoles(['Master', 'Operador','Admini
 app.use('/api/SDM', autenticarToken,autorizarRoles(['Master', 'Operador']), SDMRoutes);
 
 // Rotas de Relatorio Status DMs
-app.use('/api/Log', autenticarToken,autorizarRoles(['Master', 'Operador']), LogRoutes);
+app.use('/api/Log', autenticarToken,autorizarRoles(['Master', 'Operador','Administrador']), LogRoutes);
 
 //Rotas de Relatorio Retirada
 app.use('/api/relatorioRetiRe',autenticarToken,autorizarRoles(['Master', 'Operador']), retiradaRealizadaRoute);

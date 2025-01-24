@@ -177,6 +177,24 @@ const listarDMResumido = async (request, response) => {
     response.status(500).send("Erro ao executar consulta no banco de dados.");
   }
 };
+const listarDMResumido2 = async (request, response) => {
+  try {
+    let sqlRequest = new sql.Request();
+    let query = `
+      SELECT 
+        id_dm, Identificacao,id_cliente
+      FROM 
+        DMS
+      WHERE 
+        Deleted = 0
+    `;
+    const result = await sqlRequest.query(query);
+    response.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta no banco de dados.");
+  }
+};
 const listarDMPaginado = async (request, response) => {
   try {
     const {
@@ -1581,6 +1599,7 @@ module.exports = {
   listarDM,
   listarDMPaginado,
   listarItensDM,
+  listarDMResumido2,
   adicionarItens,
   deletarItensDM,
   atualizar,
