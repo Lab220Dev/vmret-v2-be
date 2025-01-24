@@ -10,7 +10,7 @@ const { logQuery } = require("../../utils/logUtils"); // Importa a função 'log
 async function listarUsuariosSimples(request, response) {
   try {
     // Define a consulta SQL para listar usuários com a coluna 'id' e 'nome'.
-    let query = "SELECT id, nome FROM Usuarios_DM WHERE deleted = 0";
+    let query = "SELECT id, nome, id_cliente FROM Usuarios_DM WHERE deleted = 0";
     const sqlRequest = new sql.Request(); // Cria um novo objeto de requisição SQL.
 
     // Verifica se o ID do cliente foi fornecido no corpo da requisição, e adiciona à consulta.
