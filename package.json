@@ -3,7 +3,7 @@
   "version": "2.1.62",
   "main": "index.js",
   "scripts": {
-     "build": "babel src --out-dir build --env-name production && npx copyfiles server.js .env package.json build",
+    "build": "babel src --out-dir build --env-name production && npx copyfiles server.js .env package.json build",
     "start": "node --inspect server.js",
     "debug": "nodemon --exec \"npm start\""
   },
@@ -18,7 +18,8 @@
     "connect-history-api-fallback": "^2.0.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",

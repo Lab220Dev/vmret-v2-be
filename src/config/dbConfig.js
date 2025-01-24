@@ -12,8 +12,7 @@ const config = {
         idleTimeoutMillis: 30000 // Tempo máximo de inatividade antes de liberar a conexão
     },
     options: {
-        encrypt: false, // Use true se estiver usando TLS
-        useUTC: false,  // Usa o horário local
+        encrypt: false,  
     }
 };
 

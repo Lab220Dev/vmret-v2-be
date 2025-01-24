@@ -1,4 +1,6 @@
 const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o banco de dados SQL Server
+const { logQuery } = require("../../utils/logUtils");
+const {  format } = require('date-fns-tz');
 
 /**
  * Função para gerar um relatório baseado nos parâmetros fornecidos (id_cliente, id_dm, dia).
@@ -8,71 +10,79 @@ const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o 
  */
 async function relatorio(request, response) {
   try {
-    // Extrai os parâmetros da requisição
-    const { id_cliente, id_dm, dia } = request.body;
+    const { id_cliente, id_dm, dia, id_usuario } = request.body;
 
-    // Verifica se o id_cliente foi fornecido
     if (!id_cliente) {
-      // Retorna um erro 401 (Unauthorized) se id_cliente não foi enviado
       return response.status(401).json("ID do cliente não enviado");
     }
 
-    // Verifica se o id_dm foi fornecido
-    if (!id_dm) {
-      // Retorna um erro 401 (Unauthorized) se id_dm não foi enviado
-      return response.status(401).json("ID da DM não enviado");
+    if (!dia || isNaN(new Date(dia))) {
+      return response.status(400).json("Parâmetro 'dia' é inválido ou não foi enviado");
     }
 
-    // Converte o parâmetro 'dia' em um objeto Date e ajusta para o fuso horário
     const currentDate = new Date(dia);
-    currentDate.setHours(currentDate.getHours() - 3); // Ajusta o horário para UTC-3
 
-    // Define o início do dia (00:00:00) e o final do dia (23:59:59)
     const startOfDay = new Date(currentDate);
     startOfDay.setHours(0, 0, 0, 0);
+
     const endOfDay = new Date(currentDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Ajuste para o fuso horário UTC-3 novamente, para garantir que estamos no horário correto
-    startOfDay.setHours(startOfDay.getHours() - 3);
-    endOfDay.setHours(endOfDay.getHours() - 3);
-
-    // Declara a variável que vai armazenar a consulta SQL
-    let query;
-
-    // Cria um novo objeto de requisição SQL
     const dbRequest = new sql.Request();
-
-    // Define os parâmetros da consulta
     dbRequest.input("id_cliente", sql.Int, id_cliente);
     dbRequest.input("startOfDay", sql.DateTime, startOfDay);
     dbRequest.input("endOfDay", sql.DateTime, endOfDay);
 
-    // Verifica se id_dm é null (não especificado)
-    if (id_dm === null) {
-      // Se id_dm não for especificado, consulta o status de todas as DMs para o cliente no dia fornecido
-      query =
-        "SELECT * FROM DM_status WHERE id_cliente = @id_cliente AND CONVERT(date, dataHora) = @dia";
-    } else {
-      // Se id_dm for especificado, consulta os status da DM específica dentro do intervalo de tempo definido
-      query =
-        "SELECT DISTINCT ds.ID_DM, d.Identificacao, ds.dataHora, ds.status FROM DM_Status ds INNER JOIN DMs d ON ds.id_dm = d.ID_DM WHERE ds.id_cliente = @id_cliente AND ds.dataHora BETWEEN @startOfDay AND @endOfDay";
+    let query;
+    const params = { id_cliente, startOfDay: startOfDay.toISOString(), endOfDay: endOfDay.toISOString() };
 
-      // Adiciona o parâmetro id_dm à requisição SQL
+    if (id_dm === null || id_dm === undefined) {
+      query = `
+        SELECT * 
+        FROM DM_status 
+        WHERE id_cliente = @id_cliente 
+          AND dataHora BETWEEN @startOfDay AND @endOfDay
+        ORDER BY ID DESC
+      `;
+    } else {
+      query = `
+      SELECT 
+        ds.ID_DM, 
+        ds.ID, 
+        d.Identificacao, 
+       CONVERT(NVARCHAR, ds.dataHora, 120) AS dataHora,  
+        ds.status
+      FROM DM_Status ds
+      INNER JOIN DMs d ON ds.id_dm = d.ID_DM
+      WHERE ds.id_cliente = @id_cliente 
+        AND ds.dataHora BETWEEN @startOfDay AND @endOfDay
+      ORDER BY ds.ID DESC
+      `;
       dbRequest.input("ID_DM", sql.Int, id_dm);
+      params.id_dm = id_dm;
     }
 
-    // Executa a consulta no banco de dados
     const result = await dbRequest.query(query);
 
-    // Retorna os resultados da consulta com status 200 (OK)
-    response.status(200).json(result.recordset); // `result.recordset` contém os dados retornados pela consulta SQL
+    // Log de sucesso ao gerar o relatório
+    logQuery(
+      'info',
+      `Usuário ${id_usuario} gerou um relatório SDM`,
+      'sucesso',
+      'Relatório SDM',
+      id_cliente,
+      id_usuario,
+      query,
+      params
+    );
+
+    response.status(200).json(result.recordset);
   } catch (error) {
-    // Caso ocorra algum erro durante a execução da consulta, captura o erro e retorna uma mensagem de erro genérica
-    console.error("Erro ao executar consulta:", error.message); // Exibe o erro no console para depuração
-    response.status(500).send("Erro ao executar consulta"); // Retorna um erro 500 (Internal Server Error) ao cliente
+    console.error("Erro ao executar consulta:", error);
+    response.status(500).json({ error: "Erro ao processar a solicitação." });
   }
 }
+
 
 /**
  * Função para obter um resumo de dados com base no id_cliente.

@@ -1195,12 +1195,12 @@ async function adicionarItens(request, response) {
   const insertQuery = `INSERT INTO DM_itens (
     id_item, id_cliente, ID_DM, id_produto, Controladora, Placa, Motor1, Motor2, 
     DIP, Andar, Posicao, quantidade, quantidademinima, capacidade, deleted, nome, 
-    ProdutoCodigo, sku, unidade_medida, imagem1, ca
+    ProdutoCodigo, sku, unidade_medida, imagem1, ca,Sincronizado
 ) 
 VALUES (
     @id_item, @id_cliente, @ID_DM, @id_produto, @Controladora, @Placa, @Motor1, @Motor2, 
     @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @capacidade, @deleted, @nome, 
-    @ProdutoCodigo, @sku, @unidade_medida, @imagem1, @ca
+    @ProdutoCodigo, @sku, @unidade_medida, @imagem1, @ca,@Sincronizado
 )`;
 
   try {
@@ -1248,6 +1248,7 @@ VALUES (
       Posicao: null,
       quantidade: 0,
       capacidade: Capacidade,
+      Sincronizado:0,
       deleted: false,
       nome: nome,
       ProdutoCodigo: ProdutoCodigo,
@@ -1278,6 +1279,7 @@ VALUES (
     sqlRequest2.input("imagem1", sql.NVarChar, imagem1);
     sqlRequest2.input("ca", sql.NVarChar, ca);
     sqlRequest2.input("quantidademinima", sql.Int, quantidademinima);
+    sqlRequest2.input("Sincronizado", sql.Int, 0);
 
     const insertResult = await sqlRequest2.query(insertQuery);
     if (insertResult.rowsAffected[0] > 0) {

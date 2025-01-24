@@ -30,7 +30,7 @@ async function relatorio(request, response) {
                 r.ID_Funcionario,
                 r.Forma_Autenticacao,
                 r.Autenticacao,
-                r.Dia,
+                CONVERT( NVARCHAR,r.Dia,120) AS Dia,
                 r.Deleted,
                 r.Sincronizado,
                 ri.ID_Retirada_Item,
@@ -78,18 +78,33 @@ async function relatorio(request, response) {
         
         // Verifica se as datas de início e fim foram fornecidas
         if (data_inicio && data_final) {
+            // Ajusta a hora para o início e o fim do dia
+            const startDate = new Date(data_inicio);
+            startDate.setHours(0, 0, 0, 0); // Define hora como 00:00:00
+        
+            const endDate = new Date(data_final);
+            endDate.setHours(23, 59, 59, 999); // Define hora como 23:59:59.999
+        
             // Adiciona condição para filtrar entre as duas datas
             query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
-            params.data_inicio = new Date(data_inicio).toISOString(); // Converte para o formato ISO
-            params.data_final = new Date(data_final).toISOString(); // Converte para o formato ISO
+            params.data_inicio = startDate.toISOString(); // Converte para ISO
+            params.data_final = endDate.toISOString(); // Converte para ISO
         } else if (data_inicio) {
+            // Ajusta a hora para o início do dia
+            const startDate = new Date(data_inicio);
+            startDate.setHours(0, 0, 0, 0); // Define hora como 00:00:00
+        
             // Adiciona condição para filtrar a partir da data de início
             query += ' AND r.Dia >= @data_inicio';
-            params.data_inicio = new Date(data_inicio).toISOString();
+            params.data_inicio = startDate.toISOString();
         } else if (data_final) {
+            // Ajusta a hora para o fim do dia
+            const endDate = new Date(data_final);
+            endDate.setHours(23, 59, 59, 999); // Define hora como 23:59:59.999
+        
             // Adiciona condição para filtrar até a data final
             query += ' AND r.Dia <= @data_final';
-            params.data_final = new Date(data_final).toISOString();
+            params.data_final = endDate.toISOString();
         }
 
         // Cria um objeto de requisição SQL
@@ -115,7 +130,7 @@ async function relatorio(request, response) {
           Matricula: row.matricula,
           Nome: row.nome,
           Email: row.email,
-          Dia: new Date(row.Dia).toISOString(), // Converte a data para um formato legível
+          Dia: row.Dia, 
           ProdutoID: row.ProdutoID,
           ProdutoNome: row.ProdutoNome,
           ProdutoSKU: row.ProdutoSKU,
