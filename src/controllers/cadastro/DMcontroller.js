@@ -946,6 +946,7 @@ async function atualizarControladoraLocker(
       sqlRequest.input("Posicao", sql.Int, posicao);
 
       await sqlRequest.query(query);
+      console.log("Posição inserida:", posicao);
     }
   }
 }
@@ -1013,10 +1014,9 @@ async function atualizarControladora2023(
       sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
       await sqlRequestInsert.query(insertQuery);
+      console.log("Posição inserida:", posicao);
+      console.log("Andar inserido:", novasAndares);
     }
-    console.log("Posição inserida:", posicao);
-    console.log("Andar inserido:", novasAndares);
-    
   }
 }
 }
@@ -1127,13 +1127,13 @@ async function adicionarControladora2023(
   dmId,
   clienteId
 ) {
-  const sqlRequest = new sql.Request(transaction);
 
   for (const andar of controladora.dados.andar) {
     for (const posicao of controladora.dados.posicao) {
       const query = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Andar, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, 0, 0)`;
+        const sqlRequest = new sql.Request(transaction);
 
       sqlRequest.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest.input("ID_DM", sql.Int, dmId);
@@ -1144,8 +1144,6 @@ async function adicionarControladora2023(
 
       await sqlRequest.query(query);
     }
-    console.log("Posição inserida:", posicao);
-    console.log("Andar inserido:", andar);
   }
 }
 async function adicionarControladora2018(
