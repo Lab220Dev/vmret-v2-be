@@ -946,6 +946,7 @@ async function atualizarControladoraLocker(
       sqlRequest.input("Posicao", sql.Int, posicao);
 
       await sqlRequest.query(query);
+      console.log("Posição inserida:", posicao);
     }
   }
 }
@@ -1013,10 +1014,9 @@ async function atualizarControladora2023(
       sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
       await sqlRequestInsert.query(insertQuery);
+      console.log("Posição inserida:", posicao);
+      console.log("Andar inserido:", novasAndares);
     }
-    console.log("Posição inserida:", posicao);
-    console.log("Andar inserido:", novasAndares);
-    
   }
 }
 }
