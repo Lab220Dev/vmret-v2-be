@@ -38,9 +38,22 @@ async function relatorio(request, response) {
 
     if (id_dm === null || id_dm === undefined) {
       query = `
-        SELECT * 
-        FROM DM_status 
-        WHERE id_cliente = @id_cliente 
+        SELECT 
+          ds.ID,
+          ds.ID_DM,
+          ds.id_cliente,
+          ds.status,
+          CONVERT(NVARCHAR, ds.dataHora, 120) AS dataHora,
+          ds.Sincronizado,
+          dms.Identificacao 
+        FROM 
+          DM_status ds
+        Join 
+          DMs
+        ON
+          ds.ID_DM = dms.ID_DM
+        WHERE 
+          id_cliente = @id_cliente 
           AND dataHora BETWEEN @startOfDay AND @endOfDay
         ORDER BY ID DESC
       `;

@@ -17,7 +17,7 @@ async function relatorio(request, response) {
         a.id_dm,
         a.id_item,
         a.id_usuario_dm,
-        a.dia,
+        CONVERT(NVARCHAR, a.dia, 120) AS dia, 
         a.qtd_abastecido,
         d.nome AS nome_produto,
         d.controladora,

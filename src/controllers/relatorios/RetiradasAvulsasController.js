@@ -30,8 +30,8 @@ async function relatorio(request, response) {
     // Define a consulta SQL básica, com os filtros necessários para a consulta.
     let query = `
             SELECT  
-                r.ID_DM AS DM,                       
-                r.Dia AS Data,                        
+                r.ID_DM AS DM,                      
+                CONVERT( NVARCHAR,r.Dia,120) AS Data,                        
                 f.matricula AS Matricula,             
                 r.Autenticacao AS Voucher,            
                 f.nome AS Nome,                       
@@ -109,7 +109,7 @@ async function relatorio(request, response) {
     // Processa os resultados para formatá-los de acordo com as necessidades do frontend.
     const retiradasfiltradas = result.recordset.map((row) => ({
       DM: row.DM,                               // ID da DM
-      Data: format(new Date(row.Data), "dd/MM/yyyy - HH:mm"), // Formata a data no formato "dd/MM/yyyy - HH:mm"
+      Data: row.Data, // Formata a data no formato "dd/MM/yyyy - HH:mm"
       Matricula: row.Matricula,                 // Matrícula do funcionário
       Voucher: row.Voucher,                     // Voucher associado à retirada
       Nome: row.Nome,                           // Nome do funcionário

@@ -79,24 +79,253 @@ function getMenuOrderByProfile(perfil) {
   }
 }
 
+async function salvarMenus(request, response) {
+  const { id_cliente, perfil, menus } = request.body;
+
+  const referenciaCliente = 88;
+  let transaction;
+
+  try {
+    console.log("Perfil recebido:", perfil);
+
+    const menuOrder = getMenuOrderByProfile(perfil);
+    console.log("Menu Order selecionado:", menuOrder);
+
+    // Inicia a transação
+    transaction = new sql.Transaction();
+    await transaction.begin();
+    console.log("Transação iniciada");
+
+    // Inserir Dashboard
+    if (menuOrder["Dashboard"]) {
+      const dashboardOrder = menuOrder["Dashboard"];
+      const existsDashboard = await verificarMenuExistente(
+        transaction,
+        id_cliente,
+        "Dashboard"
+      );
+
+      if (!existsDashboard) {
+        await inserirMenuPrincipal(transaction, id_cliente, perfil, "Dashboard", dashboardOrder);
+        console.log("Dashboard inserido com sucesso!");
+      } else {
+        console.log("Dashboard já existe. Pulando inserção.");
+      }
+    } else {
+      console.error("Erro: Menu 'Dashboard' não encontrado no menuOrder.");
+      throw new Error('Menu "Dashboard" não encontrado no menuOrder.');
+    }
+
+    console.log("Preparando dados para inserção...");
+
+    const bulkMenus = [];
+    const bulkSubmenus = [];
+    const submenuNames = []; // Lista para coletar os nomes de submenus e subsubmenus
+    const subsubmenuMap = {}; // Mapeia submenus para seus subsubmenus
+
+    // Preparar os dados para inserção
+    for (let menu of menus) {
+      const order = menuOrder[menu.name];
+      if (!order) {
+        console.log(`Menu ${menu.name} não encontrado para o perfil ${perfil}`);
+        continue;
+      }
+
+      bulkMenus.push({
+        ID_item: order.id_item,
+        Cod_Cli: id_cliente,
+        Nome: menu.name,
+        Perfil: perfil,
+        Icone: order.icone,
+      });
+
+      for (let submenu of menu.submenus) {
+        submenuNames.push(submenu.name); // Adiciona o nome do submenu para consulta
+
+        bulkSubmenus.push({
+          ID_Item: order.id_item,
+          Cod_Cli: id_cliente,
+          Nome: submenu.name,
+          Perfil: perfil,
+          To: null, // Será preenchido posteriormente
+          ID_Sub_Item: 0, // Preenchido posteriormente
+        });
+
+        if (submenu.subsubmenus) {
+          // Adicionar subsubmenus ao mapa para processamento posterior
+          subsubmenuMap[submenu.name] = submenu.subsubmenus;
+          submenu.subsubmenus.forEach((subsubmenu) =>
+            submenuNames.push(subsubmenu.name)
+          );
+        }
+      }
+    }
+
+    console.log("Preparação dos dados concluída com sucesso!");
+
+    // Inserir menus principais
+    console.log("Inserindo menus principais...");
+    await bulkInsert(transaction, "Menu", bulkMenus, 500);
+    console.log(`✅ Inseridos ${bulkMenus.length} registros na tabela Menu`);
+
+    // Obter os valores 'To' de todos os submenus e subsubmenus
+    console.log("Buscando valores 'To' para todos os submenus e subsubmenus...");
+    const submenuToValues = await getAllSubmenuToValues(transaction, submenuNames, referenciaCliente);
+
+    // Atualizar os valores 'To' nos submenus
+    bulkSubmenus.forEach((submenu) => {
+      submenu.To = submenuToValues[submenu.Nome] || null; // Preenche o valor 'To'
+    });
+
+    // Inserir submenus
+    console.log("Inserindo submenus...");
+    await bulkInsert(transaction, "Menu_Itens", bulkSubmenus, 500);
+    console.log(`✅ Inseridos ${bulkSubmenus.length} registros na tabela Menu_Itens (Submenus)`);
+
+    // Obter os IDs dos submenus recém-inseridos
+    console.log("Buscando IDs dos submenus para preparar os subsubmenus...");
+    const submenuIdMap = {};
+    for (let menu of menus) {
+      const submenuIds = await getInsertedSubmenuIds(transaction, id_cliente, menuOrder[menu.name].id_item);
+      Object.assign(submenuIdMap, submenuIds); // Adiciona os IDs ao mapa global
+    }
+
+    // Preparar os subsubmenus para inserção
+    const bulkSubsubmenus = [];
+    for (let [submenuName, subsubmenus] of Object.entries(subsubmenuMap)) {
+      const submenuId = submenuIdMap[submenuName]; // Obter o ID do submenu pai
+      if (!submenuId) {
+        console.warn(`⚠️ ID do submenu '${submenuName}' não encontrado. Pulando subsubmenus.`);
+        continue;
+      }
+
+      for (let subsubmenu of subsubmenus) {
+        bulkSubsubmenus.push({
+          ID_Item: submenuIdMap[subsubmenu.name] || 0, // ID do menu pai
+          ID_Sub_Item: submenuId, // ID do submenu pai
+          Cod_Cli: id_cliente,
+          Nome: subsubmenu.name,
+          Perfil: perfil,
+          To: submenuToValues[subsubmenu.name] || null, // Preenche o valor 'To'
+        });
+      }
+    }
+
+    console.log("Subsubmenus preparados para inserção!");
+
+    // Inserir subsubmenus
+    console.log("Inserindo subsubmenus...");
+    await bulkInsert(transaction, "Menu_Itens", bulkSubsubmenus, 500);
+    console.log(`✅ Inseridos ${bulkSubsubmenus.length} registros na tabela Menu_Itens (Subsubmenus)`);
+
+    // Finalizar a transação
+    await transaction.commit();
+    console.log("✅ Transação concluída com sucesso!");
+    response.status(200).send("Menus salvos com sucesso!");
+  } catch (error) {
+    // Reverter a transação em caso de erro
+    if (transaction) {
+      try {
+        await transaction.rollback();
+        console.log("⚠️ Transação revertida com sucesso.");
+      } catch (rollbackError) {
+        console.error("Erro ao reverter a transação:", rollbackError.message);
+      }
+    }
+
+    console.error("❌ Erro ao salvar menus:", error.message);
+    response.status(500).send("Erro ao salvar menus");
+  }
+}
+
+
 /**
- * Insere um item de menu principal na tabela `Menu` do banco de dados.
- * 
- * @param {object} transaction - A transação SQL utilizada para inserir os dados.
- * @param {number} id_cliente - O ID do cliente associado ao menu.
- * @param {number} perfil - O perfil de acesso do usuário.
- * @param {string} nome - O nome do item de menu.
- * @param {object} order - O objeto contendo as informações do item de menu (id_item e icone).
- * @returns {Promise<void>} - Retorna uma promessa que indica a conclusão da inserção.
+ * Verifica se um menu com o nome especificado já existe no banco.
  */
-async function inserirMenuPrincipal(
-  transaction,
-  id_cliente,
-  perfil,
-  nome,
-  order
-) {
-  let sqlRequest = new sql.Request(transaction);
+async function verificarMenuExistente(transaction, id_cliente, menuName) {
+  const request = new sql.Request(transaction);
+  request.input("id_cliente", sql.Int, id_cliente);
+  request.input("menu_name", sql.VarChar, menuName);
+
+  const result = await request.query(`
+    SELECT COUNT(*) AS count 
+    FROM Menu 
+    WHERE Cod_Cli = @id_cliente AND Nome = @menu_name AND deleted = 0
+  `);
+
+  return result.recordset[0].count > 0;
+}
+
+/**
+ * Realiza o bulk insert em uma tabela SQL.
+ */
+async function bulkInsert(transaction, tableName, data, batchSize = 500) {
+  if (!data.length) return;
+
+  const columns = Object.keys(data[0]).map((col) => `[${col}]`).join(", ");
+
+  for (let i = 0; i < data.length; i += batchSize) {
+    const batch = data.slice(i, i + batchSize);
+    const values = batch
+      .map(
+        (row) =>
+          "(" +
+          Object.values(row)
+            .map((value) =>
+              typeof value === "string"
+                ? `'${value.replace(/'/g, "''")}'`
+                : value === null || value === undefined
+                ? "NULL"
+                : value
+            )
+            .join(", ") +
+          ")"
+      )
+      .join(", ");
+
+    const sqlQuery = `INSERT INTO ${tableName} (${columns}) VALUES ${values}`;
+    console.log(`Executando bulk insert na tabela ${tableName}, registros: ${batch.length}`);
+
+    const request = new sql.Request(transaction);
+    request.timeout = 60000; // 60 segundos de timeout
+    try {
+      await request.query(sqlQuery);
+      console.log(`✅ Bulk insert concluído para a tabela ${tableName}, lote de ${batch.length} registros.`);
+    } catch (err) {
+      console.error(`❌ Erro ao executar bulk insert na tabela ${tableName}:`, err.message);
+      throw err;
+    }
+  }
+}
+
+async function getInsertedSubmenuIds(transaction, id_cliente, menuId) {
+  const query = `
+    SELECT ID, Nome
+    FROM Menu_Itens
+    WHERE Cod_Cli = @id_cliente AND ID_Item = @menuId
+  `;
+
+  const request = new sql.Request(transaction);
+  request.input("id_cliente", sql.Int, id_cliente);
+  request.input("menuId", sql.Int, menuId);
+
+  try {
+    const result = await request.query(query);
+    console.log(`✅ IDs dos submenus obtidos para ID_Item=${menuId}:`, result.recordset);
+    return result.recordset.reduce((acc, row) => {
+      acc[row.Nome] = row.ID;
+      return acc;
+    }, {});
+  } catch (err) {
+    console.error("❌ Erro ao buscar IDs dos submenus:", err.message);
+    throw err;
+  }
+}
+/**
+ * Insere um item de menu principal no banco de dados.
+ */
+async function inserirMenuPrincipal(transaction, id_cliente, perfil, nome, order) {
+  const sqlRequest = new sql.Request(transaction);
   sqlRequest
     .input("Cod_Cli", sql.Int, id_cliente)
     .input("Nome", sql.VarChar, nome)
@@ -104,350 +333,40 @@ async function inserirMenuPrincipal(
     .input("Icone", sql.VarChar, order.icone)
     .input("ID_item", sql.Int, order.id_item);
 
-  console.log(`Inserindo menu: ${nome}`);
   await sqlRequest.query(`
-        INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
-        VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
-    `);
-  console.log(`Menu ${nome} inserido com sucesso`);
+    INSERT INTO Menu (ID_item, Cod_Cli, Nome, Perfil, Icone)
+    VALUES (@ID_item, @Cod_Cli, @Nome, @Perfil, @Icone)
+  `);
 }
 
-/**
- * Insere um submenu no banco de dados, associando-o ao item de menu correspondente.
- * 
- * @param {object} transaction - A transação SQL utilizada para inserir os dados.
- * @param {number} id_cliente - O ID do cliente associado ao submenu.
- * @param {number} perfil - O perfil de acesso do usuário.
- * @param {number} id_item - O ID do item de menu ao qual o submenu será associado.
- * @param {object} submenu - O objeto que representa o submenu a ser inserido.
- * @param {number} referenciaCliente - O ID do cliente de referência para o submenu.
- * @returns {Promise<number>} - Retorna o ID do submenu inserido ou `0` se não houver subsubmenus.
- */
-async function inserirSubmenu(
-  transaction,
-  id_cliente,
-  perfil,
-  id_item,
-  submenu,
-  referenciaCliente
-) {
-  let sqlRequest = new sql.Request(transaction);
-  let submenuTo = null;
+async function getAllSubmenuToValues(transaction, submenuNames, referenciaCliente) {
+  if (!submenuNames.length) return {};
 
-  // Verifica se o submenu possui subsubmenus
-  if (!submenu.subsubmenus || submenu.subsubmenus.length === 0) {
-    const result = await sqlRequest.query(`
-            SELECT [to] FROM Menu_Itens WHERE Nome = '${submenu.name}' AND Cod_Cli = ${referenciaCliente}
-        `);
-    submenuTo = result.recordset[0]?.to || "";
-  }
+  const query = `
+    SELECT Nome, [to]
+    FROM Menu_Itens
+    WHERE Nome IN (${submenuNames.map((name) => `'${name.replace(/'/g, "''")}'`).join(", ")})
+      AND Cod_Cli = @referenciaCliente
+  `;
 
-  // Configura os parâmetros para inserção
-  sqlRequest
-    .input("ID_Item", sql.Int, id_item)
-    .input("Cod_Cli", sql.Int, id_cliente)
-    .input("Nome", sql.VarChar, submenu.name)
-    .input("Perfil", sql.Int, perfil)
-    .input("to", sql.VarChar, submenuTo);
-
-  console.log(`Inserindo submenu: ${submenu.name}`);
-
-  // Insere o submenu, verificando se ele possui subsubmenus
-  if (submenu.subsubmenus && submenu.subsubmenus.length > 0) {
-    const resultSubmenu = await sqlRequest.query(`
-            INSERT INTO Menu_Itens (ID_Item, Cod_Cli, Nome, Perfil, [to], ID_Sub_Item)
-            OUTPUT INSERTED.ID
-            VALUES (@ID_Item, @Cod_Cli, @Nome, @Perfil, NULL, 0)
-        `);
-    const submenuId = resultSubmenu.recordset[0].ID;
-    console.log(
-      `Submenu ${submenu.name} inserido com ID_Sub_Item: ${submenuId}`
-    );
-    return submenuId;
-  } else {
-    // Caso não tenha subsubmenus, insere o submenu com ID_Sub_Item 0.
-    await sqlRequest.query(`
-            INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
-            VALUES (@ID_Item, 0, @Cod_Cli, @Nome, @Perfil, @to)
-        `);
-    console.log(`Submenu ${submenu.name} inserido com ID_Sub_Item 0`);
-    return 0;
-  }
-}
-
-/**
- * Função responsável por inserir um subsubmenu na tabela Menu_Itens no banco de dados.
- * 
- * @param {sql.Transaction} transaction - A transação SQL para garantir que as inserções sejam feitas de forma atômica.
- * @param {number} id_cliente - O ID do cliente relacionado ao menu.
- * @param {number} perfil - O perfil do usuário, usado para controlar o acesso e a visibilidade.
- * @param {number} id_item - O ID do item de menu ao qual o subsubmenu pertence.
- * @param {number} id_sub_item - O ID do submenu ao qual o subsubmenu pertence.
- * @param {object} subsubmenu - Objeto que contém as informações do subsubmenu a ser inserido, como nome.
- * @param {number} referenciaCliente - ID do cliente de referência para verificar o destino do submenu.
- */
-async function inserirSubsubmenu(
-  transaction,
-  id_cliente,
-  perfil,
-  id_item,
-  id_sub_item,
-  subsubmenu,
-  referenciaCliente
-) {
-  // Criação de uma nova requisição SQL utilizando a transação.
-  let sqlRequest = new sql.Request(transaction);
-
-  // Consulta para obter o valor do campo 'to' do Menu_Itens, baseado no nome do subsubmenu e o código do cliente.
-  const result = await sqlRequest.query(`
-        SELECT [to] FROM Menu_Itens WHERE Nome = '${subsubmenu.name}' AND Cod_Cli = ${referenciaCliente}
-    `);
-  
-  // Define o valor de 'to' como o resultado da consulta, ou uma string vazia caso não encontrado.
-  const subsubmenuTo = result.recordset[0]?.to || "";
-
-  // Exibe no console a ação de inserção do subsubmenu.
-  console.log(`Inserindo subsubmenu: ${subsubmenu.name}`);
-
-  // Adiciona os parâmetros da requisição SQL para a inserção do subsubmenu.
-  sqlRequest
-    .input("ID_Item", sql.Int, id_item)
-    .input("ID_Sub_Item", sql.Int, id_sub_item)
-    .input("Cod_Cli", sql.Int, id_cliente)
-    .input("Nome", sql.VarChar, subsubmenu.name)
-    .input("Perfil", sql.Int, perfil)
-    .input("to", sql.VarChar, subsubmenuTo);
-
-  // Executa a query para inserir o subsubmenu na tabela Menu_Itens.
-  await sqlRequest.query(`
-        INSERT INTO Menu_Itens (ID_Item, ID_Sub_Item, Cod_Cli, Nome, Perfil, [to])
-        VALUES (@ID_Item, @ID_Sub_Item, @Cod_Cli, @Nome, @Perfil, @to)
-    `);
-  
-  // Exibe no console o sucesso da inserção do subsubmenu.
-  console.log(`Subsubmenu ${subsubmenu.name} inserido com sucesso`);
-}
-
-/**
- * Função que salva ou atualiza os menus e submenus no banco de dados, incluindo a verificação de alterações e inserção de novos registros.
- * Utiliza transações para garantir a integridade dos dados.
- * 
- * @param {object} request - Objeto que contém os dados da requisição, incluindo o id_cliente, perfil, menus e id_usuario.
- * @param {object} response - Objeto que contém a resposta a ser enviada ao cliente.
- */
-async function salvarMenus(request, response) {
-  // Extraí as variáveis do corpo da requisição
-  const { id_cliente, perfil, menus, id_usuario } = request.body;
-  
-  // Referência de cliente fixada, normalmente seria um parâmetro dinâmico
-  const referenciaCliente = 81;
-  let transaction;
+  const request = new sql.Request(transaction);
+  request.input("referenciaCliente", sql.Int, referenciaCliente);
 
   try {
-    console.log("Perfil recebido:", perfil);
+    const result = await request.query(query);
+    console.log(`✅ Valores 'To' obtidos:`, result.recordset);
 
-    // Obtém a ordem dos menus com base no perfil fornecido.
-    const menuOrder = getMenuOrderByProfile(perfil);
-    console.log("Menu Order selecionado:", menuOrder);
-
-    // Inicia uma nova transação SQL
-    transaction = new sql.Transaction();
-    await transaction.begin();
-    console.log("Transação iniciada");
-
-    // Verifica se o menu "Dashboard" existe na ordem dos menus do perfil
-    if (!menuOrder["Dashboard"]) {
-      throw new Error('Menu "Dashboard" não encontrado no menuOrder para o perfil especificado');
-    }
-
-    // Insere o menu principal "Dashboard"
-    await inserirMenuPrincipal(transaction, id_cliente, perfil, "Dashboard", menuOrder["Dashboard"]);
-
-    // Consulta os menus existentes no banco de dados
-    const queryMenusExistentes = `
-      SELECT * FROM Menu m WHERE Cod_cli = @id_cliente AND deleted = 0
-    `;
-    const requestSql = new sql.Request();
-    requestSql.input("id_cliente", sql.Int, id_cliente);
-    
-    // Aguarda a execução da consulta para garantir que 'resultMenusExistentes' seja preenchido
-    const resultMenusExistentes = await requestSql.query(queryMenusExistentes);
-
-    // Atribui os menus existentes à variável 'menusExistentes', caso existam
-    const menusExistentes = resultMenusExistentes.recordset || [];
-
-    // Loop sobre os menus fornecidos na requisição
-    for (let menu of menus) {
-      const order = menuOrder[menu.name];
-      
-      if (!order) {
-        console.log(`Menu ${menu.name} não encontrado no menuOrder para o perfil ${perfil}`);
-        continue;
-      }
-
-      // Verifica se o menu já existe no banco de dados
-      const menuExistente = menusExistentes.find(existingMenu => existingMenu.Nome === menu.name);
-
-      if (menuExistente) {
-        // O menu existe, então o atualiza e marca como "não deletado"
-        await atualizarMenuExistente(transaction, id_cliente, perfil, menu.name, order);
-
-        // Verifica se houve alterações nos submenus
-        for (let submenu of menu.submenus) {
-          const submenuExistente = await verificarSubmenuExistente(id_cliente, menuExistente.ID_item, submenu.name);
-          
-          if (!submenuExistente) {
-            // Insere novo submenu se não encontrado
-            const submenuId = await inserirSubmenu(transaction, id_cliente, perfil, menuExistente.ID_item, submenu, referenciaCliente);
-
-            // Insere subsubmenus se houver
-            if (submenuId > 0 && submenu.subsubmenus) {
-              for (let subsubmenu of submenu.subsubmenus) {
-                await inserirSubsubmenu(transaction, id_cliente, perfil, menuExistente.ID_item, submenuId, subsubmenu, referenciaCliente);
-              }
-            }
-          } else {
-            // Marca o submenu existente como "não deletado"
-            await atualizarSubmenuExistente(transaction, submenuExistente.ID_submenu);
-          }
-        }
-      } else {
-        // Insere novo menu principal caso não encontrado
-        await inserirMenuPrincipal(transaction, id_cliente, perfil, menu.name, order);
-
-        // Insere submenus e subsubmenus
-        for (let submenu of menu.submenus) {
-          const submenuId = await inserirSubmenu(transaction, id_cliente, perfil, order.id_item, submenu, referenciaCliente);
-
-          if (submenuId > 0 && submenu.subsubmenus) {
-            for (let subsubmenu of submenu.subsubmenus) {
-              await inserirSubsubmenu(transaction, id_cliente, perfil, order.id_item, submenuId, subsubmenu, referenciaCliente);
-            }
-          }
-        }
-      }
-    }
-
-    // Marca como deletados os menus e submenus que não existem mais
-    await marcarMenusDeletados(transaction, id_cliente, menus);
-
-    // Commit da transação caso tudo tenha ocorrido com sucesso
-    await transaction.commit();
-    console.log("Transação concluída com sucesso");
-    response.status(200).send("Menus salvos com sucesso!");
-  } catch (error) {
-    // Realiza o rollback da transação em caso de erro
-    if (transaction) await transaction.rollback();
-    console.error("Erro ao salvar menus:", error.message);
-    response.status(500).send("Erro ao salvar menus");
+    // Retorna um mapa Nome -> To
+    return result.recordset.reduce((acc, row) => {
+      acc[row.Nome] = row.to || null;
+      return acc;
+    }, {});
+  } catch (err) {
+    console.error("❌ Erro ao buscar valores 'To':", err.message);
+    throw err;
   }
 }
 
-/**
- * Função que marca os menus como deletados no banco de dados, onde o nome do menu não está na lista de menus fornecida.
- * 
- * @param {sql.Transaction} transaction - A transação SQL para garantir que as alterações sejam feitas de forma atômica.
- * @param {number} id_cliente - O ID do cliente cujos menus serão marcados como deletados.
- * @param {Array} menus - Lista de menus válidos que não devem ser deletados. Contém objetos com a propriedade `name`.
- */
-async function marcarMenusDeletados(transaction, id_cliente, menus) {
-  // Consulta SQL para atualizar os menus que não estão mais presentes, marcando-os como deletados.
-  const queryDeleteMenus = `
-    UPDATE Menu
-    SET deleted = 1
-    WHERE Cod_cli = @id_cliente
-    AND Nome NOT IN (@menus)
-  `;
-
-  // Cria uma lista com os nomes dos menus válidos para não marcar como deletados
-  const menuNames = menus.map(menu => menu.name);
-  
-  // Cria uma nova requisição SQL
-  const requestSql = new sql.Request();
-  requestSql.input("id_cliente", sql.Int, id_cliente);
-  requestSql.input("menus", sql.NVarChar, menuNames.join(','));
-
-  // Executa a consulta para marcar como deletados os menus não presentes.
-  await requestSql.query(queryDeleteMenus);
-}
-
-/**
- * Função que verifica se um submenu já existe para um cliente e menu específicos.
- * 
- * @param {number} id_cliente - O ID do cliente para verificar a existência do submenu.
- * @param {number} menuId - O ID do menu ao qual o submenu pertence.
- * @param {string} submenuName - O nome do submenu a ser verificado.
- * 
- * @returns {object|null} - Retorna o objeto do submenu se existir, ou `null` caso contrário.
- */
-async function verificarSubmenuExistente(id_cliente, menuId, submenuName) {
-  // Consulta SQL para verificar se o submenu já existe
-  const querySubmenuExistente = `
-    SELECT * FROM Submenu
-    WHERE Cod_cli = @id_cliente AND ID_Menu = @menuId AND Nome = @submenuName
-  `;
-  
-  // Cria uma nova requisição SQL
-  const requestSql = new sql.Request();
-  requestSql.input("id_cliente", sql.Int, id_cliente);
-  requestSql.input("menuId", sql.Int, menuId);
-  requestSql.input("submenuName", sql.NVarChar, submenuName);
-  
-  // Executa a consulta para verificar a existência do submenu
-  const resultSubmenu = await requestSql.query(querySubmenuExistente);
-  
-  // Se o submenu for encontrado, retorna o primeiro registro, caso contrário, retorna null.
-  return resultSubmenu.recordset.length > 0 ? resultSubmenu.recordset[0] : null;
-}
-
-/**
- * Função que atualiza as informações de um menu existente, marcando-o como não deletado e definindo a ordem.
- * 
- * @param {sql.Transaction} transaction - A transação SQL para garantir que a atualização seja feita de forma atômica.
- * @param {number} id_cliente - O ID do cliente cujo menu será atualizado.
- * @param {number} perfil - O perfil do usuário, usado para definir o acesso ao menu.
- * @param {string} menuName - O nome do menu que será atualizado.
- * @param {number} menuOrder - A ordem do menu no perfil.
- */
-async function atualizarMenuExistente(transaction, id_cliente, perfil, menuName, menuOrder) {
-  // Consulta SQL para atualizar o menu, marcando-o como não deletado e atualizando a ordem.
-  const queryUpdateMenu = `
-    UPDATE Menu
-    SET deleted = 0, order = @order
-    WHERE Cod_cli = @id_cliente AND Nome = @menuName
-  `;
-  
-  // Cria uma nova requisição SQL
-  const requestSql = new sql.Request();
-  requestSql.input("id_cliente", sql.Int, id_cliente);
-  requestSql.input("menuName", sql.NVarChar, menuName);
-  requestSql.input("order", sql.Int, menuOrder);
-  
-  // Executa a consulta para atualizar o menu.
-  await requestSql.query(queryUpdateMenu);
-}
-
-/**
- * Função que atualiza um submenu existente, marcando-o como não deletado.
- * 
- * @param {sql.Transaction} transaction - A transação SQL para garantir que a atualização seja feita de forma atômica.
- * @param {number} submenuId - O ID do submenu que será atualizado.
- */
-async function atualizarSubmenuExistente(transaction, submenuId) {
-  // Consulta SQL para atualizar o submenu, marcando-o como não deletado.
-  const queryUpdateSubmenu = `
-    UPDATE Submenu
-    SET deleted = 0
-    WHERE ID_submenu = @submenuId
-  `;
-  
-  // Cria uma nova requisição SQL
-  const requestSql = new sql.Request();
-  requestSql.input("submenuId", sql.Int, submenuId);
-  
-  // Executa a consulta para atualizar o submenu.
-  await requestSql.query(queryUpdateSubmenu);
-}
 
 /**
  * Função para listar os clientes e seus respectivos menus a partir do banco de dados.
