@@ -483,6 +483,31 @@ async function adicionar(request, response) {
     ChaveAPI,
   } = request.body;
 
+  console.log("Dados recebidos para atualização:", {
+    IDcliente,
+    Ativo,
+    Chave,
+    ClienteID,
+    Integracao,
+    ClienteNome,
+    Created,
+    Deleted,
+    Devolucao,
+    Enviada,
+    Identificacao,
+    Numero,
+    OP_Biometria,
+    OP_Facial,
+    OP_Senha,
+    URL,
+    Updated,
+    UserID,
+    Versao,
+    id_usuario,
+    Controladoras,
+    ChaveAPI,
+  });
+
   const queryDM = `
     INSERT INTO DMs (
       ID_Cliente, Numero, Devolucao, Identificacao, Ativo, Deleted, Created, Updated, Versao, Enviada, OP_Senha, 
@@ -930,12 +955,14 @@ async function atualizarControladora2023(
   dmId,
   clienteId,
   existingControladora
-) {
+) 
+{
+  console.log(existingControladora);
   const novasPosicoes = new Set(controladora.dados.posicao);
   const novasAndares = new Set(controladora.dados.andar);
   const posicoesExistentes = new Set(existingControladora.Posicao);
   const andaresExistentes = new Set(existingControladora.Andar);
-
+  
   // Remove posições antigas
   for (const posicao of posicoesExistentes) {
     if (!novasPosicoes.has(posicao)) {
@@ -966,7 +993,8 @@ async function atualizarControladora2023(
   }
 
   // Insere novas posições e andares
-  for (const posicao of novasPosicoes) {
+  for (const novasAndares of controladora.dados.andar) {
+    for (const posicao of controladora.dados.posicao) {
     if (!posicoesExistentes.has(posicao)) {
       const sqlRequestInsert = new sql.Request(transaction); // Criação de nova instância de sql.Request para cada iteração
       const insertQuery = `
@@ -981,12 +1009,16 @@ async function atualizarControladora2023(
         controladora.tipo
       );
       sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequestInsert.input("Andar", sql.Int, [...novasAndares][0]); // Assume que há apenas um andar
+      sqlRequestInsert.input("Andar", sql.Int, novasAndares);
       sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
       await sqlRequestInsert.query(insertQuery);
     }
+    console.log("Posição inserida:", posicao);
+    console.log("Andar inserido:", novasAndares);
+    
   }
+}
 }
 async function atualizarControladora2018(
   transaction,
@@ -1032,6 +1064,7 @@ async function atualizarControladora2018(
 
       await sqlRequest.query(query);
     }
+    console.log("Mola inserida:", mola);  
   }
 }
 async function adicionarControladora2024(
@@ -1111,6 +1144,8 @@ async function adicionarControladora2023(
 
       await sqlRequest.query(query);
     }
+    console.log("Posição inserida:", posicao);
+    console.log("Andar inserido:", andar);
   }
 }
 async function adicionarControladora2018(
