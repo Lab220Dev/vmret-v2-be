@@ -332,10 +332,10 @@ const listarDMPaginado = async (request, response) => {
                   controladora.Posicao,
                 ]),
               ];
-            } else if (controladora.Tipo_Controladora === "Locker-Padrão") {
-              controladoraExistente.Mola1 = [
+            } else if (controladora.Tipo_Controladora === "Locker-Padrao") {
+              controladoraExistente.Posicao = [
                 ...new Set([
-                  ...controladoraExistente.Mola1,
+                  ...controladoraExistente.Posicao,
                   controladora.Posicao,
                 ]),
               ];
@@ -686,7 +686,7 @@ async function atualizar(request, response) {
     const requestControladoras = new sql.Request(transaction);
 
     // Busca as controladoras existentes
-    const selectControladorasQuery = `SELECT * FROM Controladoras WHERE ID_DM = @ID_DM AND Deleted = 0`;
+    const selectControladorasQuery = `SELECT * FROM Controladoras WHERE ID_DM = @ID_DM`;
     requestControladoras.input("ID_DM", sql.Int, ID_DM);
     const resultControladoras = await requestControladoras.query(
       selectControladorasQuery
@@ -742,7 +742,8 @@ async function atualizar(request, response) {
         );
       } else if (
         controladora.tipo === "2023" ||
-        controladora.tipo === "Locker"
+        controladora.tipo === "Locker-Padrao" ||
+          controladora.tipo === "Locker-Ker"
       ) {
         existingControladora = existingControladorasMap.get(
           controladora.dados.dip
@@ -767,7 +768,8 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else if (controladora.tipo === "Locker") {
+        } else if (controladora.tipo === "Locker-Padrao" ||
+          controladora.tipo === "Locker-Ker") {
           await atualizarControladoraLocker(
             transaction,
             controladora,
@@ -912,12 +914,17 @@ async function atualizarControladoraLocker(
   clienteId,
   existingControladora
 ) {
+  console.log(existingControladora);
   const novasPosicoes = new Set(controladora.dados.posicao);
   const posicoesExistentes = new Set(existingControladora.Posicao);
 
+  const posicoesExistentesArr = Array.from(posicoesExistentes).map(Number);
+  const novasPosicoesArr = Array.from(novasPosicoes).map(Number);
+
+  const posicoesParaExcluir = posicoesExistentesArr.filter(posicao => !novasPosicoesArr.includes(posicao));
+
   // Remove posições antigas
-  for (const posicao of posicoesExistentes) {
-    if (!novasPosicoes.has(posicao)) {
+  for (const posicao of posicoesParaExcluir) {
       const sqlRequest = new sql.Request(transaction);
 
       const query = `
@@ -927,12 +934,27 @@ async function atualizarControladoraLocker(
       sqlRequest.input("Posicao", sql.Int, posicao);
 
       await sqlRequest.query(query);
-    }
+      console.log("Posição Locker excluída:", posicao);
   }
 
-  // Insere novas posições
-  for (const posicao of novasPosicoes) {
-    if (!posicoesExistentes.has(posicao)) {
+ // Para atualizar ou inserir as combinações de posições
+  for (const posicao of novasPosicoesArr) {
+    if (posicoesExistentesArr.includes(posicao)) {
+
+      const sqlRequest = new sql.Request(transaction);
+      const query = `
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+
+      sqlRequest.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequest.input("ID_DM", sql.Int, dmId);
+      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
+      sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
+      sqlRequest.input("Posicao", sql.Int, posicao);
+
+      await sqlRequest.query(query);
+      console.log("Posição Locker atualizada:", posicao);
+    }
+    else {
       const sqlRequest = new sql.Request(transaction);
 
       const query = `
@@ -946,76 +968,96 @@ async function atualizarControladoraLocker(
       sqlRequest.input("Posicao", sql.Int, posicao);
 
       await sqlRequest.query(query);
-      console.log("Posição inserida:", posicao);
+      console.log("Posição Locker inserida:", posicao);
     }
   }
 }
+
 async function atualizarControladora2023(
   transaction,
   controladora,
   dmId,
   clienteId,
   existingControladora
-) 
-{
+) {
   console.log(existingControladora);
   const novasPosicoes = new Set(controladora.dados.posicao);
   const novasAndares = new Set(controladora.dados.andar);
   const posicoesExistentes = new Set(existingControladora.Posicao);
   const andaresExistentes = new Set(existingControladora.Andar);
+
+  // Garantir que as posições e andares sejam arrays com números
+  const posicoesExistentesArr = Array.from(posicoesExistentes).map(Number);
+  const novasPosicoesArr = Array.from(novasPosicoes).map(Number);
   
-  // Remove posições antigas
-  for (const posicao of posicoesExistentes) {
-    if (!novasPosicoes.has(posicao)) {
-      const sqlRequestUpdate = new sql.Request(transaction);
-      const updateQuery = `
-        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+  const andaresExistentesArr = Array.from(andaresExistentes).map(Number);
+  const novasAndaresArr = Array.from(novasAndares).map(Number);
 
-      sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
-      sqlRequestUpdate.input("Posicao", sql.Int, posicao);
+  // Filtra as novas posições para que não incluam as posições existentes
+  const posicoesParaExcluir = posicoesExistentesArr.filter(posicao => !novasPosicoesArr.includes(posicao));
 
-      await sqlRequestUpdate.query(updateQuery);
-    }
+  // Remove posições antigas que não estão nas novas posições
+  for (const posicao of posicoesParaExcluir) {
+    const sqlRequestUpdate = new sql.Request(transaction);
+    const updateQuery = `
+      UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+
+    sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
+    sqlRequestUpdate.input("Posicao", sql.Int, posicao);
+
+    await sqlRequestUpdate.query(updateQuery);
+    console.log("Posição excluída:", posicao);
   }
 
-  // Remove andares antigos
-  for (const andar of andaresExistentes) {
-    if (!novasAndares.has(andar)) {
-      const sqlRequestUpdate = new sql.Request(transaction);
+  // Filtra os andares para que não incluam os andares existentes
+  const andaresParaExcluir = andaresExistentesArr.filter(andar => !novasAndaresArr.includes(andar));
 
+  for (const andar of andaresParaExcluir) {
+    const sqlRequestUpdate = new sql.Request(transaction);
+    const updateQuery = `
+      UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar`;
+
+    sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
+    sqlRequestUpdate.input("Andar", sql.Int, andar);
+
+    await sqlRequestUpdate.query(updateQuery);
+    console.log("Andar excluído:", andar);
+  }
+
+// Para atualizar ou inserir as combinações de posições e andares
+for (const andar of novasAndaresArr) {
+  for (const posicao of novasPosicoesArr) {
+    // Verifica se a combinação de posição e andar já existe
+    if (posicoesExistentesArr.includes(posicao) && andaresExistentesArr.includes(andar)) {
+      // Se existir, atualiza
+      const sqlRequestUpdate = new sql.Request(transaction);
       const updateQuery = `
-        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar`;
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Andar = @Andar AND Posicao = @Posicao`;
 
       sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
       sqlRequestUpdate.input("Andar", sql.Int, andar);
+      sqlRequestUpdate.input("Posicao", sql.Int, posicao);
 
       await sqlRequestUpdate.query(updateQuery);
-    }
-  }
-
-  // Insere novas posições e andares
-  for (const novasAndares of controladora.dados.andar) {
-    for (const posicao of controladora.dados.posicao) {
-    if (!posicoesExistentes.has(posicao)) {
-      const sqlRequestInsert = new sql.Request(transaction); // Criação de nova instância de sql.Request para cada iteração
+      console.log("Posição atualizada:", posicao);
+      console.log("Andar atualizado:", andar);
+    } else {
+      // Se não existir, insere
+      const sqlRequestInsert = new sql.Request(transaction);
       const insertQuery = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Andar, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, 0, 0)`;
 
       sqlRequestInsert.input("ID_Cliente", sql.Int, clienteId);
       sqlRequestInsert.input("ID_DM", sql.Int, dmId);
-      sqlRequestInsert.input(
-        "Tipo_Controladora",
-        sql.NVarChar,
-        controladora.tipo
-      );
+      sqlRequestInsert.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
       sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequestInsert.input("Andar", sql.Int, novasAndares);
+      sqlRequestInsert.input("Andar", sql.Int, andar);
       sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
       await sqlRequestInsert.query(insertQuery);
       console.log("Posição inserida:", posicao);
-      console.log("Andar inserido:", novasAndares);
+      console.log("Andar inserido:", andar);
     }
   }
 }
@@ -1031,8 +1073,14 @@ async function atualizarControladora2018(
   const novasMolas = new Set(controladora.dados.molas);
   const molasExistentes = new Set(existingControladora.Mola1);
 
+  //Garantir que seja array de números
+  const molasNovasArray = Array.from(novasMolas).map(Number);
+  const molasExistentesArray = Array.from(molasExistentes).map(Number);
+
+  const molasParaExcluir = molasExistentesArray.filter(mola => !molasNovasArray.includes(mola));
+
   // Remove molas antigas
-  for (const mola of molasExistentes) {
+  for (const mola of molasParaExcluir) {
     if (!novasMolas.has(mola)) {
       const sqlRequest = new sql.Request(transaction);
 
@@ -1043,16 +1091,32 @@ async function atualizarControladora2018(
       sqlRequest.input("Mola1", sql.Int, mola);
 
       await sqlRequest.query(query);
+      console.log("Mola excluída:", mola);
     }
   }
 
-  // Insere novas molas
-  for (const mola of novasMolas) {
-    if (!molasExistentes.has(mola)) {
+  // Insere novas molas ou atualiza as já existentes mas deletadas
+  for (const mola of molasNovasArray) {
+    if (molasExistentesArray.includes(mola)) {
       const sqlRequest = new sql.Request(transaction);
 
       const query = `
       
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1`;
+
+      sqlRequest.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequest.input("ID_DM", sql.Int, dmId);
+      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
+      sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
+      sqlRequest.input("Mola1", sql.Int, mola);
+
+      await sqlRequest.query(query);
+       console.log("Mola atualizada:", mola);
+    }
+    else {
+      const sqlRequest = new sql.Request(transaction);
+
+      const query = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @Placa, @Mola1, 0, 0)`;
 
@@ -1063,10 +1127,11 @@ async function atualizarControladora2018(
       sqlRequest.input("Mola1", sql.Int, mola);
 
       await sqlRequest.query(query);
+      console.log("Mola inserida:", mola);
     }
-    console.log("Mola inserida:", mola);  
   }
 }
+
 async function adicionarControladora2024(
   transaction,
   controladora,
@@ -1105,6 +1170,10 @@ async function adicionarControladoraLocker(
   dmId,
   clienteId
 ) {
+
+  if (controladora.dados.dip == null) {
+    throw new Error("O valor de DIP não pode ser nulo.");
+  }
   for (const posicao of controladora.dados.posicao) {
     const sqlRequest = new sql.Request(transaction);
 
