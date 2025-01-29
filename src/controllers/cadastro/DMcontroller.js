@@ -1518,33 +1518,47 @@ async function deletarItensDM(request, response) {
   }
 }
 async function deletarDM(request, response) {
-  const ID_DM = request.body.ID_DM;
-  const id_usuario = request.body.id_usuario;
-  const id_cliente = request.body.id_cliente;
+  const { ID_DM, id_usuario, id_cliente } = request.body;
+
+  if (!ID_DM) {
+    response.status(400).json({ error: "ID da DM não enviado" });
+    return;
+  }
+
   const query = "UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM";
-  const params = {
-    ID_DM: ID_DM,
-  };
+  const deletarDMItens= "UPDATE DM_Itens SET deleted = 1 WHERE ID_DM = @ID_DM";
+  const deletarControladoras= "UPDATE Controladoras SET deleted = 1 WHERE ID_DM = @ID_DM";
+  let transaction;
+
   try {
-    if (!ID_DM) {
-      response.status(401).json("ID da DM não enviado");
-      return;
-    }
-    const sqlRequest = new sql.Request();
+    transaction = new sql.Transaction();
+    await transaction.begin();
+    const sqlRequest = new sql.Request(transaction);
+
     sqlRequest.input("ID_DM", sql.Int, ID_DM);
+
     const result = await sqlRequest.query(query);
 
-    if (result.rowsAffected[0] > 0) {
-      //logQuery('info', `O usuário ${id_usuario} deletou a DM ${ID_DM}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
-      response.status(200).json({ message: "DM excluído com sucesso" });
-    } else {
-      //logQuery('error', `Erro ao excluir: ${ID_DM} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-      response.status(404).json({ error: "Item não encontrado" });
+    if (result.rowsAffected[0] === 0) {
+      await transaction.rollback();
+      response.status(404).json({ error: "DM não encontrada" });
+      return;
     }
+    const requestDMItens = new sql.Request(transaction);
+    requestDMItens.input("ID_DM", sql.Int, ID_DM);
+    await requestDMItens.query(deletarDMItens);
+
+    const requestControladoras = new sql.Request(transaction);
+    requestControladoras.input("ID_DM", sql.Int, ID_DM);
+    await requestControladoras.query(deletarControladoras);
+
+    await transaction.commit();
+
+    response.status(200).json({ message: "DM e itens associados excluídos com sucesso" });
   } catch (error) {
-    //logQuery('error', `${error.message}`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
-    console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
+    if (transaction && transaction.rollback) await transaction.rollback();
+    console.error("Erro ao deletar DM e itens associados:", error.message);
+    response.status(500).json({ error: "Erro ao deletar DM e itens associados", details: error.message });
   }
 }
 async function recuperarClienteInfo(request, response) {
