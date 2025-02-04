@@ -28,7 +28,15 @@ async function relatorio(request, response) {
 
     // Inicia a construção da consulta SQL básica para buscar dados na tabela Log_Web
     let query = `
-        SELECT *
+        SELECT 
+          ID,
+          ID_Cliente,
+          ID_Usuario,
+          Operacao,
+          Log_Web,
+          Log_String,
+          Resultado,
+          CONVERT(NVARCHAR, Dia, 120) AS Dia,
         FROM
             Log_Web
         WHERE
@@ -120,7 +128,16 @@ async function relatorioMaquina(request, response) {
 
     // Inicia a construção da consulta SQL básica para buscar dados na tabela Log_Desk
     let query = `
-      SELECT *
+      SELECT 
+      ID,
+      id_cliente,
+      ID_DM,
+      DM_Log,
+      CONVERT( NVARCHAR, Dia, 120) AS Dia,
+      Log_String,
+      Resultado,
+      Operacao,
+      Sincronizado
       FROM
           DM_Log_Desk
       WHERE

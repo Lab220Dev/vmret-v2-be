@@ -74,9 +74,6 @@ async function relatorio(request, response) {
     // Define os parâmetros de entrada para a consulta SQL.
     request.input("id_cliente", sql.Int, params.id_cliente); // Define o parâmetro ID_Cliente
     if (params.id_dm) request.input("id_dm", sql.VarChar, id_dm.toString()); // Define o parâmetro ID_DM se presente
-    // Se o parâmetro `id_funcionario` fosse utilizado, ele seria configurado aqui.
-    // if (params.id_funcionario)
-    //   request.input("id_funcionario", sql.VarChar, params.id_funcionario);
     if (params.data_inicio) request.input("data_inicio", sql.DateTime, params.data_inicio); // Define o parâmetro Data_Inicio
     if (params.data_final) request.input("data_final", sql.DateTime, params.data_final); // Define o parâmetro Data_Final
 

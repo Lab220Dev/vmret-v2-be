@@ -29,16 +29,31 @@ async function relatorio(request, response) {
     // Consulta SQL inicial para buscar os dados de devoluções.
     let query = `
             SELECT  
-                dvi.*,  // Seleciona todas as colunas da tabela DM_Devolucao_Itens.
-                f.nome, // Seleciona o nome do funcionário.
-                f.matricula, // Seleciona a matrícula do funcionário.
-                f.email // Seleciona o e-mail do funcionário.
+                dvi.ID_Devolucao_Item,  
+                dvi.ID_DM,
+                dvi.ID_Cliente,
+                dvi.Porta,
+                dvi.Dip,
+                dvi.Andar,
+                dvi.Posicao,
+                dvi.Mola,
+                dvi.ProdutoID,
+                dvi.ProdutoNome,
+                dvi.ProdutoSKU,
+                dvi.Quantidade,
+                dvi.Sincronizado,
+                dvi.Retorno,
+                dvi.id_funcionario,
+                CONVERT(NVARCHAR, dvi.Dia, 120) AS Dia,   
+                f.nome, 
+                f.matricula, 
+                f.email 
             FROM
-                DM_Devolucao_Itens dvi  // Tabela de devoluções.
+                DM_Devolucao_Itens dvi  
             LEFT JOIN
-                funcionarios f ON dvi.id_funcionario = f.id_funcionario  // Realiza um LEFT JOIN com a tabela de funcionários.
+                funcionarios f ON dvi.id_funcionario = f.id_funcionario  
             WHERE
-                dvi.ID_Cliente = @id_cliente AND dvi.Sincronizado = 1 // Filtra os resultados pelo ID do cliente e sincronização.
+                dvi.ID_Cliente = @id_cliente AND dvi.Sincronizado = 1
         `;
 
     // Inicializa os parâmetros que serão passados para a consulta SQL.
@@ -92,7 +107,7 @@ async function relatorio(request, response) {
       matricula: row.matricula, // Matrícula do funcionário.
       email: row.email, // E-mail do funcionário.
       Dip: row.Dip, // Código DIP.
-      Dia: format(new Date(row.Dia), "dd/MM/yyyy - HH:mm"), // Formata a data de devolução no formato dd/MM/yyyy - HH:mm.
+      Dia:row.Dia, // Formata a data de devolução no formato dd/MM/yyyy - HH:mm.
       Andar: row.Andar, // Andar onde ocorreu a devolução.
       Posicao: row.Posicao, // Posição do item.
       Mola: row.Mola, // Informações sobre a mola.

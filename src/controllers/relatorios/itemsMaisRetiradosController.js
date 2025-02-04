@@ -33,7 +33,7 @@ async function relatorio(request, response) {
                 ri.ProdutoNome,
                 ri.ProdutoSKU,
                 ri.Quantidade,
-                r.Dia,
+                CONVERT( NVARCHAR,r.Dia,120) AS Dia,
                 d.Identificacao
             FROM
                 DM_Retiradas r
