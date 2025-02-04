@@ -77,7 +77,7 @@ const listarDM = async (request, response) => {
         if (
           row.Tipo_Controladora === "2023" ||
           row.Tipo_Controladora === "Locker" ||
-          row.Tipo_Controladora === "Locker-Padrão" ||
+          row.Tipo_Controladora === "Locker-Padrao" ||
           row.Tipo_Controladora === "Locker-Ker"
         ) {
           controladoraExistente = dmsMap
@@ -112,15 +112,15 @@ const listarDM = async (request, response) => {
               ];
             } else if (row.Tipo_Controladora === "Locker") {
               controladoraExistente.Mola1 = [
-                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+                ...new Set([...controladoraExistente.Posicao, row.Posicao]),
               ];
-            } else if (row.Tipo_Controladora === "Locker-Padrão") {
+            } else if (row.Tipo_Controladora === "Locker-Padrao") {
               controladoraExistente.Mola1 = [
-                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+                ...new Set([...controladoraExistente.Posicao, row.Posicao]),
               ];
             } else if (row.Tipo_Controladora === "Locker-Ker") {
               controladoraExistente.Mola1 = [
-                ...new Set([...controladoraExistente.Mola1, row.Posicao]),
+                ...new Set([...controladoraExistente.Posicao, row.Posicao]),
               ];
             }
           }
@@ -215,11 +215,11 @@ const listarDMPaginado = async (request, response) => {
     FROM DMS
     WHERE DMS.Deleted = 0
   `;
-  if(id_cliente){
-    queryDMs += ` AND DMS.ID_Cliente = @id_cliente`;
-    sqlRequest.input("id_cliente", sql.Int, id_cliente);
-  }
-  queryDMs += `
+    if (id_cliente) {
+      queryDMs += ` AND DMS.ID_Cliente = @id_cliente`;
+      sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    }
+    queryDMs += `
   ORDER BY ${sortField} ${sortOrder}
     OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;`;
     if (filters.global && filters.global.value) {
@@ -277,16 +277,15 @@ const listarDMPaginado = async (request, response) => {
         let controladoraExistente;
         if (
           controladora.Tipo_Controladora === "2023" ||
-          controladora.Tipo_Controladora === "Locker-Padrão"||
+          controladora.Tipo_Controladora === "Locker-Padrao" ||
           controladora.Tipo_Controladora === "Locker-Ker"
-
         ) {
           controladoraExistente = dm.Controladoras.find(
-            (ctrl) => ctrl.DIP === controladora.DIP
+            (ctrl) => ctrl.DIP === controladora.DIP && ctrl.Tipo_Controladora === controladora.Tipo_Controladora
           );
         } else {
           controladoraExistente = dm.Controladoras.find(
-            (ctrl) => ctrl.Placa === controladora.Placa
+            (ctrl) => ctrl.Placa === controladora.Placa 
           );
         }
 
@@ -326,9 +325,9 @@ const listarDMPaginado = async (request, response) => {
                 ]),
               ];
             } else if (controladora.Tipo_Controladora === "Locker") {
-              controladoraExistente.Mola1 = [
+              controladoraExistente.Posicao = [
                 ...new Set([
-                  ...controladoraExistente.Mola1,
+                  ...controladoraExistente.Posicao,
                   controladora.Posicao,
                 ]),
               ];
@@ -391,8 +390,8 @@ async function inserirControladoraGenerica(
 ) {
   // Verifica o tipo da controladora e realiza a inserção adequada
   const tipoControladora = controladora.tipo;
-
-  if (tipoControladora === "2018") {
+console.log("vocêe stá inserindo pelo caminho gerérico:",tipoControladora)
+  if (tipoControladora === "2018" && controladora.dados.placa > 0) {
     for (const mola of controladora.dados.molas) {
       const queryControladora2018 = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, Placa, Mola1, Sincronizado, Deleted)
@@ -407,7 +406,7 @@ async function inserirControladoraGenerica(
       sqlRequest2.input("Mola1", sql.Int, mola);
       await sqlRequest2.query(queryControladora2018);
     }
-  } else if (tipoControladora === "2023") {
+  } else if (tipoControladora === "2023" && controladora.dados.dip > 0) {
     for (const andar of controladora.dados.andar) {
       for (const posicao of controladora.dados.posicao) {
         const queryControladora2023 = `
@@ -425,7 +424,11 @@ async function inserirControladoraGenerica(
         await sqlRequest2.query(queryControladora2023);
       }
     }
-  } else if (tipoControladora === "Locker"||tipoControladora === "Locker-Padrao"||tipoControladora === "Locker-Ker") {
+  } else if (
+    tipoControladora === "Locker" ||
+    tipoControladora === "Locker-Padrao" ||
+    tipoControladora === "Locker-Ker"
+  ) {
     for (const posicao of controladora.dados.posicao) {
       const queryControladoraLocker = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
@@ -483,7 +486,7 @@ async function adicionar(request, response) {
     ChaveAPI,
   } = request.body;
 
-  console.log("Dados recebidos para atualização:", {
+  console.log("Dados recebidos para adicionar:", {
     IDcliente,
     Ativo,
     Chave,
@@ -743,7 +746,7 @@ async function atualizar(request, response) {
       } else if (
         controladora.tipo === "2023" ||
         controladora.tipo === "Locker-Padrao" ||
-          controladora.tipo === "Locker-Ker"
+        controladora.tipo === "Locker-Ker"
       ) {
         existingControladora = existingControladorasMap.get(
           controladora.dados.dip
@@ -752,7 +755,7 @@ async function atualizar(request, response) {
 
       if (existingControladora) {
         // Atualiza a controladora existente
-        if (controladora.tipo === "2018") {
+        if (controladora.tipo === "2018" && controladora.dados.placa > 0) {
           await atualizarControladora2018(
             transaction,
             controladora,
@@ -760,7 +763,7 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else if (controladora.tipo === "2023") {
+        } else if (controladora.tipo === "2023" && controladora.dados.dip > 0) {
           await atualizarControladora2023(
             transaction,
             controladora,
@@ -768,8 +771,10 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else if (controladora.tipo === "Locker-Padrao" ||
-          controladora.tipo === "Locker-Ker") {
+        } else if (
+          (controladora.tipo === "Locker-Padrao" ||
+            controladora.tipo === "Locker-Ker")
+        ) {
           await atualizarControladoraLocker(
             transaction,
             controladora,
@@ -777,7 +782,7 @@ async function atualizar(request, response) {
             IDcliente,
             existingControladora
           );
-        } else if (controladora.tipo === "2024") {
+        } else if (controladora.tipo === "2024" && controladora.dados.dip > 0) {
           await atualizarControladora2024(
             transaction,
             controladora,
@@ -788,14 +793,14 @@ async function atualizar(request, response) {
         }
       } else {
         // Insere a nova controladora
-        if (controladora.tipo === "2018") {
+        if (controladora.tipo === "2018" && controladora.dados.placa > 0) {
           await adicionarControladora2018(
             transaction,
             controladora,
             ID_DM,
             IDcliente
           );
-        } else if (controladora.tipo === "2023") {
+        } else if (controladora.tipo === "2023" && controladora.dados.dip > 0) {
           await adicionarControladora2023(
             transaction,
             controladora,
@@ -803,8 +808,8 @@ async function atualizar(request, response) {
             IDcliente
           );
         } else if (
-          controladora.tipo === "Locker-Padrao" ||
-          controladora.tipo === "Locker-Ker"
+          (controladora.tipo === "Locker-Padrao" ||
+            controladora.tipo === "Locker-Ker")
         ) {
           await adicionarControladoraLocker(
             transaction,
@@ -812,7 +817,7 @@ async function atualizar(request, response) {
             ID_DM,
             IDcliente
           );
-        } else if (controladora.tipo === "2024") {
+        } else if (controladora.tipo === "2024" && controladora.dados.dip > 0) {
           await adicionarControladora2024(
             transaction,
             controladora,
@@ -921,54 +926,74 @@ async function atualizarControladoraLocker(
   const posicoesExistentesArr = Array.from(posicoesExistentes).map(Number);
   const novasPosicoesArr = Array.from(novasPosicoes).map(Number);
 
-  const posicoesParaExcluir = posicoesExistentesArr.filter(posicao => !novasPosicoesArr.includes(posicao));
+  const posicoesParaExcluir = posicoesExistentesArr.filter(
+    (posicao) => !novasPosicoesArr.includes(posicao)
+  );
 
   // Remove posições antigas
   for (const posicao of posicoesParaExcluir) {
-      const sqlRequest = new sql.Request(transaction);
+    const sqlRequestDelete = new sql.Request(transaction);
 
-      const query = `
-        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+    const query = `
+        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
-      sqlRequest.input("ID_DM", sql.Int, dmId);
-      sqlRequest.input("Posicao", sql.Int, posicao);
+    sqlRequestDelete.input("ID_DM", sql.Int, dmId);
+    sqlRequestDelete.input("Posicao", sql.Int, posicao);
+    sqlRequestDelete.input("DIP", sql.Int, controladora.dados.dip);
 
-      await sqlRequest.query(query);
-      console.log("Posição Locker excluída:", posicao);
+    await sqlRequestDelete.query(query);
+    console.log(
+      "Posição",
+      posicao,
+      " do dip",
+      controladora.dados.dip,
+      " excluída."
+    );
   }
 
- // Para atualizar ou inserir as combinações de posições
+  // Para atualizar ou inserir as combinações de posições
   for (const posicao of novasPosicoesArr) {
     if (posicoesExistentesArr.includes(posicao)) {
-
-      const sqlRequest = new sql.Request(transaction);
+      const sqlRequestUpdate = new sql.Request(transaction);
       const query = `
-        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
-      sqlRequest.input("ID_Cliente", sql.Int, clienteId);
-      sqlRequest.input("ID_DM", sql.Int, dmId);
-      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-      sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequest.input("Posicao", sql.Int, posicao);
+        sqlRequestUpdate.input("ID_Cliente", sql.Int, clienteId);
+      sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
+      sqlRequestUpdate.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
+      sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
+      sqlRequestUpdate.input("Posicao", sql.Int, posicao);
 
-      await sqlRequest.query(query);
-      console.log("Posição Locker atualizada:", posicao);
-    }
-    else {
-      const sqlRequest = new sql.Request(transaction);
+      await sqlRequestUpdate.query(query);
+        console.log(
+          "Posição",
+          posicao,
+          " do dip",
+          controladora.dados.dip,
+          " atualizada."
+        );
+    } else {
+      // Se não existir, insere
+      const sqlRequestInsert = new sql.Request(transaction);
 
       const query = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Posicao, 0, 0)`;
 
-      sqlRequest.input("ID_Cliente", sql.Int, clienteId);
-      sqlRequest.input("ID_DM", sql.Int, dmId);
-      sqlRequest.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-      sqlRequest.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequest.input("Posicao", sql.Int, posicao);
+        sqlRequestInsert.input("ID_Cliente", sql.Int, clienteId);
+        sqlRequestInsert.input("ID_DM", sql.Int, dmId);
+        sqlRequestInsert.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
+        sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
+        sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
-      await sqlRequest.query(query);
-      console.log("Posição Locker inserida:", posicao);
+      await sqlRequestInsert.query(query);
+        console.log(
+          "Posição",
+          posicao,
+          " do dip",
+          controladora.dados.dip,
+          " inserido."
+        );
     }
   }
 }
@@ -983,84 +1008,122 @@ async function atualizarControladora2023(
   console.log(existingControladora);
   const novasPosicoes = new Set(controladora.dados.posicao);
   const novasAndares = new Set(controladora.dados.andar);
+  
   const posicoesExistentes = new Set(existingControladora.Posicao);
   const andaresExistentes = new Set(existingControladora.Andar);
 
   // Garantir que as posições e andares sejam arrays com números
   const posicoesExistentesArr = Array.from(posicoesExistentes).map(Number);
   const novasPosicoesArr = Array.from(novasPosicoes).map(Number);
-  
+
   const andaresExistentesArr = Array.from(andaresExistentes).map(Number);
   const novasAndaresArr = Array.from(novasAndares).map(Number);
 
-  // Filtra as novas posições para que não incluam as posições existentes
-  const posicoesParaExcluir = posicoesExistentesArr.filter(posicao => !novasPosicoesArr.includes(posicao));
+  // Filtra os andares para que não incluam os andares existentes
+  const andaresParaExcluir = andaresExistentesArr.filter(
+    (andar) => !novasAndaresArr.includes(andar)
+  );
+  // Remove andares antigas que não estão nas novas posições
+  for (const andar of andaresParaExcluir) {
+    const sqlRequestUpdate = new sql.Request(transaction);
+    const updateQuery = `
+    UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`;
 
+    sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
+    sqlRequestUpdate.input("Andar", sql.Int, andar);
+    sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
+
+    await sqlRequestUpdate.query(updateQuery);
+    console.log(
+      "Andar",
+      andar,
+      " do dip",
+      controladora.dados.dip,
+      " excluído."
+    );
+  }
+  // Filtra as novas posições para que não incluam as posições existentes
+  const posicoesParaExcluir = posicoesExistentesArr.filter(
+    (posicao) => !novasPosicoesArr.includes(posicao)
+  );
   // Remove posições antigas que não estão nas novas posições
   for (const posicao of posicoesParaExcluir) {
     const sqlRequestUpdate = new sql.Request(transaction);
     const updateQuery = `
-      UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao`;
+    UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
     sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
     sqlRequestUpdate.input("Posicao", sql.Int, posicao);
+    sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
 
     await sqlRequestUpdate.query(updateQuery);
-    console.log("Posição excluída:", posicao);
+    console.log(
+      "Posição",
+      posicao,
+      " do dip",
+      controladora.dados.dip,
+      " excluída."
+    );
   }
+  // Para atualizar ou inserir as combinações de posições e andares
+  for (const andar of novasAndaresArr) {
+    for (const posicao of novasPosicoesArr) {
+      // Verifica se a combinação de posição e andar já existe
+      if (
+        posicoesExistentesArr.includes(posicao) &&
+        andaresExistentesArr.includes(andar)
+      ) {
+        // Se existir, atualiza
+        const sqlRequestUpdate = new sql.Request(transaction);
+        const updateQuery = `
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Andar = @Andar AND Posicao = @Posicao AND DIP = @DIP`;
 
-  // Filtra os andares para que não incluam os andares existentes
-  const andaresParaExcluir = andaresExistentesArr.filter(andar => !novasAndaresArr.includes(andar));
+        sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
+        sqlRequestUpdate.input("Andar", sql.Int, andar);
+        sqlRequestUpdate.input("Posicao", sql.Int, posicao);
+        sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
 
-  for (const andar of andaresParaExcluir) {
-    const sqlRequestUpdate = new sql.Request(transaction);
-    const updateQuery = `
-      UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Andar = @Andar`;
-
-    sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
-    sqlRequestUpdate.input("Andar", sql.Int, andar);
-
-    await sqlRequestUpdate.query(updateQuery);
-    console.log("Andar excluído:", andar);
-  }
-
-// Para atualizar ou inserir as combinações de posições e andares
-for (const andar of novasAndaresArr) {
-  for (const posicao of novasPosicoesArr) {
-    // Verifica se a combinação de posição e andar já existe
-    if (posicoesExistentesArr.includes(posicao) && andaresExistentesArr.includes(andar)) {
-      // Se existir, atualiza
-      const sqlRequestUpdate = new sql.Request(transaction);
-      const updateQuery = `
-        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Andar = @Andar AND Posicao = @Posicao`;
-
-      sqlRequestUpdate.input("ID_DM", sql.Int, dmId);
-      sqlRequestUpdate.input("Andar", sql.Int, andar);
-      sqlRequestUpdate.input("Posicao", sql.Int, posicao);
-
-      await sqlRequestUpdate.query(updateQuery);
-      console.log("Posição atualizada:", posicao);
-      console.log("Andar atualizado:", andar);
-    } else {
-      // Se não existir, insere
-      const sqlRequestInsert = new sql.Request(transaction);
-      const insertQuery = `
+        await sqlRequestUpdate.query(updateQuery);
+        console.log(
+          "Andar",
+          andar,
+          " e posição",
+          posicao,
+          " do dip",
+          controladora.dados.dip,
+          " atualizada."
+        );
+      } else {
+        // Se não existir, insere
+        const sqlRequestInsert = new sql.Request(transaction);
+        const insertQuery = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Andar, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, 0, 0)`;
 
-      sqlRequestInsert.input("ID_Cliente", sql.Int, clienteId);
-      sqlRequestInsert.input("ID_DM", sql.Int, dmId);
-      sqlRequestInsert.input("Tipo_Controladora", sql.NVarChar, controladora.tipo);
-      sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
-      sqlRequestInsert.input("Andar", sql.Int, andar);
-      sqlRequestInsert.input("Posicao", sql.Int, posicao);
+        sqlRequestInsert.input("ID_Cliente", sql.Int, clienteId);
+        sqlRequestInsert.input("ID_DM", sql.Int, dmId);
+        sqlRequestInsert.input(
+          "Tipo_Controladora",
+          sql.NVarChar,
+          controladora.tipo
+        );
+        sqlRequestInsert.input("DIP", sql.Int, controladora.dados.dip);
+        sqlRequestInsert.input("Andar", sql.Int, andar);
+        sqlRequestInsert.input("Posicao", sql.Int, posicao);
 
-      await sqlRequestInsert.query(insertQuery);
-      console.log("Posição inserida:", posicao);
-      console.log("Andar inserido:", andar);
+        await sqlRequestInsert.query(insertQuery);
+        console.log(
+          "Andar",
+          andar,
+          " e posição",
+          posicao,
+          " do dip",
+          controladora.dados.dip,
+          " inserido."
+        );
+      }
     }
   }
-}
 }
 async function atualizarControladora2018(
   transaction,
@@ -1077,7 +1140,9 @@ async function atualizarControladora2018(
   const molasNovasArray = Array.from(novasMolas).map(Number);
   const molasExistentesArray = Array.from(molasExistentes).map(Number);
 
-  const molasParaExcluir = molasExistentesArray.filter(mola => !molasNovasArray.includes(mola));
+  const molasParaExcluir = molasExistentesArray.filter(
+    (mola) => !molasNovasArray.includes(mola)
+  );
 
   // Remove molas antigas
   for (const mola of molasParaExcluir) {
@@ -1085,16 +1150,26 @@ async function atualizarControladora2018(
       const sqlRequest = new sql.Request(transaction);
 
       const query = `
-        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1`;
+        UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1 AND Placa = @Placa`;
 
       sqlRequest.input("ID_DM", sql.Int, dmId);
       sqlRequest.input("Mola1", sql.Int, mola);
+      sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
 
       await sqlRequest.query(query);
-      console.log("Mola excluída:", mola);
+      console.log(
+        "Mola ",
+        mola,
+        " da placa ",
+        controladora.dados.placa,
+        "excluída."
+      );
     }
   }
 
+  // if (controladora.dados.placa === existingControladora.Placa) {
+  //   throw new Error("Placa não pode ser repetida");
+  // }
   // Insere novas molas ou atualiza as já existentes mas deletadas
   for (const mola of molasNovasArray) {
     if (molasExistentesArray.includes(mola)) {
@@ -1102,7 +1177,7 @@ async function atualizarControladora2018(
 
       const query = `
       
-        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1`;
+        UPDATE Controladoras SET Deleted = 0 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1 AND Placa = @Placa`;
 
       sqlRequest.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest.input("ID_DM", sql.Int, dmId);
@@ -1111,9 +1186,14 @@ async function atualizarControladora2018(
       sqlRequest.input("Mola1", sql.Int, mola);
 
       await sqlRequest.query(query);
-       console.log("Mola atualizada:", mola);
-    }
-    else {
+      console.log(
+        "Mola ",
+        mola,
+        " da placa ",
+        controladora.dados.placa,
+        "atualizada."
+      );
+    } else {
       const sqlRequest = new sql.Request(transaction);
 
       const query = `
@@ -1127,7 +1207,13 @@ async function atualizarControladora2018(
       sqlRequest.input("Mola1", sql.Int, mola);
 
       await sqlRequest.query(query);
-      console.log("Mola inserida:", mola);
+      console.log(
+        "Mola ",
+        mola,
+        " da placa ",
+        controladora.dados.placa,
+        "inserida."
+      );
     }
   }
 }
@@ -1170,10 +1256,7 @@ async function adicionarControladoraLocker(
   dmId,
   clienteId
 ) {
-
-  if (controladora.dados.dip == null) {
-    throw new Error("O valor de DIP não pode ser nulo.");
-  }
+ 
   for (const posicao of controladora.dados.posicao) {
     const sqlRequest = new sql.Request(transaction);
 
@@ -1196,13 +1279,12 @@ async function adicionarControladora2023(
   dmId,
   clienteId
 ) {
-
   for (const andar of controladora.dados.andar) {
     for (const posicao of controladora.dados.posicao) {
       const query = `
         INSERT INTO Controladoras (ID_Cliente, ID_DM, Tipo_Controladora, DIP, Andar, Posicao, Sincronizado, Deleted)
         VALUES (@ID_Cliente, @ID_DM, @Tipo_Controladora, @DIP, @Andar, @Posicao, 0, 0)`;
-        const sqlRequest = new sql.Request(transaction);
+      const sqlRequest = new sql.Request(transaction);
 
       sqlRequest.input("ID_Cliente", sql.Int, clienteId);
       sqlRequest.input("ID_DM", sql.Int, dmId);
@@ -1256,19 +1338,19 @@ async function listarItensDM(request, response) {
         let modeloControladora;
         switch (row.Controladora) {
           case "2018":
-              posicao = `${row.Controladora} / ${row.Placa} / ${row.Motor1} / ${row.Motor2}`;
-              break;
+            posicao = `${row.Controladora} / ${row.Placa} / ${row.Motor1} / ${row.Motor2}`;
+            break;
           case "2023":
-              posicao = `${row.Controladora} / ${row.DIP} / ${row.Andar} / ${row.Posicao}`;
-              break;
+            posicao = `${row.Controladora} / ${row.DIP} / ${row.Andar} / ${row.Posicao}`;
+            break;
           case "Locker":
           case "Locker-Padrao":
           case "Locker-Ker":
-              posicao = `${row.Controladora} / ${row.DIP} / ${row.Posicao}`;
-              break;
+            posicao = `${row.Controladora} / ${row.DIP} / ${row.Posicao}`;
+            break;
           default:
-              posicao = "Posição desconhecida";
-      }
+            posicao = "Posição desconhecida";
+        }
 
         modeloControladora = `${row.Controladora}`;
 
@@ -1295,6 +1377,7 @@ async function listarItensDM(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+
 async function adicionarItens(request, response) {
   const {
     id_produto,
@@ -1362,13 +1445,13 @@ VALUES (
       Controladora: tipo_controladora,
       Placa: Placa,
       Motor1: Motor1,
-      Motor2: Motor2? Motor2 : 0,
+      Motor2: Motor2 ? Motor2 : 0,
       DIP: Dip,
       Andar: null,
       Posicao: null,
       quantidade: 0,
       capacidade: Capacidade,
-      Sincronizado:0,
+      Sincronizado: 0,
       deleted: false,
       nome: nome,
       ProdutoCodigo: ProdutoCodigo,
@@ -1385,7 +1468,7 @@ VALUES (
     sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
     sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
-    sqlRequest2.input("Motor2", sql.Int, Motor2? Motor2 : 0);
+    sqlRequest2.input("Motor2", sql.Int, Motor2 ? Motor2 : 0);
     sqlRequest2.input("DIP", sql.Int, Dip);
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
@@ -1506,11 +1589,11 @@ async function atualizarItemDM(request, response) {
       Controladora: tipo_controladora,
       Placa: Placa,
       Motor1: Motor1,
-      Motor2: Motor2? Motor2 : 0,
+      Motor2: Motor2 ? Motor2 : 0,
       DIP: Dip,
       Andar: Andar,
       Posicao: Posicao,
-      Sincronizado:0,
+      Sincronizado: 0,
       quantidade: 0, // Atualize conforme necessário
       capacidade: capacidade,
       deleted: false, // Atualize conforme necessário
@@ -1530,7 +1613,7 @@ async function atualizarItemDM(request, response) {
     sqlRequest2.input("Controladora", sql.VarChar, tipo_controladora);
     sqlRequest2.input("Placa", sql.Int, Placa);
     sqlRequest2.input("Motor1", sql.Int, Motor1);
-    sqlRequest2.input("Motor2", sql.Int, Motor2? Motor2 : 0);
+    sqlRequest2.input("Motor2", sql.Int, Motor2 ? Motor2 : 0);
     sqlRequest2.input("DIP", sql.Int, Dip);
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
@@ -1561,7 +1644,8 @@ async function deletarItensDM(request, response) {
   const id_item = request.body.id_item;
   const id_usuario = request.body.id_usuario;
   const id_cliente = request.body.id_cliente;
-  const query = "UPDATE DM_Itens SET deleted = 1,Sincronizado = 0 WHERE id_item = @id_item";
+  const query =
+    "UPDATE DM_Itens SET deleted = 1,Sincronizado = 0 WHERE id_item = @id_item";
   const params = {
     id_item: id_item,
   };
