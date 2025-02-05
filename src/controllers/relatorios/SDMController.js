@@ -231,7 +231,7 @@ async function obterDadosResumo(request, response) {
  */
 function getColor(status) {
   const colorMap = {
-    Conectado: "#17202a", // Cor para "Conectado"
+    Conectado: "#222222", // Cor para "Conectado"
     Desconectado: "#00bb7e", // Cor para "Desconectado"
   };
   return colorMap[status] || "#888888"; // Retorna a cor padrão se não encontrado
@@ -241,13 +241,13 @@ function getColor(status) {
  * Paleta de cores para o gráfico (cores quentes).
  */
 const ColorPalette = [
-  "#e51e1e", // Vermelho 1
-  "#e5501e", // Vermelho 2
-  "#e5821e", // Vermelho 3
-  "#138f13", // Verde 1
-  "#1ee51e", // Verde 2 -
-  "#1e1ee5", // Azul
-  "#1e88e5", // Azul claro
+  "#00f5e9", 
+  "#00afbd", 
+  "#007791", 
+  "#004e6a", 
+  "#0874ba", 
+  "#12455d", 
+  "#7fe4e5", 
 ];
 
 const usedColors = []; // Variável para controlar as cores já usadas
