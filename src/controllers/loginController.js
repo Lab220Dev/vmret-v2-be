@@ -15,9 +15,14 @@ const opcoes = {
  * @returns {Promise<void>} - Retorna a resposta com sucesso ou erro.
  */
 async function login(request, response) {
+  console.log("Dispositivo:", request.headers["user-agent"]);
   try {
     // Extrai o email e a senha enviados no corpo da requisição.
     const { email, senha } = request.body;
+
+    const isMobileDevice = request.headers["user-agent"]
+      .toLowerCase()
+      .includes("mobile"); // Verifica se o dispositivo é um dispositivo móvel.
 
     // Verifica se o email e a senha foram fornecidos, caso contrário, retorna erro 400.
     if (!email || !senha) {
@@ -83,17 +88,33 @@ async function login(request, response) {
 
       const cliente = clienteResult.recordset[0];
       Usuario.mob = cliente && cliente.usar_api ? true : false;
-      // Consulta o menu de acordo com o ID do cliente e perfil do usuário.
-      const queryMenu = `
-                 SELECT * FROM Menu
-                WHERE Cod_cli = @id_cliente
-                  AND perfil = @perfil`;
+      let queryMenu;
+      let queryMenuItem;
 
-      // Consulta os itens de menu relacionados ao cliente e perfil do usuário.
-      const queryMenuItem = `
-                SELECT * FROM menu_itens
-                WHERE Cod_cli = @id_cliente
-                  AND perfil = @perfil`;
+      if (isMobileDevice) {
+        queryMenu = `
+          SELECT * FROM Menu
+          WHERE Cod_cli = @id_cliente
+            AND perfil = @perfil AND Nome IN ('Dashboard', 'Relatórios')`; // Consulta os menus relacionados ao cliente e perfil do usuário.
+
+        // Consulta os itens de menu relacionados ao cliente e perfil do usuário.
+        queryMenuItem = `
+          SELECT * FROM menu_itens
+          WHERE Cod_cli = @id_cliente
+            AND perfil = @perfil AND Nome IN ('Retiradas e Devoluções', 'Retiradas Realizadas', 'Fichas de Retiradas', 'Operacional', 'Status DM')`;
+
+      } else {
+                queryMenu = `
+        SELECT * FROM Menu
+        WHERE Cod_cli = @id_cliente
+          AND perfil = @perfil`;
+
+                // Consulta os itens de menu relacionados ao cliente e perfil do usuário.
+                queryMenuItem = `
+        SELECT * FROM menu_itens
+        WHERE Cod_cli = @id_cliente
+          AND perfil = @perfil`;
+      }
 
       const requestSql = new sql.Request();
       requestSql.input("id_cliente", sql.Int, id_cliente);
