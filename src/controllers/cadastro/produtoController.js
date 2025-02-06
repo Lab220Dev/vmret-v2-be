@@ -239,7 +239,7 @@ async function adicionarProdutos(request, response) {
     requestSql.input("capacidade", sql.Int, 0);
     requestSql.input("ca", sql.NVarChar, "");
     requestSql.input("id_planta", sql.Int, id_planta);
-    requestSql.input("id_tipoProduto", sql.BigInt, id_tipoProduto);
+    requestSql.input("id_tipoProduto", sql.Int, id_tipoProduto);
     requestSql.input("unidade_medida", sql.VarChar, unidade_medida);
 
     const result = await requestSql.query(query);
@@ -249,10 +249,29 @@ async function adicionarProdutos(request, response) {
       response.status(201).json("Produto registrado com sucesso");
       // Retorna sucesso para o cliente
     } else {
-      //logQuery('error', Usuário ${id_usuario} falhou ao criar Centro de Custo, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery(
+        "error",
+        `Usuário ${id_usuario} falhou ao criar um PRODUTO`,
+        "falha",
+        "INSERT",
+        id_cliente,
+        id_usuario,
+        query,
+        params
+      );
       response.status(400).json("Erro ao registrar o Produto");
     }
   } catch (error) {
+    logQuery(
+      "error",
+      `Usuário ${id_usuario} falhou ao criar um PRODUTO`,
+      "falha",
+      "INSERT",
+      id_cliente,
+      id_usuario,
+      query,
+      params
+    );
     console.error("Erro ao adicionar produto:", error.message); // Log de erro no console
     response.status(500).send("Erro ao adicionar produto!"); // Retorna um erro ao cliente
   }
