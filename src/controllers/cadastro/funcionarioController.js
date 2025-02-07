@@ -395,7 +395,6 @@ async function adiconarFuncionarioExt(request, response) {
 
     // Executa a consulta de inserção
     const result = await sqlrequest.query(query);
-
     // Se a inserção for bem-sucedida, envia e-mail e mensagem
     if (result.rowsAffected.length > 0) {
       const params = {
@@ -947,8 +946,10 @@ async function deleteFuncionario(request, response) {
   }
 
   // Consulta SQL para marcar o funcionário como excluído
-  const query =
-    "UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario";
+  const query =`
+  UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario;
+    
+  UPDATE Ret_Item_Funcionario SET deleted = 1 WHERE id_funcionario = @id_funcionario;`;
   const params = id_funcionario;
 
   try {

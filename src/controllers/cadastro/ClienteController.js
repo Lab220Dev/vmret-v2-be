@@ -1,6 +1,11 @@
 // Importa o módulo 'mssql', utilizado para interagir com o banco de dados SQL Server.
 const sql = require("mssql");
 
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
 // Importa a função 'logQuery' do módulo utilitário localizado em '../../utils/logUtils'.
 // A função 'logQuery' provavelmente é usada para registrar detalhes sobre a execução de queries no banco de dados.
 const { logQuery } = require("../../utils/logUtils");
@@ -1257,64 +1262,105 @@ async function atualizar(request, response) {
   }
 }
 
-/**
- * Função para deletar (marcar como excluído) um cliente.
- * 
- * @param {Object} request - O objeto da requisição, contendo o ID do cliente a ser excluído.
- * @param {Object} response - O objeto da resposta, usado para enviar a resposta ao cliente.
- * 
- * @returns {void} Retorna uma resposta HTTP indicando o sucesso ou falha na exclusão do cliente.
- */
+const progressClients = {};  // Armazena o progresso de exclusão de clientes
+
 async function deletar(request, response) {
-  const { id_cliente, id_usuario } = request.body;
-  const query =
-    "UPDATE clientes SET deleted = 1 WHERE id_cliente = @id_cliente";
-  const params = {
-    id_cliente: id_cliente,
-  };
+  const { id_cliente } = request.body;
+  const tables = [
+    'Clientes',
+    'Menu',
+    'Menu_Itens',
+    'DMs',
+    'Controladoras',
+    'DM_Itens',
+    'Funcionarios',
+    'Ret_Item_Funcionario',
+    'Usuarios',
+    'Usuarios_DM',
+    'Centro_Custos',
+    'Setores',
+    'Ret_Itens_setor',
+    'Funcao',
+    'Plantas',
+    'Produtos'
+  ];
+  let transaction;
   try {
-    if (!id_cliente) {
-      return response
-        .status(400)
-        .json({ error: "ID do cliente não foi enviado" });
+    transaction = new sql.Transaction();
+    await transaction.begin();
+
+    response.setHeader('Content-Type', 'text/event-stream');
+    response.setHeader('Cache-Control', 'no-cache');
+    response.setHeader('Connection', 'keep-alive');
+
+    let interval = setInterval(() => {
+      // Envia o progresso de todos os clientes
+      response.write(`data: ${JSON.stringify(progressClients)}\n\n`);
+    }, 500);
+
+    request.on('close', () => {
+      clearInterval(interval);
+      delete progressClients[id_cliente];
+    });
+
+    // Inicia o progresso para esse cliente específico
+    progressClients[id_cliente] = 0;
+
+    for (let i = 0; i < tables.length; i++) {
+      const table = tables[i];
+      let query = `UPDATE ${table} SET deleted = 1 WHERE id_cliente = @id_cliente`;
+
+      if (table === 'Ret_Item_Funcionario') {
+        query = 
+          `UPDATE Ret_Item_Funcionario
+          SET deleted = 1
+          FROM Ret_Item_Funcionario
+          INNER JOIN Funcionarios ON Ret_Item_Funcionario.id_funcionario = Funcionarios.id_funcionario
+          WHERE Funcionarios.id_cliente = @id_cliente`
+        ;
+      } else if (table === 'Ret_Itens_setor') {
+        query = 
+          `UPDATE Ret_Itens_setor
+          SET deleted = 1
+          FROM Ret_Itens_setor
+          INNER JOIN Setores ON Ret_Itens_setor.id_setor = Setores.id_setor
+          WHERE Setores.id_cliente = @id_cliente`
+        ;
+      } else if (table === 'Menu') {
+        query = 
+          `UPDATE Menu SET deleted = 1 WHERE Cod_Cli = @id_cliente`;
+        ;
+      } else if (table === 'Menu_Itens') {
+        query = 
+          `UPDATE Menu_Itens SET deleted = 1 WHERE Cod_Cli = @id_cliente`;
+        ;
+      }
+
+      const sqlrequest = new sql.Request(transaction);
+      sqlrequest.input('id_cliente', sql.Int, id_cliente);
+      await sqlrequest.query(query);
+
+      // Atualiza o progresso do cliente específico
+      progressClients[id_cliente] = ((i + 1) / tables.length) * 100;
     }
 
-    const sqlRequest = new sql.Request();
-    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    await transaction.commit();
 
-    const result = await sqlRequest.query(query);
-
-    if (result.rowsAffected[0] > 0) {
-
-      response.status(200).json({ message: "cliente excluído com sucesso" });
-    } else {
-      logQuery(
-        "error",
-        `O usuário ${id_usuario} falhou em deletar o cliente ${id_cliente}`,
-        "erro",
-        "DELETE",
-        id_cliente,
-        id_usuario,
-        query,
-        params
-      );
-      response.status(404).json({ error: "cliente não encontrado" });
+    // Finaliza o progresso do cliente
+    progressClients[id_cliente] = 100;
+    response.write(`data: ${JSON.stringify(progressClients)}\n\n`);
+    response.end();
+  } catch (err) {
+    if (transaction) {
+      await transaction.rollback();
     }
-  } catch (error) {
-    logQuery(
-      "error",
-      error.message,
-      "erro",
-      "DELETE",
-      id_cliente,
-      id_usuario,
-      query,
-      params
-    );
-    console.error("Erro ao excluir:", error.message);
-    response.status(500).send("Erro ao excluir");
+    progressClients[id_cliente] = -1; // Indica erro no progresso
+    response.status(500).json({ 'Erro ao excluir cliente': err.message });
   }
 }
+
+
+
 
 /**
  * Função para mapear um conjunto de registros de clientes e seus serviços.

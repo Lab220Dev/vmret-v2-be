@@ -1675,7 +1675,10 @@ async function deletarDM(request, response) {
   const ID_DM = request.body.ID_DM;
   const id_usuario = request.body.id_usuario;
   const id_cliente = request.body.id_cliente;
-  const query = "UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM";
+  const query = `
+  UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM;
+  UPDATE DM_Itens SET deleted = 1 WHERE ID_DM = @ID_DM;
+  UPDATE Controladoras SET deleted = 1 WHERE ID_DM = @ID_DM;`;
   const params = {
     ID_DM: ID_DM,
   };
