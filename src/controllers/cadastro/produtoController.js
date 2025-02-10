@@ -239,7 +239,7 @@ async function adicionarProdutos(request, response) {
     requestSql.input("capacidade", sql.Int, 0);
     requestSql.input("ca", sql.NVarChar, "");
     requestSql.input("id_planta", sql.Int, id_planta);
-    requestSql.input("id_tipoProduto", sql.BigInt, id_tipoProduto);
+    requestSql.input("id_tipoProduto", sql.Int, id_tipoProduto);
     requestSql.input("unidade_medida", sql.VarChar, unidade_medida);
 
     const result = await requestSql.query(query);
@@ -249,10 +249,29 @@ async function adicionarProdutos(request, response) {
       response.status(201).json("Produto registrado com sucesso");
       // Retorna sucesso para o cliente
     } else {
-      //logQuery('error', Usuário ${id_usuario} falhou ao criar Centro de Custo, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
+      logQuery(
+        "error",
+        `Usuário ${id_usuario} falhou ao criar um PRODUTO`,
+        "falha",
+        "INSERT",
+        id_cliente,
+        id_usuario,
+        query,
+        params
+      );
       response.status(400).json("Erro ao registrar o Produto");
     }
   } catch (error) {
+    logQuery(
+      "error",
+      `Usuário ${id_usuario} falhou ao criar um PRODUTO`,
+      "falha",
+      "INSERT",
+      id_cliente,
+      id_usuario,
+      query,
+      params
+    );
     console.error("Erro ao adicionar produto:", error.message); // Log de erro no console
     response.status(500).send("Erro ao adicionar produto!"); // Retorna um erro ao cliente
   }
@@ -404,7 +423,33 @@ async function atualizarProduto(request, response) {
         unidade_medida = @unidade_medida
     WHERE id_produto = @id_produto
   `;
+  const queryDMItens = `
+  UPDATE dm_itens
+  SET nome = @nome, 
+      unidade_medida = @unidade_medida, 
+      ProdutoCodigo = @codigo, 
+      sku = @codigo, 
+      imagem1 = @imagem1,
+      Sincronizado = 0
+  WHERE id_produto = @id_produto and deleted = 0
+`;
 
+const queryRetItensSetor = `
+  UPDATE ret_itens_setor
+  SET nome = @nome, 
+      sku = @codigo, 
+      imagem1 = @imagem1,
+      Sincronizado = 0
+  WHERE id_produto = @id_produto and deleted = 0
+`;
+
+const queryRetItensFuncionario = `
+  UPDATE ret_item_funcionario
+  SET nome_produto = @nome, 
+      sku = @codigo,
+      Sincronizado = 0
+  WHERE id_produto = @id_produto and deleted = 0
+`;
   // Parâmetros para a consulta SQL.
   const params = {
     id_cliente: id_cliente,
@@ -532,7 +577,9 @@ async function atualizarProduto(request, response) {
     requestSql.input("id_produto", sql.Int, id_produto);
 
     const result = await requestSql.query(query); // Executa a consulta de atualização.
-
+    await requestSql.query(queryDMItens);
+    await requestSql.query(queryRetItensSetor);
+    await requestSql.query(queryRetItensFuncionario);
     // Verifica se houve sucesso na atualização do produto.
     if (result.rowsAffected && result.rowsAffected[0] > 0) {
       // logQuery('info', `Produto ${id_produto} Deletado com sucesso`, 'sucesso', 'UPDATE', id_cliente, id_usuario, query, params); // Log comentado de sucesso.

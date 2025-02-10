@@ -45,20 +45,17 @@ async function relatorio(request, response) {
                 ri.ProdutoSKU,
                 ri.Quantidade,
                 ri.Retorno,
-                f.matricula,
-                f.nome,
-                f.email,
+                r.matricula,
+                r.nome,
                 dm.Identificacao AS DM_Identificacao
             FROM
-                DM_Retiradas r
+                db_a45fb2_dmretiradanew.dbo.DM_Retiradas r
             INNER JOIN
-                DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+               db_a45fb2_dmretiradanew.dbo. DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada AND r.ID_DM = ri.ID_DM
             LEFT JOIN
-                funcionarios f ON r.ID_Funcionario = f.id_funcionario
-            LEFT JOIN
-                DMs dm ON r.ID_DM = dm.ID_DM
+                db_a45fb2_dmretiradanew.dbo.DMs dm ON r.ID_DM = dm.ID_DM
             WHERE
-                r.ID_Cliente = @id_cliente AND r.Sincronizado = 1
+                r.ID_Cliente = 92 AND r.Sincronizado = 1
         `;
       
         // Cria o objeto de parâmetros que será enviado para a consulta SQL

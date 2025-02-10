@@ -571,6 +571,10 @@ async function adicionar(request, response) {
         );
       }
     }
+    queryPermissions = ` Insert into DM_Usuario_Permissao (ID_DM,ID_Usuario_dm,Deleted,Sincronizado) values (@ID_DM,1044,0,0),(@ID_DM,1045,0,0)`;
+    const sqlRequest2 = new sql.Request(transaction);
+    sqlRequest2.input("ID_DM", sql.Int, dmId);
+    await sqlRequest2.query(queryPermissions);
 
     await transaction.commit();
     response.status(201).send("DM e Controladoras criadas com sucesso!");
@@ -1430,6 +1434,7 @@ VALUES (
       imagem1,
       quantidademinima,
       ca,
+      Capacidade,
     } = produto;
 
     const nextIdItem = await obterProximoIdItem();
@@ -1516,6 +1521,7 @@ async function atualizarItemDM(request, response) {
     Dip,
     Posicao,
     Andar,
+    Capacidade
   } = request.body;
 
   const updateQuery = `
@@ -1575,7 +1581,6 @@ async function atualizarItemDM(request, response) {
       imagem1,
       quantidademinima,
       ca,
-      capacidade,
     } = produto;
 
     const sqlRequest2 = new sql.Request();
@@ -1593,7 +1598,7 @@ async function atualizarItemDM(request, response) {
       Posicao: Posicao,
       Sincronizado: 0,
       quantidade: 0, // Atualize conforme necessário
-      capacidade: capacidade,
+      capacidade: Capacidade,
       deleted: false, // Atualize conforme necessário
       nome: nome,
       ProdutoCodigo: ProdutoCodigo,
@@ -1617,7 +1622,7 @@ async function atualizarItemDM(request, response) {
     sqlRequest2.input("Posicao", sql.Int, Posicao);
     sqlRequest2.input("Sincronizado", sql.Int, 0);
     sqlRequest2.input("quantidade", sql.Int, 0); // Atualize conforme necessário
-    sqlRequest2.input("capacidade", sql.Int, capacidade);
+    sqlRequest2.input("capacidade", sql.Int, Capacidade);
     sqlRequest2.input("deleted", sql.Bit, false); // Atualize conforme necessário
     sqlRequest2.input("nome", sql.NVarChar, nome);
     sqlRequest2.input("ProdutoCodigo", sql.NVarChar, ProdutoCodigo);
