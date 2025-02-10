@@ -253,11 +253,9 @@ const listarDMPaginado = async (request, response) => {
     const dmIds = dms.map((dm) => dm.ID_DM);
     const queryControladoras = `
       SELECT *
-      FROM Controladoras
-      WHERE Controladoras.ID_DM IN (${dmIds
-        .map((_, index) => `@dmId${index}`)
-        .join(",")})
-      AND Controladoras.Deleted = 0;
+  FROM Controladoras
+  WHERE Controladoras.ID_DM IN (${dmIds.length ? dmIds.map((_, index) => `@dmId${index}`).join(",") : "-1"})
+  AND Controladoras.Deleted = 0;
     `;
 
     dmIds.forEach((id, index) => {
