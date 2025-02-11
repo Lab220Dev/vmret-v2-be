@@ -36,7 +36,7 @@ async function relatorio(request, response) {
           Log_Web,
           Log_String,
           Resultado,
-          CONVERT(NVARCHAR, Dia, 120) AS Dia,
+          CONVERT(NVARCHAR, Dia, 120) AS Dia
         FROM
             Log_Web
         WHERE
