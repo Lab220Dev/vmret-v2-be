@@ -138,7 +138,7 @@ router.get('/:Identificacao', async (req, res) => {
         const query = `
             SELECT Video
             FROM DMs
-            WHERE Identificacao = @Identificacao
+            WHERE Identificacao = @Identificacao and deleted = 0
         `;
 
         const request = new sql.Request();

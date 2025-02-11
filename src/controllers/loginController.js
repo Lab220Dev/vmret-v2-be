@@ -37,7 +37,8 @@ async function login(request, response) {
     const query = `
         SELECT * FROM Usuarios
         WHERE email = @Email
-          AND senha = @Senha`;
+          AND senha = @Senha
+          And deleted = 0`;
 
     // Executa a consulta SQL com parâmetros de email e senha criptografada.
     const result = await new sql.Request()

@@ -55,7 +55,7 @@ async function relatorio(request, response) {
             LEFT JOIN
                 db_a45fb2_dmretiradanew.dbo.DMs dm ON r.ID_DM = dm.ID_DM
             WHERE
-                r.ID_Cliente = 92 AND r.Sincronizado = 1
+                r.ID_Cliente = @id_cliente
         `;
       
         // Cria o objeto de parâmetros que será enviado para a consulta SQL
