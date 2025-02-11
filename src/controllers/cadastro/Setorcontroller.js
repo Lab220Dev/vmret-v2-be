@@ -464,9 +464,13 @@ async function atualizar(request, response) {
   }
 }
 async function deleteFuncao(request, response) {
-  const query = "UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor";
   const id_setor = request.body.id_setor;
   const id_usuario = request.body.id_usuario;
+
+  const query = `
+  UPDATE Setores SET deleted = 1 WHERE id_setor = @id_setor;
+  UPDATE Ret_Itens_setor SET deleted = 1 WHERE id_setor = @id_setor;
+  `;
 
   const params = {
     id_setor: id_setor,
