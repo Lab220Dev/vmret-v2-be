@@ -128,21 +128,26 @@ router.post('/delete',autenticarToken,autorizarRoles(['Master','Administrador'])
         }
     }
 );
-router.get('/:Identificacao', async (req, res) => {
-    const identificacao = req.params.Identificacao;
+router.get('/:id_cliente/:Identificacao', async (req, res) => {
+    const { id_cliente, Identificacao } = req.params;
 
     try {
-        if (!identificacao) {
-            return res.status(400).json({ error: 'Identificação não fornecida.' });
+        if (!id_cliente || !Identificacao) {
+            return res.status(400).json({ error: 'Parâmetros inválidos ou ausentes' });
+        }
+        const clienteId = parseInt(id_cliente, 10);
+        if (isNaN(clienteId)) {
+            return res.status(400).json({ error: 'id_cliente deve ser um número válido' });
         }
         const query = `
             SELECT Video
             FROM DMs
-            WHERE Identificacao = @Identificacao and deleted = 0
+            WHERE Identificacao = @Identificacao and id_cliente = @id_cliente and deleted = 0
         `;
 
         const request = new sql.Request();
-        request.input('Identificacao', sql.VarChar, identificacao); 
+        request.input('Identificacao', sql.VarChar, Identificacao); 
+        request.input('id_cliente', sql.Int, clienteId); 
         const result = await request.query(query);
 
         if (!result.recordset || result.recordset.length === 0) {
