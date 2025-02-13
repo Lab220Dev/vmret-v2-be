@@ -124,7 +124,10 @@ async function relatorio(request, response) {
     // Verifica se o resultado da consulta não contém dados.
     if (!result.recordset.length) {
       console.warn("Nenhum dado encontrado para os critérios fornecidos."); // Log de aviso se não houver resultados.
-      return response.status(404).json("Nenhum dado encontrado"); // Retorna erro 404 se não houver dados.
+      return response.status(200).json({
+        message: "Nenhum dado encontrado para os critérios fornecidos.",
+        data: []
+      });
     }
 
     const produtosMap = new Map(); // Cria um mapa para armazenar os produtos.

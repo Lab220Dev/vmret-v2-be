@@ -396,7 +396,7 @@ async function listarMaisRet(request, response) {
             FROM 
                 DM_Retirada_Itens ri
             JOIN 
-                DM_Retiradas r ON ri.id_retirada = r.id_retirada
+                DM_Retiradas r ON ri.id_retirada = r.id_retirada and  r.ID_DM = ri.ID_DM
             WHERE 
                 r.Dia >= DATEADD(MONTH, -6, GETDATE())  
                 AND r.ID_Cliente = @id_cliente         

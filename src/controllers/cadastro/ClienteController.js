@@ -261,6 +261,42 @@ async function verificarMenuExistente(transaction, id_cliente, menuName) {
   return result.recordset[0].count > 0;
 }
 
+async function obterMenusExistentes(transaction, id_cliente) {
+  const request = new sql.Request(transaction);
+  request.input("id_cliente", sql.Int, id_cliente);
+
+  const queryMenu = `
+        SELECT * 
+        FROM Menu
+        WHERE Cod_cli = @id_cliente
+      `;
+
+      // Consulta para recuperar os itens de menu do cliente
+      const queryMenuItem = `
+        SELECT * 
+        FROM menu_itens
+        WHERE Cod_cli = @id_cliente
+      `;
+
+      // Prepara a requisição SQL
+      const requestSql = new sql.Request();
+      requestSql.input("id_cliente", sql.Int, id_cliente);
+
+      // Executa as consultas para obter os menus e itens
+      const menuResult = await requestSql.query(queryMenu);
+      const menuItemResult = await requestSql.query(queryMenuItem);
+
+      const menus = menuResult.recordset;
+      const menuItens = menuItemResult.recordset;
+
+      // Constrói a árvore de menus para o cliente atual
+      const menuTree =
+        menus.length > 0 || menuItens.length > 0
+          ? buildMenuTree(menus, menuItens)
+          : [];
+      menuTree.forEach(cleanItems);
+      return menuTree;
+}
 /**
  * Realiza o bulk insert em uma tabela SQL.
  */
@@ -458,7 +494,16 @@ async function listarComMenuPaginado(request, response) {
     let queryClientes = `
       SELECT 
         COUNT(*) OVER() AS TotalRecords, 
-        clientes.*
+        clientes.id_cliente,
+        clientes.nome,
+        clientes.cpfcnpj as cnpj,
+        clientes.ativo,
+        clientes.deleted,
+        clientes.created,
+        clientes.updated,
+        clientes.last_login,
+        clientes.usar_api,
+        clientes.atualizado        
       FROM 
         clientes
       WHERE 
@@ -749,13 +794,13 @@ async function listarClienteComServicos(request, response) {
  * @returns {void} Retorna um status HTTP 201 em caso de sucesso ou um erro HTTP 500 em caso de falha.
  */
 async function adicionar(request, response) {
-  const { nome, cpfcnpj, ativo, usar_api, id_usuario } = request.body;  // Dados do cliente
+  const { nome, cnpj, ativo, usar_api, id_usuario } = request.body;  // Dados do cliente
   const apiKey = generateApiKey();  // Geração da chave de API
 
   const queryCliente = `
         INSERT INTO clientes 
         (id_cliente, nome, cpfcnpj, ativo, deleted, created, updated, last_login, usar_api, atualizado)
-        VALUES (@id_cliente, @nome, @cpfcnpj, @ativo, @deleted, @created, @updated, @last_login, @usar_api, @atualizado)
+        VALUES (@id_cliente, @nome, @cnpj, @ativo, @deleted, @created, @updated, @last_login, @usar_api, @atualizado)
     `;
 
   const queryApiKey = `
@@ -780,7 +825,7 @@ async function adicionar(request, response) {
     // Prepara as variáveis para a query de inserção de cliente
     sqlRequest.input("id_cliente", sql.Int, newIdCliente);
     sqlRequest.input("nome", sql.VarChar, nome);
-    sqlRequest.input("cpfcnpj", sql.VarChar, cpfcnpj);
+    sqlRequest.input("cnpj", sql.VarChar, cnpj);
     sqlRequest.input("ativo", sql.Bit, ativo);
     sqlRequest.input("deleted", sql.Bit, false);
     sqlRequest.input("created", sql.DateTime, new Date());
@@ -1190,11 +1235,11 @@ async function inserirNovoServico(
  * @returns {void} Retorna uma resposta HTTP indicando se a atualização foi bem-sucedida ou se ocorreu um erro.
  */
 async function atualizar(request, response) {
-  const { id_cliente, nome, cpfcnpj, ativo, usarapi, id_usuario } =
+  const { id_cliente, nome, cnpj, ativo, usarapi, id_usuario } =
     request.body;
   const params = {
     nome: nome,
-    cpfcnpj: cpfcnpj,
+    cnpj: cnpj,
     ativo: convertToBoolean(ativo),
     updated: new Date(),
     usar_api: convertToBoolean(usarapi),
@@ -1205,7 +1250,7 @@ async function atualizar(request, response) {
     UPDATE clientes
     SET 
         nome = @nome,
-        cpfcnpj = @cpfcnpj,
+        cpfcnpj = @cnpj,
         ativo = @ativo,
         updated = @updated,
         usar_api = @usar_api,
@@ -1215,7 +1260,7 @@ async function atualizar(request, response) {
     const sqlRequest = new sql.Request();
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
     sqlRequest.input("nome", sql.VarChar, nome);
-    sqlRequest.input("cpfcnpj", sql.VarChar, cpfcnpj);
+    sqlRequest.input("cnpj", sql.VarChar, cnpj);
     sqlRequest.input("ativo", sql.Bit, ativo);
     sqlRequest.input("updated", sql.DateTime, new Date());
     sqlRequest.input("usar_api", sql.Bit, usarapi);

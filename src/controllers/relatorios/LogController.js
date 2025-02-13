@@ -129,15 +129,14 @@ async function relatorioMaquina(request, response) {
     // Inicia a construção da consulta SQL básica para buscar dados na tabela Log_Desk
     let query = `
       SELECT 
-      ID,
-      id_cliente,
+      ID_Cliente,
       ID_DM,
-      DM_Log,
+      ID_Usuario_Desk,
       CONVERT( NVARCHAR, Dia, 120) AS Dia,
-      Log_String,
-      Resultado,
+      ID_Funcionario,
       Operacao,
-      Sincronizado
+      Log,
+      ID
       FROM
           DM_Log_Desk
       WHERE
@@ -202,18 +201,18 @@ async function relatorioMaquina(request, response) {
     const dbRequest = new sql.Request();
 
     // Define os parâmetros de entrada para a consulta SQL
-    if (params.id_cliente) dbRequest.input("id_cliente", sql.Int, params.id_cliente); // Define o parâmetro ID_Cliente
-    if (params.id_dm) dbRequest.input("id_dm", sql.Int, params.id_dm); // Define o parâmetro ID_DM se estiver presente
+    if (params.id_cliente) dbRequest.input("id_cliente", sql.Numeric, params.id_cliente); // Define o parâmetro ID_Cliente
+    if (params.id_dm) dbRequest.input("id_dm", sql.Numeric, params.id_dm); // Define o parâmetro ID_DM se estiver presente
     if (params.id_usuario)
-      dbRequest.input("id_usuario", sql.Int, params.id_usuario); // Define o parâmetro ID_Usuario se estiver presente
+      dbRequest.input("id_usuario", sql.Numeric, params.id_usuario); // Define o parâmetro ID_Usuario se estiver presente
     if (params.operacao)
       dbRequest.input("operacao", sql.VarChar, params.operacao); // Define o parâmetro Operacao se estiver presente
     if (params.id_funcionario)
-      dbRequest.input("id_funcionario", sql.VarChar, params.id_funcionario); // Define o parâmetro ID_Funcionario se estiver presente
+      dbRequest.input("id_funcionario", sql.Numeric, params.id_funcionario); // Define o parâmetro ID_Funcionario se estiver presente
     if (params.data_inicio)
-      dbRequest.input("data_inicio", sql.DateTime, params.data_inicio); // Define o parâmetro Data_Inicio se estiver presente
+      dbRequest.input("data_inicio", sql.NVarChar, params.data_inicio); // Define o parâmetro Data_Inicio se estiver presente
     if (params.data_final)
-      dbRequest.input("data_final", sql.DateTime, params.data_final); // Define o parâmetro Data_Final se estiver presente
+      dbRequest.input("data_final", sql.NVarChar, params.data_final); // Define o parâmetro Data_Final se estiver presente
 
     // Executa a consulta SQL
     const result = await dbRequest.query(query);

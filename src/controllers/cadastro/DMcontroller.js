@@ -1404,7 +1404,7 @@ async function adicionarItens(request, response) {
 ) 
 VALUES (
     @id_item, @id_cliente, @ID_DM, @id_produto, @Controladora, @Placa, @Motor1, @Motor2, 
-    @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @capacidade, @deleted, @nome, 
+    @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @Capacidade, @deleted, @nome, 
     @ProdutoCodigo, @sku, @unidade_medida, @imagem1, @ca,@Sincronizado
 )`;
 
@@ -1434,7 +1434,6 @@ VALUES (
       imagem1,
       quantidademinima,
       ca,
-      Capacidade,
     } = produto;
 
     const nextIdItem = await obterProximoIdItem();
@@ -1476,7 +1475,7 @@ VALUES (
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
     sqlRequest2.input("quantidade", sql.Int, 0);
-    sqlRequest2.input("capacidade", sql.Int, Capacidade);
+    sqlRequest2.input("Capacidade", sql.Int, Capacidade);
     sqlRequest2.input("deleted", sql.Bit, false);
     sqlRequest2.input("nome", sql.NVarChar, nome);
     sqlRequest2.input("ProdutoCodigo", sql.NVarChar, ProdutoCodigo);
