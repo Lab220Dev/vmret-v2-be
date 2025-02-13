@@ -1404,7 +1404,7 @@ async function adicionarItens(request, response) {
 ) 
 VALUES (
     @id_item, @id_cliente, @ID_DM, @id_produto, @Controladora, @Placa, @Motor1, @Motor2, 
-    @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @capacidade, @deleted, @nome, 
+    @DIP, @Andar, @Posicao, @quantidade, @quantidademinima, @Capacidade, @deleted, @nome, 
     @ProdutoCodigo, @sku, @unidade_medida, @imagem1, @ca,@Sincronizado
 )`;
 
@@ -1434,7 +1434,6 @@ VALUES (
       imagem1,
       quantidademinima,
       ca,
-      Capacidade,
     } = produto;
 
     const nextIdItem = await obterProximoIdItem();
@@ -1476,7 +1475,7 @@ VALUES (
     sqlRequest2.input("Andar", sql.Int, Andar);
     sqlRequest2.input("Posicao", sql.Int, Posicao);
     sqlRequest2.input("quantidade", sql.Int, 0);
-    sqlRequest2.input("capacidade", sql.Int, Capacidade);
+    sqlRequest2.input("Capacidade", sql.Int, Capacidade);
     sqlRequest2.input("deleted", sql.Bit, false);
     sqlRequest2.input("nome", sql.NVarChar, nome);
     sqlRequest2.input("ProdutoCodigo", sql.NVarChar, ProdutoCodigo);
@@ -1678,7 +1677,10 @@ async function deletarDM(request, response) {
   const ID_DM = request.body.ID_DM;
   const id_usuario = request.body.id_usuario;
   const id_cliente = request.body.id_cliente;
-  const query = "UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM";
+  const query = `
+  UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM;
+  UPDATE DM_Itens SET deleted = 1 WHERE ID_DM = @ID_DM;
+  UPDATE Controladoras SET deleted = 1 WHERE ID_DM = @ID_DM;`;
   const params = {
     ID_DM: ID_DM,
   };
