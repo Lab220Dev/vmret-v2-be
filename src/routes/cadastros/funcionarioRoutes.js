@@ -3,6 +3,7 @@ const router = express.Router();
 const funcionarioController = require('../../controllers/cadastro/funcionarioController');
 
 router.post('/listar', funcionarioController.listarFuncionarios);
+router.post('/fetchdados', funcionarioController.fetchdados);
 router.post('/listaSimples', funcionarioController.listarFuncionariosSimples);
 router.post('/listaRelatorio', funcionarioController.listarFuncionariosRelatorio);
 router.post('/listaPaginado', funcionarioController.listarFuncionariosPagianda);

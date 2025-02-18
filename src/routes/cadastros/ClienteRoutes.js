@@ -14,7 +14,7 @@ router.post('/atualizar', clienteController.atualizar);
 router.post('/adicionar', clienteController.adicionar); 
 router.post('/adicionarServico', clienteController.adicionarServico);
 router.post('/deletarServico', clienteController.deletarServico); 
-
+router.post('/fetchdados',clienteController.fetchdadosclient);
 //processo de deletar e atualizar progressbar
 router.post('/deletar', clienteController.deletar); // Rota para excluir o cliente e acompanhar o progresso
 

@@ -216,7 +216,11 @@ async function listarFuncionariosPagianda(request, response) {
     for (let funcionario of funcionarios) {
       const sqlRequestItens = new sql.Request();
       // Passa o ID do funcionário para a consulta de itens
-      sqlRequestItens.input( "id_funcionario", sql.Int, funcionario.id_funcionario);
+      sqlRequestItens.input(
+        "id_funcionario",
+        sql.Int,
+        funcionario.id_funcionario
+      );
 
       // Executa a consulta de itens
       const itensResult = await sqlRequestItens.query(queryItensFuncionario);
@@ -946,7 +950,7 @@ async function deleteFuncionario(request, response) {
   }
 
   // Consulta SQL para marcar o funcionário como excluído
-  const query =`
+  const query = `
   UPDATE Funcionarios SET deleted = 1 WHERE id_funcionario = @id_funcionario;
     
   UPDATE Ret_Item_Funcionario SET deleted = 1 WHERE id_funcionario = @id_funcionario;`;
@@ -1252,12 +1256,9 @@ async function adicionarItem(request, response) {
 
       // Caso não encontre nenhum funcionário, retorna erro.
       if (funcionarioResult.recordset.length === 0) {
-        return response
-          .status(400)
-          .json({
-            message:
-              "Nenhum funcionário encontrado para o id_cliente fornecido.",
-          });
+        return response.status(400).json({
+          message: "Nenhum funcionário encontrado para o id_cliente fornecido.",
+        });
       }
 
       // Atribui o próximo ID do funcionário para o novo item.
@@ -1317,12 +1318,10 @@ async function adicionarItem(request, response) {
         `;
         listarRequest.input("id_funcionario", sql.Int, id_funcionario);
         const result = await listarRequest.query(queryItensFuncionario);
-        return response
-          .status(201)
-          .json({
-            dados: result.recordsets,
-            message: "Item adicionado com sucesso",
-          });
+        return response.status(201).json({
+          dados: result.recordsets,
+          message: "Item adicionado com sucesso",
+        });
       }
     } else {
       // Se o item não existir, insere um novo item.
@@ -1355,12 +1354,10 @@ async function adicionarItem(request, response) {
         `;
         listarRequest.input("id_funcionario", sql.Int, id_funcionario);
         const result = await listarRequest.query(queryItensFuncionario);
-        return response
-          .status(201)
-          .json({
-            dados: result.recordsets,
-            message: "Item adicionado com sucesso",
-          });
+        return response.status(201).json({
+          dados: result.recordsets,
+          message: "Item adicionado com sucesso",
+        });
       }
     }
   } catch (error) {
@@ -1475,11 +1472,45 @@ async function deleteItem(request, response) {
       .json({ error: `Erro ao excluir item: ${error.message}` });
   }
 }
+async function fetchdados(request, response) {
+  const { id_funcionario } = request.body;
+  const query = `
+  SELECT 
+    f.nome, f.matricula, f.cpf, f.id_funcao, fn.nome as funcao_nome , elementos
+  FROM 
+    funcionarios f
+  LEFT JOIN 
+    funcao fn ON f.id_funcao = fn.id_funcao
+  WHERE 
+    f.id_funcionario = @id_funcionario
+`;
 
+
+  try {
+    if (!id_funcionario) {
+      return response.status(401).json("ID da função não foi enviado");
+    }
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_funcionario", sql.Int, id_funcionario);
+
+    const result = await sqlRequest.query(query);
+    if (result.recordset.length === 0) {
+      return response.status(404).json({ message: "Funcionário não encontrado" });
+    }
+    // Retorna apenas o primeiro objeto do array
+    response.status(200).json(result.recordset[0]);
+
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
 // Exporta as funções para uso em outros módulos.
 module.exports = {
   upload,
   foto,
+  fetchdados,
   listarFuncionarios,
   listarFuncionariosSimples,
   listarFuncionariosRelatorio,

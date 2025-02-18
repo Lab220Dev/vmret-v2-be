@@ -1579,11 +1579,43 @@ async function deletarServico(request, response) {
   }
 }
 
+async function fetchdadosclient(request, response) {
+  const id_cliente = request.body.id_cliente;
+  if(id_cliente == null){
+    return response.status(400).json({ message: "ID do cliente não informado." });
+  }
+  try {
+    const query = `
+      SELECT 
+        c.nome, c.cpfcnpj, c.endereco,c.cidade,c.estado,c.cep
+      FROM 
+        clientes c
+      WHERE 
+        c.id_cliente = @id_cliente
+    `;
+
+    const result = await new sql.Request()
+      .input("id_cliente", sql.Int, id_cliente)
+      .query(query);
+
+    if (result.recordset.length === 0) {
+      return response.status(404).json({ message: "Cliente não encontrado." });
+    }
+
+    const cliente = result.recordset[0];
+    response.status(200).json(cliente);
+  } catch (error) {
+    console.error("Erro ao buscar cliente:", error.message);
+    response.status(500).send("Erro ao buscar cliente");
+  }
+}
+
 module.exports = {
   listar,
   listaSimples,
   atualizar,
   deletar,
+  fetchdadosclient,
   adicionar,
   salvarMenus,
   listarClienteComServicos,
