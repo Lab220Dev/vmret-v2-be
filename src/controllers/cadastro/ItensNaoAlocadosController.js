@@ -252,7 +252,8 @@ async function inserirOuAtualizarProdutos(
   ); // Caminho onde as imagens dos produtos serão salvas.
 
   const produtosComStatus = []; // Lista para armazenar os produtos e seu status (adicionado, atualizado).
-
+  const totalProdutos = produtosExternos.length; // Total de produtos a serem processados
+  let contador = 0; // Contador de progresso
   // Cria o diretório de upload se ele não existir.
   if (!fs.existsSync(uploadPathPrincipal)) {
     fs.mkdirSync(uploadPathPrincipal, { recursive: true }); // Cria diretórios recursivamente.
@@ -260,6 +261,8 @@ async function inserirOuAtualizarProdutos(
 
   // Loop para processar cada produto externo
   for (let produto of produtosExternos) {
+    contador++; // Incrementa o contador de progresso
+    console.log(`\n🔍 Processando produto ${contador}/${totalProdutos}: ${produto.codigo} - ${produto.nome.replace(/;/g, " ")}`);
     const imagemNova = produto.foto ? produto.foto.replace(baseUrl, "") : ""; // Obtém a imagem nova (sem o URL base).
 
     // Verifica se o produto já existe no banco de dados
@@ -275,6 +278,7 @@ async function inserirOuAtualizarProdutos(
 
     if (existingProduct.recordset.length > 0) {
       // Se o produto já existir no banco.
+      console.log(`✅ Produto ${produto.codigo} encontrado no banco.`);
       const imagemAtual = existingProduct.recordset[0].imagem1; // Obtém a imagem atual do banco.
 
       // Se a imagem nova for diferente da imagem atual
@@ -299,7 +303,7 @@ async function inserirOuAtualizarProdutos(
           .input("id_cliente", sql.Int, id_cliente)
           .input("codigo", sql.VarChar, produto.codigo.toString())
           .input("id_categoria", sql.Int, 1)
-          .input("nome", sql.VarChar, produto.nome)
+          .input("nome", sql.VarChar, produto.nome.replace(/;/g, " "))
           .input("descricao", sql.VarChar, produto.descricao || "")
           .input("ca", sql.NVarChar, produto.ca || "")
           .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
@@ -326,13 +330,14 @@ async function inserirOuAtualizarProdutos(
 
         status = "atualizado"; // Marca o status como atualizado.
       } else {
+        console.log(`🔄 A imagem é a mesma. Apenas os dados serão atualizados.`);
         // Se a imagem é a mesma, apenas atualiza os outros campos.
         const produtoRequest = new sql.Request(transaction);
         produtoRequest
           .input("id_cliente", sql.Int, id_cliente)
           .input("codigo", sql.VarChar, produto.codigo.toString())
           .input("id_categoria", sql.Int, 1)
-          .input("nome", sql.VarChar, produto.nome)
+          .input("nome", sql.VarChar, produto.nome.replace(/;/g, " "))
           .input("descricao", sql.VarChar, produto.descricao || "")
           .input("ca", sql.NVarChar, produto.ca || "")
           .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
@@ -358,6 +363,7 @@ async function inserirOuAtualizarProdutos(
         status = "atualizado"; // Marca o status como atualizado.
       }
     } else {
+      console.log(`🆕 Produto ${produto.codigo} não encontrado. Será inserido.`);
       // Se o produto não existir, insere um novo produto no banco.
       const caminhoImagemLocal = path.join(
         uploadPathPrincipal,
@@ -378,7 +384,7 @@ async function inserirOuAtualizarProdutos(
         .input("id_cliente", sql.Int, id_cliente)
         .input("codigo", sql.VarChar,produto.codigo.toString())
         .input("id_categoria", sql.Int, 1)
-        .input("nome", sql.VarChar, produto.nome)
+        .input("nome", sql.VarChar, produto.nome.replace(/;/g, " "))
         .input("descricao", sql.VarChar, produto.descricao || "")
         .input("ca", sql.NVarChar, produto.ca || "")
         .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
@@ -401,10 +407,10 @@ async function inserirOuAtualizarProdutos(
 
       status = "adicionado"; // Marca o status como adicionado.
     }
-
+    console.log(`✅ Produto ${contador}/${totalProdutos} (${produto.codigo}) ${status} com sucesso!`);
     produtosComStatus.push({ produto, status }); // Adiciona o produto e seu status à lista de produtos.
   }
-
+  console.log(`✅ Processamento concluído! ${produtosComStatus.length} produtos foram processados.`);
   return produtosComStatus; // Retorna a lista de produtos com seus respectivos status.
 }
 

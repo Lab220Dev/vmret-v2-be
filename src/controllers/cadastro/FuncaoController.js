@@ -360,6 +360,32 @@ async function deleteFuncao(request, response) {
   }
 }
 
+async function fetchdados(request,response){
+  const {id_funcionario} = request.body;
+  const query = `SELECT nome,matricula,cpf,id_funcao FROM funcionarios WHERE id_funcionario = @id_funcionario`;
+
+  try {
+    if (!id_funcao) {
+      return response.status(401).json("ID da função não foi enviado");
+    }
+
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_funcao", sql.Int, id_funcao);
+
+    const result = await sqlRequest.query(query);
+
+    if (result.rowsAffected[0] > 0) {
+      response.status(200).json(result.recordset);
+    } else {
+      response.status(400).send("Nenhuma função encontrada");
+    }
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    response.status(500).send("Erro ao executar consulta");
+  }
+}
+
+
 // Exporta as funções para que possam ser utilizadas em outros arquivos.
 module.exports = {
   adicionar,
