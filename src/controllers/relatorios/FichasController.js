@@ -1,6 +1,6 @@
 const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o banco de dados SQL Server.
 const { format } = require("date-fns"); // Importa a função 'format' do 'date-fns' para formatar datas.
-const { logQuery } = require('../../utils/logUtils') // Importa a função 'logQuery' para registrar logs de consultas SQL.
+const { logQuery } = require("../../utils/logUtils"); // Importa a função 'logQuery' para registrar logs de consultas SQL.
 
 // Função assíncrona para criar e retornar um novo objeto de requisição SQL.
 async function criarRequest() {
@@ -24,7 +24,8 @@ async function textoFicha(request, response) {
     }
 
     // Consulta SQL para obter o texto da ficha de retirada do cliente.
-    const query = "SELECT Texto FROM Ficha_Retirada WHERE id_cliente = @id_cliente";
+    const query =
+      "SELECT Texto FROM Ficha_Retirada WHERE id_cliente = @id_cliente";
 
     const requestSql = new sql.Request(); // Cria uma nova requisição SQL.
     requestSql.input("id_cliente", sql.Int, id_cliente); // Define o parâmetro 'id_cliente' para a consulta SQL.
@@ -54,7 +55,13 @@ async function textoFicha(request, response) {
 async function relatorio(request, response) {
   try {
     // Desestruturação dos parâmetros recebidos na requisição.
-    const { id_dm = "", id_funcionario, data_inicio, data_final, id_cliente } = request.body;
+    const {
+      id_dm = "",
+      id_funcionario,
+      data_inicio,
+      data_final,
+      id_cliente,
+    } = request.body;
 
     // Verifica se o ID do cliente foi enviado. Caso contrário, retorna erro 400.
     if (!id_cliente) {
@@ -63,26 +70,29 @@ async function relatorio(request, response) {
 
     // Inicia a consulta SQL básica para buscar as retiradas de produtos.
     let query1 = `
-      SELECT
-        ri.ProdutoID,
-        ri.ProdutoNome,
-        ri.ProdutoSKU,
-        p.unidade_medida,
-        r.Forma_Autenticacao,
-        ri.Quantidade,
-        r.Dia,
-        r.id_dm,
-        p.Descricao AS ProdutoDescricao  
-      FROM
-        DM_Retiradas r
-      INNER JOIN
-        DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
-      LEFT JOIN
-        Produtos p ON ri.ProdutoID = p.ID_Produto
-      LEFT JOIN
-        funcionarios f ON r.ID_Funcionario = f.id_funcionario
-      WHERE
-        r.ID_Cliente = @id_cliente
+       SELECT
+    ri.ProdutoID,
+    ri.ProdutoNome,
+    ri.ProdutoSKU,
+    p.unidade_medida,
+    r.Forma_Autenticacao,
+    ri.Quantidade,
+    CONVERT( NVARCHAR,r.Dia,120) AS Dia,
+    r.id_dm,
+    p.id_tipoProduto,
+    p.marca,
+    p.modelo,
+    p.Descricao AS ProdutoDescricao 
+FROM
+    DM_Retiradas r
+INNER JOIN
+    DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+LEFT JOIN
+    Produtos p ON ri.ProdutoID = p.ID_Produto
+LEFT JOIN
+    funcionarios f ON r.ID_Funcionario = f.id_funcionario
+WHERE
+    r.ID_Cliente = @id_cliente
     `;
 
     const params = { id_cliente }; // Cria um objeto com o parâmetro 'id_cliente'.
@@ -96,7 +106,9 @@ async function relatorio(request, response) {
     // Se 'data_inicio' e 'data_final' foram fornecidos, valida as datas e adiciona os filtros para o intervalo de datas.
     if (data_inicio && data_final) {
       if (new Date(data_inicio) > new Date(data_final)) {
-        return response.status(400).json("A data de início não pode ser posterior à data final"); // Retorna erro 400 se a data de início for posterior à data final.
+        return response
+          .status(400)
+          .json("A data de início não pode ser posterior à data final"); // Retorna erro 400 se a data de início for posterior à data final.
       }
       query1 += " AND r.Dia BETWEEN @data_inicio AND @data_final"; // Filtro de intervalo de datas.
       params.data_inicio = data_inicio; // Adiciona o valor de 'data_inicio' aos parâmetros.
@@ -114,9 +126,12 @@ async function relatorio(request, response) {
 
     const requestSql = await criarRequest(); // Cria uma nova requisição SQL.
     requestSql.input("id_cliente", sql.Int, params.id_cliente); // Adiciona o parâmetro 'id_cliente' à requisição SQL.
-    if (params.id_funcionario) requestSql.input("id_funcionario", sql.Int, params.id_funcionario); // Adiciona o parâmetro 'id_funcionario' à requisição SQL, se aplicável.
-    if (params.data_inicio) requestSql.input("data_inicio", sql.DateTime, params.data_inicio); // Adiciona o parâmetro 'data_inicio' à requisição SQL, se aplicável.
-    if (params.data_final) requestSql.input("data_final", sql.DateTime, params.data_final); // Adiciona o parâmetro 'data_final' à requisição SQL, se aplicável.
+    if (params.id_funcionario)
+      requestSql.input("id_funcionario", sql.Int, params.id_funcionario); // Adiciona o parâmetro 'id_funcionario' à requisição SQL, se aplicável.
+    if (params.data_inicio)
+      requestSql.input("data_inicio", sql.DateTime, params.data_inicio); // Adiciona o parâmetro 'data_inicio' à requisição SQL, se aplicável.
+    if (params.data_final)
+      requestSql.input("data_final", sql.DateTime, params.data_final); // Adiciona o parâmetro 'data_final' à requisição SQL, se aplicável.
 
     // Executa a consulta SQL.
     const result = await requestSql.query(query1);
@@ -126,34 +141,11 @@ async function relatorio(request, response) {
       console.warn("Nenhum dado encontrado para os critérios fornecidos."); // Log de aviso se não houver resultados.
       return response.status(200).json({
         message: "Nenhum dado encontrado para os critérios fornecidos.",
-        data: []
+        data: [],
       });
     }
-
-    const produtosMap = new Map(); // Cria um mapa para armazenar os produtos.
-
-    // Processa cada linha do resultado da consulta.
-    result.recordset.forEach((row) => {
-      const { ProdutoID, ProdutoNome, ProdutoSKU, Quantidade, Dia, ProdutoDescricao, Forma_Autenticacao } = row;
-      const dataFormatada = format(new Date(Dia), "dd/MM/yyyy - HH:mm"); // Formata a data para o formato "dd/MM/yyyy - HH:mm".
-
-      // Adiciona os dados do produto ao mapa.
-      produtosMap.set(ProdutoID, {
-        ProdutoID,
-        ProdutoNome,
-        ProdutoSKU,
-        Quantidade,
-        ProdutoDescricao,
-        Forma_Autenticacao,
-        Dia: dataFormatada // Inclui a data formatada no produto.
-      });
-    });
-
-    // Converte o mapa em uma lista.
-    const produtosList = Array.from(produtosMap.values());
-
-    // Retorna os dados do relatório como resposta.
-    return response.status(200).json(produtosList); // Retorna os produtos formatados com status 200.
+     // Retorna os dados do relatório como resposta.
+    return response.status(200).json(result.recordset); // Retorna os produtos formatados com status 200.
   } catch (error) {
     // Caso ocorra um erro durante a execução, imprime o erro e retorna erro 500.
     console.error("Erro ao executar consulta:", error.message);
@@ -164,5 +156,5 @@ async function relatorio(request, response) {
 // Exporta as funções 'relatorio' e 'textoFicha' para que possam ser usadas em outras partes do código.
 module.exports = {
   relatorio,
-  textoFicha
+  textoFicha,
 };
