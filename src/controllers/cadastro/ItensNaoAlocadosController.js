@@ -150,7 +150,6 @@ async function sincronizar(request, response) {
       .json({ mensagem: "Erro ao sincronizar", detalhes: error.message }); // Retorna erro 500 com detalhes.
   }
 }
-
 // Função para recuperar informações do cliente a partir do banco de dados
 /**
  * Recupera informações do cliente a partir do banco de dados, como ClienteID, UserID, etc.
@@ -307,7 +306,7 @@ async function inserirOuAtualizarProdutos(
           .input("descricao", sql.VarChar, produto.descricao || "")
           .input("ca", sql.NVarChar, produto.ca || "")
           .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
-          .input("imagem1", sql.VarChar, path.basename(imagemNova)) // Atualiza a imagem no banco.
+          .input("imagem1", sql.VarChar, imagemNova ? path.basename(imagemNova) : "0")// Atualiza a imagem no banco.
           .input("quantidadeMinima", sql.Int, produto.estoqueMinimo || 0)
           .input("id_planta", sql.Int, produto.codigoPlantaEpi || null)
           .input("unidade_medida", sql.VarChar, produto.unidademedida || "")
@@ -388,7 +387,7 @@ async function inserirOuAtualizarProdutos(
         .input("descricao", sql.VarChar, produto.descricao || "")
         .input("ca", sql.NVarChar, produto.ca || "")
         .input("validadeDias", sql.Int, produto.diasUsoMinimo || 0)
-        .input("imagem1", sql.VarChar, path.basename(imagemNova))
+        .input("imagem1", sql.VarChar, imagemNova ? path.basename(imagemNova) : "0")
         .input("quantidadeMinima", sql.Int, produto.estoqueMinimo || 0)
         .input("id_planta", sql.Int, produto.codigoPlantaEpi || null)
         .input("unidade_medida", sql.VarChar, produto.unidademedida || "")

@@ -15,5 +15,6 @@ router.post('/adicionarItensDM', DMController.adicionarItens);
 router.post('/atualizarItens', DMController.atualizarItemDM);
 router.post('/deleteItem', DMController.deletarItensDM);
 router.post('/delete', DMController.deletarDM);
+router.post('/validar', DMController.validar);
 
 module.exports = router;

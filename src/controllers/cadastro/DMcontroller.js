@@ -1,4 +1,5 @@
 const sql = require("mssql");
+const axios = require("axios");
 async function obterProximoIdItem() {
   const sqlRequest = new sql.Request();
   const query = `SELECT ISNULL(MAX(id_item), 0) + 1 AS NextIdItem FROM DM_itens`;
@@ -1785,9 +1786,36 @@ async function updateClienteInfo(request, response) {
     throw error;
   }
 }
+async function validar(request, response) {
+  const { UserID, Chaveapi,ClienteID,URL } = request.body; // Desestrutura os dados de id_cliente e id_usuario do corpo da requisição.
+  try {
+    console.log(`${URL}/api/Login`); // Loga a URL de login da API externa.
+    const apiResponse = await axios.post(`${URL}/api/Login`, {
+      // Faz uma requisição POST para obter o token.
+      UserID: UserID,
+      AccessKey: Chaveapi,
+      IdCliente: ClienteID,
+      tpReadFtp: 0,
+    });
+
+    const {authenticated , message} = apiResponse.data;
+    if(!authenticated){
+      return response.status(200).json({ success: false, message: message || 'Falha na autenticação.', });
+    }
+    return response.status(200).json({ success: true, message:'Autenticação bem-sucedida.', });
+
+  } catch (error) {
+    return response.status(500).json({
+      success: false,
+      message: 'Erro ao validar o usuário.',
+      error: error.message, // Retorna detalhes do erro
+    });
+  }
+}
 module.exports = {
   adicionar,
   listarDM,
+  validar,
   listarDMPaginado,
   listarItensDM,
   listarDMResumido2,

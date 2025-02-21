@@ -172,7 +172,7 @@ router.get('/:id_cliente/:Identificacao', async (req, res) => {
             }
         });
     } catch (error) {
-        logQuery('error',`Erro ao processar requisição para Identificação: ${identificacao}`,'falha','DOWNLOAD', null,null,null,{ Identificacao: identificacao, Error: error.message });
+        logQuery('error',`Erro ao processar requisição para Identificação: ${Identificacao}`,'falha','DOWNLOAD', null,null,null,{ Identificacao: identificacao, Error: error.message });
         console.error('Erro ao buscar ou enviar o arquivo:', error);
         res.status(500).json({ error: 'Erro ao processar a requisição.' });
     }
