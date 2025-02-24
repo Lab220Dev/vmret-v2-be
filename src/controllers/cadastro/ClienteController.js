@@ -3,7 +3,7 @@ const sql = require("mssql");
 
 const express = require('express');
 const app = express();
-
+const { DateTime } = require("luxon");
 app.use(express.json());
 
 // Importa a função 'logQuery' do módulo utilitário localizado em '../../utils/logUtils'.
@@ -821,15 +821,15 @@ async function adicionar(request, response) {
     );
     const lastId = resultId.recordset[0].lastId;
     const newIdCliente = lastId + 1;
-
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     // Prepara as variáveis para a query de inserção de cliente
     sqlRequest.input("id_cliente", sql.Int, newIdCliente);
     sqlRequest.input("nome", sql.VarChar, nome);
     sqlRequest.input("cnpj", sql.VarChar, cnpj);
     sqlRequest.input("ativo", sql.Bit, ativo);
     sqlRequest.input("deleted", sql.Bit, false);
-    sqlRequest.input("created", sql.DateTime, new Date());
-    sqlRequest.input("updated", sql.DateTime, new Date());
+    sqlRequest.input("created", sql.DateTime, nowInBrazil);
+    sqlRequest.input("updated", sql.DateTime, nowInBrazil);
     sqlRequest.input(
       "last_login",
       sql.DateTime,
@@ -1237,11 +1237,12 @@ async function inserirNovoServico(
 async function atualizar(request, response) {
   const { id_cliente, nome, cnpj, ativo, usarapi, id_usuario } =
     request.body;
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
   const params = {
     nome: nome,
     cnpj: cnpj,
     ativo: convertToBoolean(ativo),
-    updated: new Date(),
+    updated: nowInBrazil,
     usar_api: convertToBoolean(usarapi),
     atualizado: true,
     id_cliente: id_cliente,
@@ -1262,7 +1263,7 @@ async function atualizar(request, response) {
     sqlRequest.input("nome", sql.VarChar, nome);
     sqlRequest.input("cnpj", sql.VarChar, cnpj);
     sqlRequest.input("ativo", sql.Bit, ativo);
-    sqlRequest.input("updated", sql.DateTime, new Date());
+    sqlRequest.input("updated", sql.DateTime, nowInBrazil);
     sqlRequest.input("usar_api", sql.Bit, usarapi);
     sqlRequest.input("atualizado", sql.Bit, true);
     const result = await sqlRequest.query(query);

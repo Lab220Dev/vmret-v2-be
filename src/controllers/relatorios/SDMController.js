@@ -1,7 +1,7 @@
 const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o banco de dados SQL Server
 const { logQuery } = require("../../utils/logUtils");
 const {  format } = require('date-fns-tz');
-
+const { DateTime } = require("luxon");
 /**
  * Função para gerar um relatório baseado nos parâmetros fornecidos (id_cliente, id_dm, dia).
  * @param {Object} request - O objeto de requisição que contém os parâmetros no corpo.
@@ -113,9 +113,9 @@ async function obterDadosResumo(request, response) {
       // Retorna um erro 400 (Bad Request) se id_cliente não foi enviado
       return response.status(400).json({ error: "ID do cliente não enviado" });
     }
-
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     // Calcula o horário atual e o horário das últimas 3 horas
-    const agora = new Date();
+    const agora = nowInBrazil;
     const tresHorasAtras = new Date(agora.getTime() - 3 * 60 * 60 * 1000); // Últimas 3 horas
 
     // Cria um novo objeto de requisição SQL

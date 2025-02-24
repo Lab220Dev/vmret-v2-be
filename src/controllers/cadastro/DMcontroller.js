@@ -1,5 +1,6 @@
 const sql = require("mssql");
 const axios = require("axios");
+const { DateTime } = require("luxon");
 async function obterProximoIdItem() {
   const sqlRequest = new sql.Request();
   const query = `SELECT ISNULL(MAX(id_item), 0) + 1 AS NextIdItem FROM DM_itens`;
@@ -529,7 +530,7 @@ async function adicionar(request, response) {
 
     transaction = new sql.Transaction();
     await transaction.begin();
-
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     const sqlRequest = new sql.Request(transaction);
     sqlRequest.input("ID_Cliente", sql.Int, IDcliente);
     sqlRequest.input("Numero", sql.VarChar, Numero);
@@ -538,7 +539,7 @@ async function adicionar(request, response) {
     sqlRequest.input("ChaveAPI", sql.NVarChar, ChaveAPI);
     sqlRequest.input("Ativo", sql.Bit, Ativo);
     sqlRequest.input("Deleted", sql.Bit, false);
-    sqlRequest.input("Created", sql.DateTime, new Date());
+    sqlRequest.input("Created", sql.DateTime, nowInBrazil);
     sqlRequest.input("Updated", sql.DateTime, "1900-01-01 00:00:00.000");
     sqlRequest.input("Versao", sql.Int, Versao || 1);
     sqlRequest.input("Enviada", sql.Bit, Enviada);
@@ -664,7 +665,7 @@ async function atualizar(request, response) {
           Devolucao = @Devolucao,
           Sincronizado = 0
       WHERE ID_DM = @ID_DM AND ID_Cliente = @ID_Cliente`;
-
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     const requestDM = new sql.Request(transaction);
     requestDM.input("ID_DM", sql.Int, ID_DM);
     requestDM.input("ID_Cliente", sql.Int, IDcliente);
@@ -673,7 +674,7 @@ async function atualizar(request, response) {
     requestDM.input("Ativo", sql.Bit, Ativo);
     requestDM.input("Deleted", sql.Bit, Deleted);
     requestDM.input("Created", sql.DateTime, Created);
-    requestDM.input("Updated", sql.DateTime, Updated || new Date());
+    requestDM.input("Updated", sql.DateTime, nowInBrazil);
     requestDM.input("Versao", sql.Int, Versao);
     requestDM.input("Enviada", sql.Bit, Enviada);
     requestDM.input("OP_Senha", sql.Bit, OP_Senha);

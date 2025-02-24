@@ -2,6 +2,7 @@ const sql = require("mssql"); // Importa o módulo `mssql` para execução de co
 const { sendEmail, generateEmailHTML } = require("../utils/emailService"); // Importa funções para enviar e-mails e gerar HTML do e-mail.
 const CryptoJS = require("crypto-js"); // Importa o módulo `crypto-js` para criptografia de senhas.
 const jwt = require("jsonwebtoken"); // Importa o módulo `jsonwebtoken` para criação de tokens JWT.
+const { DateTime } = require("luxon");
 const segredo = "%$&*656$4#%$3@@@__"; // Chave secreta usada para assinar o token JWT.
 const opcoes = {
   expiresIn: "1h", // Define o tempo de expiração do token JWT para 1 hora.
@@ -63,11 +64,10 @@ async function login(request, response) {
                 UPDATE Usuarios
                 SET last_login = @LastLogin
                 WHERE id_usuario = @id_usuario`;
-      const currentDate = new Date();
-
+      const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
       // Executa a consulta SQL para atualizar o horário de login do usuário.
       await new sql.Request()
-        .input("LastLogin", sql.DateTime, currentDate)
+        .input("LastLogin", sql.DateTime, nowInBrazil)
         .input("id_usuario", sql.Int, Usuario.id_usuario)
         .query(updateQuery);
 

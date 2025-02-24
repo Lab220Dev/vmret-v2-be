@@ -1,5 +1,5 @@
 const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o banco de dados SQL Server.
-
+const { DateTime } = require("luxon");
  /**
   * Função que recupera dados sobre os clientes, seus status de DM e notificações.
   * @param {Object} req - O objeto de requisição contendo os parâmetros necessários.
@@ -21,9 +21,8 @@ async function DadosClientes(req, res) {
     const ListaDM = await sqlRequest.query(query); // Executa a consulta e aguarda o resultado.
 
     // Define o fuso horário como "America/Sao_Paulo" para trabalhar com data e hora locais.
-    const timezone = "America/Sao_Paulo";
-    const agora = new Date().toLocaleString("en-US", { timeZone: timezone }); // Obtém a hora atual no fuso horário definido.
-    const agoraDate = new Date(agora); // Converte a hora atual em um objeto Date.
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
+    const agoraDate = new Date(nowInBrazil); // Converte a hora atual em um objeto Date.
 
     // Inicializa as listas de DMs online e offline.
     const onlineList = [];
@@ -160,9 +159,8 @@ async function ResumoDados(req, res) {
     // 2. Processar detalhes de cada DM.
     for (const cliente of listaClientes) {
       for (const dm of cliente.dms) {
-        const timezone = "America/Sao_Paulo";
-        const agora = new Date().toLocaleString("en-US", { timeZone: timezone }); // Obtém a hora atual para a comparação de status.
-        const agoraDate = new Date(agora);
+        const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
+        const agoraDate = new Date(nowInBrazil);
 
         // Consulta para obter o status da DM.
         const statusQuery = `

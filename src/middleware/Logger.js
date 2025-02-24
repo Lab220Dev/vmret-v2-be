@@ -1,7 +1,7 @@
 const { createLogger, format, transports } = require('winston');  // Importa funções necessárias do módulo winston para criação de logs.
 const Transport = require('winston-transport');  // Importa a classe base `Transport` de winston para customização de transportes de logs.
 const sql = require('mssql');  // Importa o módulo `mssql` para trabalhar com bancos de dados SQL Server.
- 
+const { DateTime } = require("luxon");
 // Define o formato do log utilizando winston `format.printf`.
 // O formato do log exibe o timestamp, o nível de log, a mensagem e, opcionalmente, a query SQL.
 const logFormat = format.printf(({ level, message, timestamp, query }) => {
@@ -105,23 +105,6 @@ const logger = createLogger({
 });
 
 /**
- * Função que retorna a hora atual de São Paulo, levando em consideração o fuso horário (UTC-3).
- * 
- * @returns {string} - A data e hora em formato ISO 8601 (sem milissegundos) no fuso horário de São Paulo.
- */
-function getSaoPauloTime() {
-    const now = new Date();  // Obtém a data e hora atual no formato UTC.
-    const saoPauloOffset = -3 * 60;  // Fuso horário de São Paulo é UTC-3 (em minutos).
-    const localOffset = now.getTimezoneOffset();  // Obtém o offset do fuso horário local do servidor.
-
-    // Ajusta a hora para o fuso horário de São Paulo.
-    const saoPauloTime = new Date(now.getTime() + (saoPauloOffset - localOffset) * 60000);
-
-    // Retorna a hora formatada em ISO 8601, removendo os milissegundos.
-    return saoPauloTime.toISOString().slice(0, 19);  // Retira a parte dos milissegundos.
-}
-
-/**
  * Função de logging que registra uma operação no banco de dados ou no arquivo, com o resultado da operação.
  * 
  * @param {string} level - O nível do log (info, warn, error, etc.).
@@ -138,13 +121,13 @@ function logWithOperation(level, message, resultado, operacao, id_cliente, id_us
         console.error('Erro: Query não fornecida para logging.');  // Loga um erro no console se a query não estiver presente.
         return;  // Interrompe o processo de logging.
     }
-
+    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     // Registra o log com os parâmetros fornecidos.
     logger.log({
         level,  // Define o nível do log (info, warn, etc.).
         message,  // Mensagem a ser logada.
         resultado,  // Resultado da operação.
-        timestamp: getSaoPauloTime(),  // Timestamp da operação (hora de São Paulo).
+        timestamp: nowInBrazil,  // Timestamp da operação (hora de São Paulo).
         operacao,  // Descrição da operação.
         idCliente: id_cliente,  // ID do cliente.
         idUsuario: id_usuario,  // ID do usuário.
