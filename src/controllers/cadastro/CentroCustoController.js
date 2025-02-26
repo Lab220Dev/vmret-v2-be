@@ -20,24 +20,24 @@ const convertToBoolean = (value) => {
  */
 async function listar(request, response) {
   try {
-    const id_cliente = request.body.id_cliente;  // Extrai o ID do cliente do corpo da requisição.
-    
+    const id_cliente = request.body.id_cliente; // Extrai o ID do cliente do corpo da requisição.
+
     // Verifica se o ID do cliente foi fornecido. Se sim, executa a consulta.
     if (id_cliente) {
       const query =
         "SELECT *  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0"; // Query SQL para listar os centros de custo ativos (Deleted = 0).
-      
-      request = new sql.Request();  // Cria uma nova requisição SQL.
-      request.input("id_cliente", sql.Int, id_cliente);  // Passa o ID do cliente como parâmetro para a consulta.
-      
+
+      request = new sql.Request(); // Cria uma nova requisição SQL.
+      request.input("id_cliente", sql.Int, id_cliente); // Passa o ID do cliente como parâmetro para a consulta.
+
       // Executa a consulta e aguarda o resultado.
-      const result = await request.query(query);  
-      
+      const result = await request.query(query);
+
       // Retorna os resultados da consulta como JSON com o status HTTP 200 (OK).
-      response.status(200).json(result.recordset); 
-      return;  // Encerra a execução da função após o retorno.
+      response.status(200).json(result.recordset);
+      return; // Encerra a execução da função após o retorno.
     }
-    
+
     // Caso o ID do cliente não tenha sido enviado, retorna um erro 401 (Não Autorizado).
     response.status(401).json("ID do cliente não enviado");
   } catch (error) {
@@ -77,15 +77,14 @@ async function listarPaginada(request, response) {
 
     // Adiciona o ID do cliente como parâmetro
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    if (filters.global && filters.global.value) {
+      const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+      query += ` AND (
+                        Centro_Custos.nome LIKE @globalValue OR 
+                        Centro_Custos.Codigo LIKE @globalValue 
+                    )`;
 
-    // Filtros dinâmicos
-    if (filters.nome) {
-      query += ` AND nome LIKE @nome`;
-      sqlRequest.input("nome", sql.VarChar, `%${filters.nome.value}%`);
-    }
-    if (filters.Codigo) {
-      query += ` AND Codigo LIKE @Codigo`;
-      sqlRequest.input("Codigo", sql.VarChar, `%${filters.Codigo.value}%`);
+      sqlRequest.input("globalValue", sql.NVarChar, globalValue);
     }
 
     // Ordenação e Paginação
@@ -103,7 +102,8 @@ async function listarPaginada(request, response) {
 
     // Extrai os dados paginados e o total de registros
     const centrosCusto = result.recordset;
-    const totalRecords = centrosCusto.length > 0 ? centrosCusto[0].TotalRecords : 0;
+    const totalRecords =
+      centrosCusto.length > 0 ? centrosCusto[0].TotalRecords : 0;
 
     // Retorna os dados paginados e o total de registros
     response.status(200).json({ centrosCusto, totalRecords });
@@ -124,24 +124,24 @@ async function listarPaginada(request, response) {
  */
 async function listaSimples(request, response) {
   try {
-    const id_cliente = request.body.id_cliente;  // Extrai o ID do cliente do corpo da requisição.
-    
+    const id_cliente = request.body.id_cliente; // Extrai o ID do cliente do corpo da requisição.
+
     // Verifica se o ID do cliente foi fornecido. Se sim, executa a consulta.
     if (id_cliente) {
       const query =
         "SELECT ID_CentroCusto,Nome  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0"; // Query simplificada (apenas ID e Nome).
-      
-      request = new sql.Request();  // Cria uma nova requisição SQL.
-      request.input("id_cliente", sql.Int, id_cliente);  // Passa o ID do cliente como parâmetro para a consulta.
-      
+
+      request = new sql.Request(); // Cria uma nova requisição SQL.
+      request.input("id_cliente", sql.Int, id_cliente); // Passa o ID do cliente como parâmetro para a consulta.
+
       // Executa a consulta e aguarda o resultado.
-      const result = await request.query(query); 
-      
+      const result = await request.query(query);
+
       // Retorna os resultados da consulta como JSON com o status HTTP 200 (OK).
       response.status(200).json(result.recordset);
-      return;  // Encerra a execução da função após o retorno.
+      return; // Encerra a execução da função após o retorno.
     }
-    
+
     // Caso o ID do cliente não tenha sido enviado, retorna um erro 401 (Não Autorizado).
     response.status(401).json("ID do cliente não enviado");
   } catch (error) {
@@ -162,7 +162,7 @@ async function listaSimples(request, response) {
  * @returns {void} - Retorna um status indicando o sucesso ou falha da operação.
  */
 async function adicionar(request, response) {
-  const { id_cliente, Codigo, Nome, id_usuario } = request.body;  // Extrai os dados necessários da requisição.
+  const { id_cliente, Codigo, Nome, id_usuario } = request.body; // Extrai os dados necessários da requisição.
 
   // Query SQL para inserir um novo Centro de Custo.
   const query = `INSERT INTO Centro_Custos
@@ -174,7 +174,7 @@ async function adicionar(request, response) {
     ID_Cliente: id_cliente,
     Codigo: Codigo,
     Nome: Nome,
-    Deleted: false,  // Marca o centro de custo como não deletado.
+    Deleted: false, // Marca o centro de custo como não deletado.
   };
 
   try {
@@ -198,7 +198,7 @@ async function adicionar(request, response) {
     if (result.rowsAffected[0] > 0) {
       // Caso a inserção tenha sido bem-sucedida, retorna status 201 (Criado) e a mensagem de sucesso.
       //logQuery('info', `Usuário ${id_usuario} criou um novo Centro de Custo`, 'sucesso', 'INSERT', id_cliente, id_usuario, query, params);
-      response.status(201).send("Centro de Custo criado com sucesso!"); 
+      response.status(201).send("Centro de Custo criado com sucesso!");
     } else {
       // Caso a inserção falhe, retorna status 400 (Solicitação Incorreta).
       //logQuery('error',  `Usuário ${id_usuario} falhou ao criar Centro de Custo`, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
@@ -210,9 +210,9 @@ async function adicionar(request, response) {
     )
       ? "Erro crítico: Falha na operação"
       : `Erro ao adicionar Centro de Custo: ${error.message}`;
-    
+
     //logQuery('error',  errorMessage, 'falha', 'INSERT', id_cliente, id_usuario, query, params);
-    
+
     // Loga o erro no console.
     console.error("Erro ao adicionar registro:", error.message);
     // Retorna um erro 500 (Erro Interno do Servidor) ao cliente.
@@ -230,7 +230,9 @@ async function adicionar(request, response) {
  * @returns {void} - Retorna um status indicando o sucesso ou falha da operação.
  */
 async function deleteCentro(request, response) {
-  const { ID_CentroCusto } = request.body;  // Extrai os dados necessários da requisição.
+  const { ID_CentroCusto } = request.body; // Extrai os dados necessários da requisição.
+  const id_cliente = request.usuario.id_cliente;
+  let transaction = new sql.Transaction();
 
   try {
     // Verifica se o ID do Centro de Custo foi fornecido. Caso contrário, retorna erro 401.
@@ -238,36 +240,45 @@ async function deleteCentro(request, response) {
       response.status(401).json("ID do centro não foi enviado");
       return;
     }
-
+    await transaction.begin();
     // Query para marcar o Centro de Custo como deletado.
     const query =
-      "UPDATE Centro_Custos SET deleted = 1 WHERE ID_CentroCusto = @ID_CentroCusto";
-
+      "UPDATE Centro_Custos SET Deleted = 1 WHERE ID_CentroCusto = @ID_CentroCusto AND id_cliente = @id_cliente";
+    const querySetor =
+      "UPDATE Setores SET deleted = 1 WHERE id_centro_custo = @ID_CentroCusto  AND id_cliente = @id_cliente";
+    const queryFuncao =
+      "UPDATE Funcao SET deleted = 1 WHERE id_centro_custo = @ID_CentroCusto  AND id_cliente = @id_cliente";
     // Parâmetros para a query.
     const params = {
       ID_CentroCusto: ID_CentroCusto,
     };
 
     // Cria uma nova requisição SQL.
-    const sqlRequest = new sql.Request();
+    const sqlRequest = new sql.Request(transaction);
     sqlRequest.input("ID_CentroCusto", sql.Int, ID_CentroCusto);
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     // Executa a query e aguarda o resultado.
     const result = await sqlRequest.query(query);
+    // const resultSetor = await sqlRequest.query(querySetor);
+    // const resultFuncao = await sqlRequest.query(queryFuncao);
 
     // Verifica se a query afetou alguma linha (se o centro de custo foi deletado).
     if (result.rowsAffected[0] > 0) {
-      // Caso a operação tenha sido bem-sucedida, retorna status 200 (OK) com os resultados.
-      //logQuery('info', `O usuário ${id_usuario} deletou o Centro de Custo ${ID_CentroCusto}`, 'sucesso', 'DELETE', id_cliente, id_usuario, query, params);
-      response.status(200).json(result.recordset);
+      return response.status(200).json({
+        message: "Exclusão realizada com sucesso",
+        // centro: result.recordset,
+        // setor: resultSetor.recordset,
+        // funcao: resultFuncao.recordset,
+      });
     } else {
-      // Caso o centro de custo não tenha sido encontrado, retorna erro 400 (Solicitação Incorreta).
-      //logQuery('error',`Erro ao excluir: ${ID_CentroCusto} não encontrado.`, 'erro', 'DELETE', id_cliente, id_usuario, query, params);
+      await transaction.rollback();
       response
         .status(400)
         .send("Nenhuma alteração foi feita no centro de custo.");
     }
   } catch (error) {
+    await transaction.rollback();
     // Se ocorrer algum erro durante a execução da consulta, loga o erro no console.
     console.error("Erro ao excluir:", error.message);
     // Retorna um erro 500 (Erro Interno do Servidor) ao cliente.
@@ -285,7 +296,7 @@ async function deleteCentro(request, response) {
  * @returns {void} - Retorna um status indicando o sucesso ou falha da operação.
  */
 async function atualizar(request, response) {
-  const { ID_CentroCusto, Nome, Codigo, id_cliente, id_usuario } = request.body;  // Extrai os dados necessários da requisição.
+  const { ID_CentroCusto, Nome, Codigo, id_cliente, id_usuario } = request.body; // Extrai os dados necessários da requisição.
 
   // Parâmetros para a query de atualização.
   const params = {
@@ -350,5 +361,5 @@ module.exports = {
   deleteCentro,
   atualizar,
   listaSimples,
-  listarPaginada
+  listarPaginada,
 };

@@ -62,15 +62,16 @@ async function listarPaginado(request, response) {
         `;
 
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
-
-    if (filters.nome) {
-      query += ` AND nome LIKE @nome`;
-      sqlRequest.input("nome", sql.NVarChar, `%${filters.nome.value}%`);
-    }
-    if (filters.local) {
-      query += ` AND id_planta LIKE @id_planta`;
-      sqlRequest.input("id_planta", sql.Int, `%${filters.id_planta.value}%`);
-    }
+if (filters.global && filters.global.value) {
+                    const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+                    query += ` AND (
+                        plantas.nome LIKE @globalValue OR 
+                        plantas.codigo LIKE @globalValue 
+                    )`;
+                
+                    sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+                }
+   
 
     // Ordenação e Paginação
     query += `

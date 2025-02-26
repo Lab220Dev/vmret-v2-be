@@ -105,6 +105,7 @@ async function adicionarProdutos(request, response) {
     imagem2,
     imagemdetalhe,
     id_usuario,
+    quantidademinima,
   } = request.body;
 
   // Query SQL para inserir um novo produto na tabela
@@ -131,7 +132,7 @@ async function adicionarProdutos(request, response) {
     imagemdetalhe: imagemdetalhe,
     deleted: false,
     codigo: codigo,
-    quantidademinima: 0,
+    quantidademinima: quantidademinima,
     capacidade: 0,
     ca: "",
     id_planta: id_planta,
@@ -235,7 +236,7 @@ async function adicionarProdutos(request, response) {
     requestSql.input("deleted", sql.Bit, false);
     requestSql.input("Sincronizado", sql.Bit, 0);
     requestSql.input("codigo", sql.VarChar, codigo);
-    requestSql.input("quantidademinima", sql.Int, 0);
+    requestSql.input("quantidademinima", sql.Int,quantidademinima);
     requestSql.input("capacidade", sql.Int, 0);
     requestSql.input("ca", sql.NVarChar, "");
     requestSql.input("id_planta", sql.Int, id_planta);
@@ -404,6 +405,7 @@ async function atualizarProduto(request, response) {
     imagem1,
     imagem2,
     imagemdetalhe,
+    quantidademinima,
   } = request.body; // Desestrutura os dados da requisição.
 
   // Consulta SQL para atualizar os dados de um produto no banco de dados.
@@ -420,7 +422,9 @@ async function atualizarProduto(request, response) {
         codigo = @codigo,
         id_planta = @id_planta,
         id_tipoProduto = @id_tipoProduto,
-        unidade_medida = @unidade_medida
+        unidade_medida = @unidade_medida,
+        quantidademinima =@quantidademinima,
+        Sincronizado = 0
     WHERE id_produto = @id_produto
   `;
   const queryDMItens = `
@@ -465,6 +469,7 @@ const queryRetItensFuncionario = `
     id_tipoProduto: id_tipoProduto,
     unidade_medida: unidade_medida,
     id_produto: id_produto,
+    quantidademinima:quantidademinima,
   };
 
   try {
@@ -575,6 +580,7 @@ const queryRetItensFuncionario = `
     requestSql.input("id_tipoProduto", sql.BigInt, id_tipoProduto);
     requestSql.input("unidade_medida", sql.VarChar, unidade_medida);
     requestSql.input("id_produto", sql.Int, id_produto);
+    requestSql.input("quantidademinima", sql.Int, quantidademinima);
 
     const result = await requestSql.query(query); // Executa a consulta de atualização.
     await requestSql.query(queryDMItens);

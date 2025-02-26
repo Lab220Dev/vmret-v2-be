@@ -57,6 +57,7 @@ const storage = multer.memoryStorage();
  * @type {multer.Instance}
  */
 const upload = multer({ storage: storage });
+const { DateTime } = require("luxon");
 
 /**
  * Função para converter valores de string ("true"/"false") para booleano.
@@ -169,21 +170,16 @@ async function listarFuncionariosPagianda(request, response) {
     `;
 
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
-
-    // Filtros dinâmicos
-    if (filters.nome) {
-      queryFuncionarios += ` AND nome LIKE @nome`;
-      sqlRequest.input("nome", sql.VarChar, `%${filters.nome.value}%`);
-    }
-    if (filters.email) {
-      queryFuncionarios += ` AND matricula LIKE @matricula`;
-      sqlRequest.input(
-        "matricula",
-        sql.VarChar,
-        `%${filters.matricula.value}%`
-      );
-    }
-
+if (filters.global && filters.global.value) {
+                    const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+                    queryFuncionarios += ` AND (
+                        funcionarios.nome LIKE @globalValue OR 
+                        funcionarios.matricula LIKE @globalValue 
+                    )`;
+                
+                    sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+                }
+   
     // Ordenação e Paginação
     queryFuncionarios += `
       ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}

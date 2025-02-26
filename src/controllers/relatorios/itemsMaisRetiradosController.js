@@ -88,7 +88,7 @@ async function relatorio(request, response) {
     request.input("id_cliente", sql.Int, params.id_cliente); // Define o parâmetro do cliente
     if (params.id_dm) request.input("id_dm", sql.VarChar, id_dm.toString()); // Define o parâmetro DM, se presente
     if (params.id_funcionario)
-      request.input("id_funcionario", sql.VarChar, params.id_funcionario); // Define o parâmetro funcionário, se presente
+      request.input("id_funcionario", sql.VarChar, params.id_funcionario.toString()); // Define o parâmetro funcionário, se presente
     if (params.data_inicio)
       request.input("data_inicio", sql.DateTime, params.data_inicio); // Define o parâmetro data_inicio
     if (params.data_final)
@@ -138,32 +138,9 @@ async function relatorio(request, response) {
     // Converte o mapa de produtos em um array para envio na resposta.
     const produtosList = Array.from(produtosMap.values());
 
-    // Loga o sucesso na execução do relatório
-    logQuery(
-      "info",
-      `Usuário ${id_usuario} gerou um relatório de itens mais retirados`,
-      "sucesso",
-      "Relatório",
-      id_cliente,
-      id_usuario,
-      query,
-      params
-    );
-
     // Retorna a lista de produtos agrupados com status 200.
     return response.status(200).json(produtosList);
   } catch (error) {
-    // Loga o erro caso a consulta falhe.
-    logQuery(
-      "error",
-      `Erro ao gerar o relatório para o usuário ${id_usuario}: ${error.message}`,
-      "falha",
-      "Relatório",
-      id_cliente,
-      id_usuario,
-      query,
-      {}
-    );
     console.error("Erro ao executar consulta:", error.message); // Loga o erro no console
     response.status(500).send("Erro ao executar consulta"); // Retorna erro 500
   }
