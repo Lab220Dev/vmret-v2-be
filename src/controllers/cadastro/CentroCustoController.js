@@ -242,16 +242,15 @@ async function deleteCentro(request, response) {
     }
     await transaction.begin();
     // Query para marcar o Centro de Custo como deletado.
-    const query =
-      "UPDATE Centro_Custos SET Deleted = 1 WHERE ID_CentroCusto = @ID_CentroCusto AND id_cliente = @id_cliente";
-    const querySetor =
-      "UPDATE Setores SET deleted = 1 WHERE id_centro_custo = @ID_CentroCusto  AND id_cliente = @id_cliente";
-    const queryFuncao =
-      "UPDATE Funcao SET deleted = 1 WHERE id_centro_custo = @ID_CentroCusto  AND id_cliente = @id_cliente";
-    // Parâmetros para a query.
-    const params = {
-      ID_CentroCusto: ID_CentroCusto,
-    };
+    const combinedQuery = `
+    UPDATE Centro_Custos SET Deleted = 1 
+    WHERE ID_CentroCusto = @ID_CentroCusto AND id_cliente = @id_cliente;
+    UPDATE Setores SET deleted = 1 
+    WHERE id_centro_custo = @ID_CentroCusto AND id_cliente = @id_cliente;
+    UPDATE Funcao SET deleted = 1 
+    WHERE id_centro_custo = @ID_CentroCusto AND id_cliente = @id_cliente;
+  `;
+
 
     // Cria uma nova requisição SQL.
     const sqlRequest = new sql.Request(transaction);
@@ -259,23 +258,14 @@ async function deleteCentro(request, response) {
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
     // Executa a query e aguarda o resultado.
-    const result = await sqlRequest.query(query);
-    // const resultSetor = await sqlRequest.query(querySetor);
-    // const resultFuncao = await sqlRequest.query(queryFuncao);
-
-    // Verifica se a query afetou alguma linha (se o centro de custo foi deletado).
-    if (result.rowsAffected[0] > 0) {
-      return response.status(200).json({
-        message: "Exclusão realizada com sucesso",
-        // centro: result.recordset,
-        // setor: resultSetor.recordset,
-        // funcao: resultFuncao.recordset,
-      });
+    const result = await sqlRequest.query(combinedQuery);
+    const totalRowsAffected = result.rowsAffected.reduce((total, curr) => total + curr, 0);
+    if (totalRowsAffected > 0) {
+      await transaction.commit();
+      return response.status(200).json({ message: "Exclusão realizada com sucesso" });
     } else {
       await transaction.rollback();
-      response
-        .status(400)
-        .send("Nenhuma alteração foi feita no centro de custo.");
+      return response.status(400).send("Nenhuma alteração foi feita no centro de custo.");
     }
   } catch (error) {
     await transaction.rollback();
