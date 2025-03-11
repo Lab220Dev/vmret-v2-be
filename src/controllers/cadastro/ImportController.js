@@ -1,6 +1,55 @@
 const sql = require("mssql"); // Importa o módulo 'mssql' para interagir com o banco de dados SQL Server.
 const { logQuery } = require("../../utils/logUtils"); // Importa a função 'logQuery' para registrar logs de consultas realizadas.
+const path = require("path"); // Importa o módulo 'path' para manipulação de caminhos de arquivos e diretórios
+const fs = require("fs").promises; // Importa o módulo 'fs' para manipulação de arquivos com promessas
+const axios = require('axios');
 
+/**
+ * Sanitiza o nome do arquivo: remove acentos, espaços e caracteres especiais.
+ * @param {string} filename Nome original do arquivo
+ * @returns {string} Nome sanitizado
+ */
+const sanitizeFileName = (filename) => {
+  if (typeof filename === "string") {
+    const parts = filename.split(".");
+    const extension = parts.length > 1 ? `.${parts.pop()}` : "";
+    const nameWithoutExtension = parts
+      .join(".")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9 _]/g, "-")
+      .replace(/ /g, "_");
+    return `${nameWithoutExtension}${extension}`;
+  } else {
+    console.error("Filename is not a string:", filename);
+    return "unknown_filename";
+  }
+};
+const isValidUrl = (string) => {
+  try {
+    new URL(string);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+function removePunctuation(value) {
+  return String(value).replace(/[.,\/-]/g, '');
+}
+async function downloadImage(url, uploadPath) {
+  try {
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const originalname = path.basename(new URL(url).pathname);
+    const sanitizedName = sanitizeFileName(originalname);
+    const filePath = path.join(uploadPath, sanitizedName);
+    await fs.writeFile(filePath, response.data);
+    return sanitizedName;
+  } catch (error) {
+    console.error(`Falha ao baixar a imagem da URL ${url}: ${error.message}`);
+    // Dependendo do fluxo, você pode optar por retornar null ou lançar o erro.
+    return null;
+  }
+}
 // Função principal de importação
 /**
  * Função para realizar a importação de dados para diferentes tipos de entidades.
@@ -14,34 +63,28 @@ const { logQuery } = require("../../utils/logUtils"); // Importa a função 'log
  */
 async function importacao(request, response) {
   const { tipo, dados } = request.body; // Desestrutura os dados do corpo da requisição: tipo (tipo de importação) e dados (dados a serem importados).
-
+  const id_cliente = request.usuario.id_cliente; // Obtém o ID do cliente a partir do usuário autenticado.
   try {
     switch (
       tipo.toLowerCase() // Verifica o tipo de importação, tornando a verificação case-insensitive.
     ) {
-      case "centro de custo":
-      case "cdc":
-        await insertCentroCustoBulk(dados); // Chama a função para inserir dados de Centro de Custo, passando os dados e o usuário.
+      case "centro_custo":
+        await insertCentroCustoBulk(dados, id_cliente); // Chama a função para inserir dados de Centro de Custo, passando os dados e o usuário.
         break;
       case "funcao":
-        await insertFuncao(dados); // Chama a função para inserir dados de Função.
+        await insertFuncao(dados, id_cliente); // Chama a função para inserir dados de Função.
+        break;
+      case "produtos":
+        await insertProdutoBulk(dados, id_cliente); // Chama a função para inserir dados de Produto.
         break;
       case "setor":
-        await insertSetor(dados); // Chama a função para inserir dados de Setor.
-        break;
-      case "produto":
-        await insertProduto(dados); // Chama a função para inserir dados de Produto.
-        break;
-      case "itens do setor":
-      case "itens":
-        await insertSetorBulk(dados); // Chama a função para inserir dados de Itens do Setor.
+        await insertSetorBulk(dados, id_cliente); // Chama a função para inserir dados de Itens do Setor.
         break;
       case "planta":
-        await insertPlanta(dados); // Chama a função para inserir dados de Planta.
+        await insertPlanta(dados, id_cliente); // Chama a função para inserir dados de Planta.
         break;
-      case "funcionario":
       case "funcionarios":
-        await insertFuncionarioBulk(dados); // Chama a função para inserir dados de Funcionário.
+        await insertFuncionarioBulk(dados, id_cliente); // Chama a função para inserir dados de Funcionário.
         break;
       default:
         return response
@@ -49,24 +92,12 @@ async function importacao(request, response) {
           .json({ message: "Tipo de importação não suportado." }); // Retorna erro caso o tipo não seja reconhecido.
     }
 
-    // Após a inserção bem-sucedida, registra um log indicando o sucesso da importação.
-    await logQuery(
-      "importacao",
-      tipo,
-      dados,
-      "Importação realizada com sucesso."
-    );
     return response
       .status(200)
       .json({ message: "Importação realizada com sucesso." }); // Retorna uma resposta de sucesso ao cliente.
   } catch (error) {
     // Caso ocorra um erro, registra um log indicando o erro ocorrido.
-    await logQuery(
-      "importacao",
-      tipo,
-      dados,
-      `Erro na importação: ${error.message}`
-    );
+
     return response
       .status(500)
       .json({ message: "Erro na importação.", error: error.message }); // Retorna uma resposta de erro.
@@ -82,56 +113,62 @@ async function importacao(request, response) {
  * @param {Object} usuario - Informações do usuário que realizou a operação (para log).
  * @returns {void} - Nenhuma resposta é retornada diretamente.
  */
-async function insertFuncao(dados, usuario) {
-  const transaction = new sql.Transaction(); // Cria uma nova transação SQL.
+async function insertFuncao(dados, id_cliente) {
+  if (!dados.length) return;
 
+  // Processa os dados em paralelo com Promise.all
+  const processedData = await Promise.all(
+    dados.map(async (d) => {
+      // Valida os campos obrigatórios
+      if (!d.Nome || d.Nome.trim() === "") {
+        throw new Error("Nome é obrigatório para Cadastrar Função");
+      }
+      if (!d.Codigo || d.Codigo.toString().trim() === "") {
+        throw new Error("Código é obrigatório para Cadastrar Função");
+      }
+      if (
+        !d.Codigo_Centro_Custo ||
+        d.Codigo_Centro_Custo.toString().trim() === ""
+      ) {
+        throw new Error("cdc é obrigatório para Cadastrar Função");
+      }
+
+      // Converte o Código para número, se aplicável
+      const codigo = isNaN(d.Codigo) ? d.Codigo : Number(d.Codigo);
+
+      const id_centro_custo = await obterIdOuFalhar(
+        "Centro_Custos",
+        "ID_CentroCusto",
+        "Codigo",
+        d.Codigo_Centro_Custo,
+        id_cliente
+      );
+
+      return {
+        Nome: d.Nome,
+        Codigo: codigo,
+        id_cliente: id_cliente,
+        elementos: d.Descricao,
+        id_centro_custo: id_centro_custo,
+        Deleted: 0,
+      };
+    })
+  );
+
+  // Inicia a transação e executa o bulk insert de forma atômica
+  const transaction = new sql.Transaction();
   try {
-    await transaction.begin(); // Inicia a transação.
-
-    const request = new sql.Request(transaction); // Cria uma requisição SQL dentro da transação.
-    const query = `INSERT INTO Funcao (Codigo, Nome) VALUES (@Codigo, @Nome)`; // Define a consulta de inserção para a tabela 'Funcao'.
-
-    for (const d of dados) {
-      // Para cada dado de função, executa a consulta.
-      await request
-        .input("Codigo", sql.VarChar, d.codigo) // Adiciona o parâmetro 'Codigo'.
-        .input("Nome", sql.VarChar, d.nome) // Adiciona o parâmetro 'Nome'.
-        .query(query); // Executa a consulta de inserção.
-    }
-
-    await transaction.commit(); // Confirma a transação.
-    console.log("Transação de Função concluída com sucesso"); // Log de sucesso.
-
-    // await logQuery('insertFuncao', dados, 'Inserção realizada com sucesso.', 'success', usuario); // Log comentado.
+    await transaction.begin();
+    await bulkInsert(transaction, "Funcao", processedData);
+    await transaction.commit();
+    console.log("Bulk insert de Centro de Custo concluído com sucesso");
   } catch (error) {
-    await transaction.rollback(); // Se ocorrer erro, desfaz as operações realizadas na transação.
+    await transaction.rollback();
     console.error(
-      "Erro na transação de Função, todas as operações foram revertidas:",
+      "Erro no bulk insert de Centro de Custo, operação revertida:",
       error.message
-    ); // Log de erro.
-    // await logQuery('insertFuncao', dados, `Erro: ${error.message}`, 'error', usuario); // Log comentado.
-    throw error; // Lança o erro para ser tratado na função principal.
-  }
-}
-
-// Função placeholder para inserir Setor
-/**
- * Função para inserir dados de Setor (a ser implementada).
- *
- * @async
- * @function insertSetor
- * @param {Array} dados - Dados do setor a serem inseridos.
- * @param {Object} usuario - Informações do usuário que realizou a operação (para log).
- * @returns {void} - Nenhuma resposta é retornada diretamente.
- */
-async function insertSetor(dados, usuario) {
-  // Implementar lógica similar às funções acima
-  try {
-    // Lógica de inserção
-    // await logQuery('insertSetor', dados, 'Inserção realizada com sucesso.', 'success', usuario); // Log comentado.
-  } catch (error) {
-    // await logQuery('insertSetor', dados, `Erro: ${error.message}`, 'error', usuario); // Log comentado.
-    throw error; // Lança o erro para ser tratado na função principal.
+    );
+    throw error;
   }
 }
 
@@ -145,14 +182,102 @@ async function insertSetor(dados, usuario) {
  * @param {Object} usuario - Informações do usuário que realizou a operação (para log).
  * @returns {void} - Nenhuma resposta é retornada diretamente.
  */
-async function insertProduto(dados, usuario) {
-  // Implementar lógica similar às funções acima
+async function insertProdutoBulk(dados, id_cliente) {
+  if (!dados.length) return;
+
+  // Define os diretórios para armazenar as imagens
+  const uploadPathPrincipal = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "principal");
+  const uploadPathSecundario = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "secundario");
+  const uploadPathInfoAdicional = path.join(__dirname, "../../uploads/produtos", id_cliente.toString(), "info");
+
+  // Cria os diretórios se não existirem
+  await fs.mkdir(uploadPathPrincipal, { recursive: true });
+  await fs.mkdir(uploadPathSecundario, { recursive: true });
+  await fs.mkdir(uploadPathInfoAdicional, { recursive: true });
+
+  const processedData = await Promise.all(
+    dados.map(async (d) => {
+      // Valida os campos obrigatórios
+      if (!d.Nome || d.Nome.trim() === "") {
+        throw new Error("Nome do Produto é obrigatório");
+      }
+      if (!d.Codigo || d.Codigo.toString().trim() === "") {
+        throw new Error("Código do Produto é obrigatório");
+      }
+      if (!d.Descricao || d.Descricao.trim() === "") {
+        throw new Error("Descrição do Produto é obrigatória");
+      }
+      if (!d.Especificacao || d.Especificacao.trim() === "") {
+        throw new Error("Especificação do Produto é obrigatória");
+      }
+      if (!d.tipo_produto || d.tipo_produto.trim() === "") {
+        throw new Error("Tipo de Produto é obrigatório");
+      }
+      if (!d.unidade_medida || d.unidade_medida.trim() === "") {
+        throw new Error("Unidade de Medida é obrigatória");
+      }
+      if (!d.validade || d.validade.toString().trim() === "") {
+        throw new Error("Validade é obrigatória");
+      }
+      if (!d.quantidade_minima || d.quantidade_minima.toString().trim() === "") {
+        throw new Error("Quantidade Mínima é obrigatória");
+      }
+
+      // Converte os campos numéricos conforme necessário
+      const codigo = isNaN(d.Codigo) ? d.Codigo : Number(d.Codigo);
+      const quantidade_minima = isNaN(d.quantidade_minima)
+        ? d.quantidade_minima
+        : Number(d.quantidade_minima);
+
+      // Processa as imagens – verifica se veio via upload ou como URL.
+      let url_foto_principal = null;
+      let url_foto_secundaria = null;
+      let url_info_adicional = null;
+
+      if (d.url_foto_principal && isValidUrl(d.url_foto_principal)) {
+        url_foto_principal = await downloadImage(d.url_foto_principal, uploadPathPrincipal);
+      }
+
+      if (d.url_foto_secundaria && isValidUrl(d.url_foto_secundaria)) {
+        url_foto_secundaria = await downloadImage(d.url_foto_secundaria, uploadPathSecundario);
+      }
+
+      if (d.url_info_adicional && isValidUrl(d.url_info_adicional)) {
+        url_info_adicional = await downloadImage(d.url_info_adicional, uploadPathInfoAdicional);
+      }
+
+      return {
+        nome: d.Nome,
+        codigo: codigo,
+        descricao: d.Descricao,
+        id_tipoProduto: d.tipo_produto,
+        id_planta: d.id_planta,
+        unidade_medida: d.unidade_medida,
+        validadedias: d.validade,
+        quantidademinima: quantidade_minima,
+        imagem1: url_foto_principal,
+        imagem2: url_foto_secundaria,
+        imagemdetalhe: url_info_adicional,
+        id_cliente: id_cliente,
+        Deleted: 0,
+        Sincronizado: 0,
+        capacidade: 0,
+        id_categoria:53,
+      };
+    })
+  );
+
+  // Realiza a operação de bulk insert dentro de uma transação para garantir atomicidade.
+  const transaction = new sql.Transaction();
   try {
-    // Lógica de inserção
-    // await logQuery('insertProduto', dados, 'Inserção realizada com sucesso.', 'success', usuario); // Log comentado.
+    await transaction.begin();
+    await bulkInsert(transaction, "Produtos", processedData);
+    await transaction.commit();
+    console.log("Bulk insert de Produtos concluído com sucesso");
   } catch (error) {
-    // await logQuery('insertProduto', dados, `Erro: ${error.message}`, 'error', usuario); // Log comentado.
-    throw error; // Lança o erro para ser tratado na função principal.
+    await transaction.rollback();
+    console.error("Erro no bulk insert de Produtos, operação revertida:", error.message);
+    throw error;
   }
 }
 
@@ -166,59 +291,63 @@ async function insertProduto(dados, usuario) {
  * @param {Object} usuario - Informações do usuário que realizou a operação (para log).
  * @returns {void} - Nenhuma resposta é retornada diretamente.
  */
-async function insertSetorBulk(dados, usuario) {
-    if (!dados.length) return;
-  
-    // Array para armazenar os dados processados para a tabela de Setores
-    const processedData = [];
-  
-    for (const d of dados) {
-      // Valida os campos obrigatórios para o setor
-      if (!d.Nome || d.Nome.trim() === '') {
-        throw new Error('Nome é obrigatório para Setor');
+async function insertSetorBulk(dados, id_cliente) {
+  if (!dados.length) return;
+
+  // Processa os dados em paralelo com Promise.all
+  const processedData = await Promise.all(
+    dados.map(async (d) => {
+      // Valida os campos obrigatórios
+      if (!d.Nome || d.Nome.trim() === "") {
+        throw new Error("Nome é obrigatório para Cadastrar Setor");
       }
-      if (!d.Codigo || d.Codigo.toString().trim() === '') {
-        throw new Error('Código é obrigatório para Setor');
+      if (!d.Codigo || d.Codigo.toString().trim() === "") {
+        throw new Error("Código é obrigatório para Cadastrar Setor");
       }
-      if (!d.CodigoCentroCusto || d.CodigoCentroCusto.toString().trim() === '') {
-        throw new Error('Código do Centro de Custo é obrigatório para Setor');
+      if (
+        !d.Codigo_Centro_Custo ||
+        d.Codigo_Centro_Custo.toString().trim() === ""
+      ) {
+        throw new Error("cdc é obrigatório para Cadastrar Setor");
       }
-  
-      // Converte os valores de Código e Código do Centro de Custo se necessário
+
+      // Converte o Código para número, se aplicável
       const codigo = isNaN(d.Codigo) ? d.Codigo : Number(d.Codigo);
-      const codigoCentroCusto = isNaN(d.CodigoCentroCusto)
-        ? d.CodigoCentroCusto
-        : Number(d.CodigoCentroCusto);
-  
-      // Busca o ID do Centro de Custo associado utilizando o código (assumindo que a coluna de busca é 'Codigo')
-      const centroCustoId = await obterIdOuFalhar('Centro_Custos', 'ID_CentroCusto', 'Codigo', codigoCentroCusto);
-  
-      // Cria o objeto do setor conforme a estrutura da tabela Setores
-      const setor = {
+
+      const id_centro_custo = await obterIdOuFalhar(
+        "Centro_Custos",
+        "ID_CentroCusto",
+        "Codigo",
+        d.Codigo_Centro_Custo,
+        id_cliente
+      );
+
+      return {
         Nome: d.Nome,
-        Codigo: codigo,
-        ID_CentroCusto: centroCustoId, // Associação com o Centro de Custo encontrado
+        codigo: codigo,
+        id_cliente: id_cliente,
+        id_centro_custo: id_centro_custo,
+        deleted: 0,
       };
-  
-      processedData.push(setor);
-    }
-  
-    // Inicia a transação e executa o bulk insert para a tabela de Setores
-    const transaction = new sql.Transaction();
-    try {
-      await transaction.begin();
-      await bulkInsert(transaction, 'Setores', processedData);
-      await transaction.commit();
-      console.log('Bulk insert de Setores concluído com sucesso');
-      // Aqui você pode registrar log de sucesso se necessário.
-    } catch (error) {
-      await transaction.rollback();
-      console.error('Erro no bulk insert de Setores, operação revertida:', error.message);
-      // Aqui você pode registrar log de erro se necessário.
-      throw error;
-    }
+    })
+  );
+
+  // Inicia a transação e executa o bulk insert de forma atômica
+  const transaction = new sql.Transaction();
+  try {
+    await transaction.begin();
+    await bulkInsert(transaction, "Setores", processedData);
+    await transaction.commit();
+    console.log("Bulk insert de Setor concluído com sucesso");
+  } catch (error) {
+    await transaction.rollback();
+    console.error(
+      "Erro no bulk insert de Setor, operação revertida:",
+      error.message
+    );
+    throw error;
   }
-  
+}
 
 // Função placeholder para inserir Planta
 /**
@@ -230,14 +359,46 @@ async function insertSetorBulk(dados, usuario) {
  * @param {Object} usuario - Informações do usuário que realizou a operação (para log).
  * @returns {void} - Nenhuma resposta é retornada diretamente.
  */
-async function insertPlanta(dados, usuario) {
-  // Implementar lógica similar às funções acima
+async function insertPlanta(dados, id_cliente) {
+  if (!dados.length) return;
+
+  // Processa os dados em paralelo com Promise.all
+  const processedData = await Promise.all(
+    dados.map(async (d) => {
+      // Valida os campos obrigatórios
+      if (!d.Nome || d.Nome.trim() === "") {
+        throw new Error("Nome é obrigatório para Cadastrar Função");
+      }
+      if (!d.Codigo || d.Codigo.toString().trim() === "") {
+        throw new Error("Código é obrigatório para Cadastrar Função");
+      }
+
+      // Converte o Código para número, se aplicável
+      const codigo = isNaN(d.Codigo) ? d.Codigo : Number(d.Codigo);
+
+      return {
+        Nome: d.Nome,
+        Codigo: codigo,
+        id_cliente: id_cliente,
+        Deleted: 0,
+      };
+    })
+  );
+
+  // Inicia a transação e executa o bulk insert de forma atômica
+  const transaction = new sql.Transaction();
   try {
-    // Lógica de inserção
-    // await logQuery('insertPlanta', dados, 'Inserção realizada com sucesso.', 'success', usuario); // Log comentado.
+    await transaction.begin();
+    await bulkInsert(transaction, "Plantas", processedData);
+    await transaction.commit();
+    console.log("Bulk insert de Centro de Custo concluído com sucesso");
   } catch (error) {
-    // await logQuery('insertPlanta', dados, `Erro: ${error.message}`, 'error', usuario); // Log comentado.
-    throw error; // Lança o erro para ser tratado na função principal.
+    await transaction.rollback();
+    console.error(
+      "Erro no bulk insert de Centro de Custo, operação revertida:",
+      error.message
+    );
+    throw error;
   }
 }
 
@@ -288,7 +449,7 @@ async function bulkInsert(transaction, tableName, data, batchSize = 500) {
     }
   }
 }
-async function insertFuncionarioBulk(dados) {
+async function insertFuncionarioBulk(dados, id_cliente) {
   if (!dados.length) return;
 
   // Array para armazenar os dados processados
@@ -311,25 +472,29 @@ async function insertFuncionarioBulk(dados) {
       "Centro_Custos",
       "ID_CentroCusto",
       "Nome",
-      d.centroDeCusto
+      d.Centro_Custo,
+      id_cliente
     );
     const plantaId = await obterIdOuFalhar(
       "Plantas",
       "id_planta",
       "Nome",
-      d.planta
+      d.Planta,
+      id_cliente
     );
     const setorId = await obterIdOuFalhar(
       "Setores",
       "id_setor",
       "Nome",
-      d.setor
+      d.Setor,
+      id_cliente
     );
     const funcaoId = await obterIdOuFalhar(
       "Funcao",
       "id_funcao",
       "Nome",
-      d.funcao
+      d.Função,
+      id_cliente
     );
 
     if (!centroDeCustoId || !plantaId || !setorId || !funcaoId) {
@@ -346,30 +511,34 @@ async function insertFuncionarioBulk(dados) {
     const horaFinal = d.HoraFinal
       ? new Date(`1970-01-01T${d.HoraFinal}:00Z`)
       : null;
-
+      const cpfLimpo = removePunctuation(d.CPF);
+      const rgLimpo = removePunctuation(d.RG);
+      const ctpsLimpo = removePunctuation(d.CTPS);
     // Cria o objeto com as colunas conforme a tabela Funcionario
     const funcionario = {
       Nome: d.Nome,
-      Matricula: d.Matricula,
-      DataDeAdmissao: dataDeAdmissao,
-      CPF: d.CPF,
-      RG: d.RG,
-      CTPS: d.CTPS,
-      Email: d.Email,
-      ID_CentroCusto: centroDeCustoId,
+      matricula: d.Matrícula,
+      data_admissao: dataDeAdmissao,
+      CPF:cpfLimpo,
+      RG: rgLimpo,
+      CTPS:ctpsLimpo,
+      email: d.Email,
+      id_centro_custo: centroDeCustoId,
       id_planta: plantaId,
       id_setor: setorId,
       id_funcao: funcaoId,
-      Status: d.Status,
-      HoraInicial: horaInicial,
-      HoraFinal: horaFinal,
-      Segunda: diasBooleanos.Segunda,
-      Terca: diasBooleanos.Terca,
-      Quarta: diasBooleanos.Quarta,
-      Quinta: diasBooleanos.Quinta,
-      Sexta: diasBooleanos.Sexta,
-      Sabado: diasBooleanos.Sabado,
-      Domingo: diasBooleanos.Domingo,
+      id_cliente: id_cliente,
+      deleted: 0,
+      status: d.Status,
+      hora_inicial: horaInicial,
+      hora_final: horaFinal,
+      Segunda: diasBooleanos.Segunda ? 1 : 0,
+      Terca: diasBooleanos.Terca ? 1 : 0,
+      Quarta: diasBooleanos.Quarta ? 1 : 0,
+      Quinta: diasBooleanos.Quinta ? 1 : 0,
+      Sexta: diasBooleanos.Sexta ? 1 : 0,
+      Sabado: diasBooleanos.Sabado ? 1 : 0,
+      Domingo: diasBooleanos.Domingo ? 1 : 0,
     };
 
     processedData.push(funcionario);
@@ -379,7 +548,7 @@ async function insertFuncionarioBulk(dados) {
   const transaction = new sql.Transaction();
   try {
     await transaction.begin();
-    await bulkInsert(transaction, "Funcionario", processedData);
+    await bulkInsert(transaction, "Funcionarios", processedData);
     await transaction.commit();
     console.log("Bulk insert de funcionários concluído com sucesso");
     // Aqui você pode registrar log de sucesso se necessário.
@@ -393,7 +562,7 @@ async function insertFuncionarioBulk(dados) {
     throw error;
   }
 }
-async function insertCentroCustoBulk(dados) {
+async function insertCentroCustoBulk(dados, id_cliente) {
   if (!dados.length) return;
 
   // Array para armazenar os dados processados
@@ -415,6 +584,8 @@ async function insertCentroCustoBulk(dados) {
     const centroCusto = {
       Nome: d.Nome,
       Codigo: codigo,
+      ID_Cliente: id_cliente,
+      Deleted: 0,
     };
 
     processedData.push(centroCusto);
@@ -424,7 +595,7 @@ async function insertCentroCustoBulk(dados) {
   const transaction = new sql.Transaction();
   try {
     await transaction.begin();
-    await bulkInsert(transaction, "CentroCusto", processedData);
+    await bulkInsert(transaction, "Centro_Custos", processedData);
     await transaction.commit();
     console.log("Bulk insert de Centro de Custo concluído com sucesso");
     // Aqui você pode registrar log de sucesso se necessário.
@@ -452,27 +623,37 @@ async function insertCentroCustoBulk(dados) {
  * @returns {number} O ID encontrado.
  * @throws {Error} Lança erro caso o valor não seja encontrado.
  */
-async function obterIdOuFalhar(tabela, campoId, campoNome, valor) {
+async function obterIdOuFalhar(tabela, campoId, campoNome, valor, id_cliente) {
   const request = new sql.Request(); // Cria uma nova requisição SQL.
 
   let query, result;
   if (isNaN(valor)) {
     // Se o valor não for número, assume-se que é um nome.
-    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoNome} = @valor`; // Consulta para buscar o ID pelo nome.
-    result = await request.input("valor", sql.VarChar, valor).query(query);
+    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoNome} = @valor and Deleted = 0 and id_cliente = @id_cliente`; // Consulta para buscar o ID pelo nome.
+    result = await request
+      .input("valor", sql.VarChar, valor)
+      .input("id_cliente", sql.Int, id_cliente)
+      .query(query);
   } else {
     // Caso contrário, busca-se pelo ID diretamente.
-    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoId} = @valor`; // Consulta para buscar pelo ID.
+    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoNome} = @valor AND Deleted = 0 AND id_cliente = @id_cliente`;
     result = await request
       .input("valor", sql.Int, parseInt(valor))
+      .input("id_cliente", sql.Int, id_cliente)
       .query(query);
   }
 
   if (result.recordset.length > 0) {
-    // Se a consulta retornar algum resultado.
-    return result.recordset[0].id; // Retorna o ID encontrado.
+    if (result.recordset.length > 1) {
+      console.warn(
+        `Mais de um registro encontrado para valor '${valor}' na tabela '${tabela}'. Usando o primeiro registro.`
+      );
+    }
+    return result.recordset[0].id;
   } else {
-    throw new Error(`Valor '${valor}' não encontrado em '${tabela}'`); // Lança erro caso não encontre.
+    throw new Error(
+      `Valor '${valor}' não encontrado em '${tabela}' para o id_cliente '${id_cliente}'.`
+    );
   }
 }
 
