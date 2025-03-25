@@ -105,7 +105,7 @@ async function adicionarProdutos(request, response) {
     imagem2,
     imagemdetalhe,
     id_usuario,
-  } = request.body;
+  } = request.body; // Extrai os dados do corpo da requisição.
 
   // Query SQL para inserir um novo produto na tabela
   const query = `
