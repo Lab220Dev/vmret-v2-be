@@ -1,10 +1,8 @@
 // Importa o módulo 'mssql', utilizado para interagir com o banco de dados SQL Server.
 const sql = require("mssql");
-
-const express = require('express');
-const app = express();
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const { DateTime } = require("luxon");
-app.use(express.json());
 
 // Importa a função 'logQuery' do módulo utilitário localizado em '../../utils/logUtils'.
 // A função 'logQuery' provavelmente é usada para registrar detalhes sobre a execução de queries no banco de dados.
@@ -796,7 +794,7 @@ async function listarClienteComServicos(request, response) {
 async function adicionar(request, response) {
   const { nome, cnpj, ativo, usar_api, id_usuario } = request.body;  // Dados do cliente
   const apiKey = generateApiKey();  // Geração da chave de API
-
+  const hash = await bcrypt.hash('123456', saltRounds);
   const queryCliente = `
         INSERT INTO clientes 
         (id_cliente, nome, cpfcnpj, ativo, deleted, created, updated, last_login, usar_api, atualizado)
@@ -807,7 +805,10 @@ async function adicionar(request, response) {
         INSERT INTO API_KEY (id_cliente, api_key, Nome_cliente)
         VALUES (@id_cliente, @api_key, @nome_cliente)
     `;
-
+    const queryDash = `
+    INSERT INTO Usuario_Dash (id_cliente, login, senha)
+    VALUES (@id_cliente, @login, @senha)
+`;
   const transaction = new sql.Transaction();  // Inicia uma transação
   try {
     await transaction.begin();  // Começa a transação
@@ -852,6 +853,16 @@ async function adicionar(request, response) {
     // Executa a query para inserir a chave de API
     await sqlRequest.query(queryApiKey);
 
+// Instancia um novo sql.Request para a query de inserção de Usuario_Dash
+sqlRequest = new sql.Request(transaction);
+const login = nome.trim().toLowerCase() + '@lab220.com.br';
+// Prepara as variáveis para a query de inserção de API Key
+sqlRequest.input("id_cliente", sql.Int, newIdCliente);
+sqlRequest.input("login", sql.NVarChar, login);
+sqlRequest.input("senha", sql.NVarChar, hash);
+
+await sqlRequest.query(queryDash);
+
     // Commit da transação
     await transaction.commit();
 
@@ -878,16 +889,22 @@ async function adicionarServico(request, response) {
     let transaction = new sql.Transaction();
     await transaction.begin();  // Inicia a transação
     for (const servico of servicos) {
-      // Para cada serviço, itera pelos destinatários e insere o serviço
-      for (const destinatario of servico.destinatarios) {
-        await inserirNovoServico(
-          transaction,
-          id_cliente,
-          servico,
-          destinatario
-        );
+      for (const metodo of servico.metodos_notificacao){
+        let dest = [];
+        if(metodo === 'email'){
+          dest = servico.destinatarios;
+        }else if(metodo ==='notif'){
+          dest = servico.destinatariosweb;
+        }else{
+          continue;
+        }
+        for (const destinatario of dest) {
+          const servicoComMetodo = { ...servico, metodos_notificacao: [metodo] };
+          await inserirNovoServico(transaction, id_cliente, servicoComMetodo, destinatario);
+        }
       }
     }
+    
     await transaction.commit();  // Commit da transação se tudo estiver bem
     response.status(200).json({ message: "Serviços adicionados com sucesso" });  // Resposta de sucesso
   } catch (error) {
@@ -909,72 +926,81 @@ async function adicionarServico(request, response) {
  * @returns {void} Retorna um status HTTP 200 em caso de sucesso ou um erro HTTP 500 em caso de falha.
  */
 async function atualizarServico(request, response) {
-  const { id_cliente, servicos } = request.body;  // Dados do cliente e serviços a serem atualizados
+  const { id_cliente, servicos } = request.body;
   let transaction;
 
   try {
     transaction = new sql.Transaction();
-    await transaction.begin();  // Inicia a transação
+    await transaction.begin();
 
-    // Recupera os serviços existentes para o cliente
-    const existingServices = await buscarServicosExistentes(
-      transaction,
-      id_cliente
+    // Recupera os serviços existentes para o cliente (já associados)
+    const existingServices = await buscarServicosExistentes(transaction, id_cliente);
+    // Cria um Set para facilitar a verificação: "id_servico-id_funcionario"
+    const existingAssociations = new Set(
+      existingServices.map((reg) => `${reg.id_servico}-${reg.id_funcionario_responsavel}`)
     );
 
-    // Marca serviços deletados com base na diferença entre serviços existentes e novos
-    await marcarServicosDeletados(
-      transaction,
-      id_cliente,
-      existingServices,
-      servicos
-    );
+    // Marca como deletados os registros que não estão no payload
+    await marcarServicosDeletados(transaction, id_cliente, existingServices, servicos);
 
-    // Para cada serviço e destinatário, verifica se já existe e realiza a ação adequada
     for (const servico of servicos) {
-      for (const destinatario of servico.destinatarios) {
-        const serviceExists = await verificarServicoExistente(
-          transaction,
-          id_cliente,
-          servico.id_servico,
-          destinatario
-        );
-        if (serviceExists) {
-          const { deleted } = serviceExists;
-          if (deleted) {
-            await reativarServico(
-              transaction,
-              id_cliente,
-              servico,
-              destinatario
-            );  // Reativa o serviço se estiver deletado
-          } else {
-            await atualizarServicoExistente(
-              transaction,
-              id_cliente,
-              servico,
-              destinatario
-            );  // Atualiza o serviço existente
+      const processados = new Set();
+
+      // Itera sobre cada método de notificação do serviço
+      for (const metodo of servico.metodos_notificacao) {
+        // Seleciona o array de destinatários conforme o método
+        let destinatariosArray = [];
+        if (metodo === "email") {
+          destinatariosArray = servico.destinatarios;
+        } else if (metodo === "notif") {
+          destinatariosArray = servico.destinatariosweb;
+        }
+
+        // Para cada destinatário desse método
+        for (const destinatario of destinatariosArray) {
+          const chave = `${servico.id_servico}-${destinatario}`;
+
+          // Se esse funcionário já foi processado para esse serviço, pule
+          if (processados.has(chave)) continue;
+          processados.add(chave);
+
+         if (existingAssociations.has(chave)) {
+            continue;
           }
-        } else {
-          await inserirNovoServico(
+
+          // Cria uma cópia do serviço definindo somente o método atual para manter a consistência
+          const servicoComMetodo = { ...servico, metodos_notificacao: [metodo] };
+
+          // Verifica se a associação já existe (no banco) considerando o método (caso a lógica permita alteração de tipo)
+          const serviceExists = await verificarServicoExistente(
             transaction,
             id_cliente,
-            servico,
-            destinatario
-          );  // Insere um novo serviço se não existir
+            servico.id_servico,
+            destinatario,
+            metodo
+          );
+
+          if (serviceExists) {
+            if (serviceExists.deleted) {
+              await reativarServico(transaction, id_cliente, servicoComMetodo, destinatario);
+            } else {
+              await atualizarServicoExistente(transaction, id_cliente, servicoComMetodo, destinatario);
+            }
+          } else {
+            await inserirNovoServico(transaction, id_cliente, servicoComMetodo, destinatario);
+          }
         }
       }
     }
 
-    await transaction.commit();  // Commit da transação
-    response.status(200).json({ message: "Serviços atualizados com sucesso" });  // Resposta de sucesso
+    await transaction.commit();
+    response.status(200).json({ message: "Serviços atualizados com sucesso" });
   } catch (error) {
     console.error("Erro ao atualizar serviços:", error);
     if (transaction) {
-      await transaction.rollback();  // Rollback em caso de erro
+      await transaction.rollback();
     }
-    response.status(500).json({ message: "Erro ao atualizar serviços" });  // Resposta de erro
+    response.status(500).json({ message: "Erro ao atualizar serviços" });
   }
 }
 
@@ -992,10 +1018,10 @@ async function buscarServicosExistentes(transaction, id_cliente) {
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
   const result = await sqlRequest.query(`
-        SELECT id_servico, id_funcionario_responsavel 
-        FROM Notificacoes_Servicos 
-        WHERE id_cliente = @id_cliente AND deleted = 0
-    `);
+    SELECT id_servico, id_funcionario_responsavel 
+    FROM Notificacoes_Servicos 
+    WHERE id_cliente = @id_cliente AND deleted = 0
+  `);
 
   return result.recordset;
 }
@@ -1010,36 +1036,28 @@ async function buscarServicosExistentes(transaction, id_cliente) {
  * 
  * @returns {void} Não retorna nada, mas marca os serviços deletados no banco de dados.
  */
-async function marcarServicosDeletados(
-  transaction,
-  id_cliente,
-  existingServices,
-  servicos
-) {
+async function marcarServicosDeletados(transaction, id_cliente, existingServices, servicos) {
   for (const existing of existingServices) {
-    const found = servicos.some(
-      (servico) =>
-        servico.id_servico === existing.id_servico &&
-        servico.destinatarios.includes(existing.id_funcionario_responsavel)
-    );
+    // Verifica se a associação já existe em algum dos arrays do payload
+    const found = servicos.some(servico => {
+      if (servico.id_servico !== existing.id_servico) return false;
+      return servico.destinatarios.includes(existing.id_funcionario_responsavel) ||
+             servico.destinatariosweb.includes(existing.id_funcionario_responsavel);
+    });
 
     if (!found) {
       const sqlRequest = new sql.Request(transaction);
       sqlRequest.input("id_cliente", sql.Int, id_cliente);
       sqlRequest.input("id_servico", sql.Int, existing.id_servico);
-      sqlRequest.input(
-        "id_funcionario_responsavel",
-        sql.Int,
-        existing.id_funcionario_responsavel
-      );
+      sqlRequest.input("id_funcionario_responsavel", sql.Int, existing.id_funcionario_responsavel);
 
       await sqlRequest.query(`
-                UPDATE Notificacoes_Servicos
-                SET deleted = 1
-                WHERE id_cliente = @id_cliente 
-                AND id_servico = @id_servico
-                AND id_funcionario_responsavel = @id_funcionario_responsavel
-            `);
+        UPDATE Notificacoes_Servicos
+        SET deleted = 1
+        WHERE id_cliente = @id_cliente 
+          AND id_servico = @id_servico
+          AND id_funcionario_responsavel = @id_funcionario_responsavel
+      `);
     }
   }
 }
@@ -1055,28 +1073,21 @@ async function marcarServicosDeletados(
  * 
  * @returns {Object|null} Retorna o status de deletado (deleted) do serviço ou null caso o serviço não seja encontrado.
  */
-async function verificarServicoExistente(
-  transaction,
-  id_cliente,
-  id_servico,
-  id_funcionario_responsavel
-) {
+async function verificarServicoExistente(transaction, id_cliente, id_servico, id_funcionario_responsavel, tipo_notificacao) {
   const sqlRequest = new sql.Request(transaction);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, id_servico);
-  sqlRequest.input(
-    "id_funcionario_responsavel",
-    sql.Int,
-    id_funcionario_responsavel
-  );
+  sqlRequest.input("id_funcionario_responsavel", sql.Int, id_funcionario_responsavel);
+  sqlRequest.input("tipo_notificacao", sql.VarChar, tipo_notificacao);
 
   const result = await sqlRequest.query(`
-        SELECT deleted 
-        FROM Notificacoes_Servicos 
-        WHERE id_cliente = @id_cliente 
-        AND id_servico = @id_servico 
-        AND id_funcionario_responsavel = @id_funcionario_responsavel
-    `);
+    SELECT deleted 
+    FROM Notificacoes_Servicos 
+    WHERE id_cliente = @id_cliente 
+      AND id_servico = @id_servico 
+      AND id_funcionario_responsavel = @id_funcionario_responsavel
+      AND tipo_notificacao = @tipo_notificacao
+  `);
 
   return result.recordset.length > 0 ? result.recordset[0] : null;
 }
@@ -1095,26 +1106,22 @@ async function verificarServicoExistente(
 async function reativarServico(transaction, id_cliente, servico, destinatario) {
   const sqlRequest = new sql.Request(transaction);
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input(
-    "tipo_notificacao",
-    sql.VarChar,
-    servico.metodos_notificacao.join(", ")
-  );
+  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
   sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);
 
   await sqlRequest.query(`
-        UPDATE Notificacoes_Servicos 
-        SET frequencia = @frequencia,
-            tipo_notificacao = @tipo_notificacao,
-            hora_notificacao = @hora_notificacao,
-            deleted = 0
-        WHERE id_cliente = @id_cliente 
-        AND id_servico = @id_servico 
-        AND id_funcionario_responsavel = @id_funcionario_responsavel
-    `);
+    UPDATE Notificacoes_Servicos 
+    SET frequencia = @frequencia,
+        tipo_notificacao = @tipo_notificacao,
+        hora_notificacao = @hora_notificacao,
+        deleted = 0
+    WHERE id_cliente = @id_cliente 
+      AND id_servico = @id_servico 
+      AND id_funcionario_responsavel = @id_funcionario_responsavel
+  `);
 }
 
 /**
@@ -1158,34 +1165,25 @@ function validarHoraNotificacao(hora) {
  * 
  * @returns {void} Não retorna nada, mas atualiza o serviço na base de dados.
  */
-async function atualizarServicoExistente(
-  transaction,
-  id_cliente,
-  servico,
-  destinatario
-) {
+async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
   const sqlRequest = new sql.Request(transaction);
   const horaNotificacao = validarHoraNotificacao(servico.horario_notificacao);
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input(
-    "tipo_notificacao",
-    sql.VarChar,
-    servico.metodos_notificacao.join(", ")
-  );
+  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
   sqlRequest.input("hora_notificacao", sql.VarChar, horaNotificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);
 
   await sqlRequest.query(`
-        UPDATE Notificacoes_Servicos 
-        SET frequencia = @frequencia,
-            tipo_notificacao = @tipo_notificacao,
-            hora_notificacao = @hora_notificacao
-        WHERE id_cliente = @id_cliente 
-        AND id_servico = @id_servico 
-        AND id_funcionario_responsavel = @id_funcionario_responsavel
-    `);
+    UPDATE Notificacoes_Servicos 
+    SET frequencia = @frequencia,
+        tipo_notificacao = @tipo_notificacao,
+        hora_notificacao = @hora_notificacao
+    WHERE id_cliente = @id_cliente 
+      AND id_servico = @id_servico 
+      AND id_funcionario_responsavel = @id_funcionario_responsavel
+  `);
 }
 
 /**
@@ -1198,20 +1196,11 @@ async function atualizarServicoExistente(
  * 
  * @returns {void} Não retorna nada, mas insere o serviço na base de dados.
  */
-async function inserirNovoServico(
-  transaction,
-  id_cliente,
-  servico,
-  destinatario
-) {
+async function inserirNovoServico(transaction, id_cliente, servico, destinatario) {
   const sqlRequest = new sql.Request(transaction);
   sqlRequest.input("nome", sql.VarChar, servico.nome_servico);
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input(
-    "tipo_notificacao",
-    sql.VarChar,
-    servico.metodos_notificacao.join(", ")
-  );
+  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
   sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
@@ -1219,10 +1208,11 @@ async function inserirNovoServico(
   sqlRequest.input("deleted", sql.Bit, 0);
 
   await sqlRequest.query(`
-        INSERT INTO Notificacoes_Servicos 
-        (nome, id_cliente, frequencia, tipo_notificacao, id_funcionario_responsavel, hora_notificacao, id_servico, deleted)
-        VALUES (@nome, @id_cliente, @frequencia, @tipo_notificacao, @id_funcionario_responsavel, @hora_notificacao, @id_servico, @deleted)
-    `);
+    INSERT INTO Notificacoes_Servicos 
+      (nome, id_cliente, frequencia, tipo_notificacao, id_funcionario_responsavel, hora_notificacao, id_servico, deleted)
+    VALUES
+      (@nome, @id_cliente, @frequencia, @tipo_notificacao, @id_funcionario_responsavel, @hora_notificacao, @id_servico, @deleted)
+  `);
 }
 
 /**

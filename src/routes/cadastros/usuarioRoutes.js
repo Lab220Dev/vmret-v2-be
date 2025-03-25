@@ -9,5 +9,5 @@ router.post('/deletar', usuariosController.deleteUsuario);
 router.post('/listar', usuariosController.listar);
 router.post('/listarPaginado', usuariosController.listarPaginado);
 router.post('/listarPlanta', usuariosController.listarPlanta);
-
+router.post('/listaSimples',usuariosController.listarSimples)
 module.exports = router;

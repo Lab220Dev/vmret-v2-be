@@ -212,7 +212,15 @@ async function listarPaginado(request, response) {
       response.status(500).send("Erro ao executar consulta");
     }
   }
-  
+async function listarSimples(request, response) {
+const id_cliente = request.body.id_cliente;
+let query = `SELECT nome,id_usuario,email FROM usuarios WHERE id_cliente = @id_cliente AND deleted = 0 and ativo = 1`;
+const sqlRequest = new sql.Request();
+sqlRequest.input('id_cliente', sql.Int, id_cliente);
+const result = await sqlRequest.query(query);
+response.status(200).json(result.recordset);
+
+}
 /**
  * Função assíncrona para listar as plantas associadas a um cliente.
  * @param {Object} request - O objeto que contém os dados enviados na requisição.
@@ -381,5 +389,5 @@ async function atualizarUsuario(request, response) {
  * Exporta as funções para que possam ser usadas em outros módulos.
  */
 module.exports = {
-    adicionar, listar, listarPlanta, atualizarUsuario, deleteUsuario,listarPaginado
+    adicionar, listar, listarPlanta, atualizarUsuario, deleteUsuario,listarPaginado,listarSimples
 };
