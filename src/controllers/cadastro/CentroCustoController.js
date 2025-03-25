@@ -4,11 +4,6 @@ const sql = require("mssql");
 // Importa a função 'logQuery' de um módulo utilitário para registrar logs de consultas SQL.
 const { logQuery } = require("../../utils/logUtils");
 
-// Função para converter um valor string em booleano.
-const convertToBoolean = (value) => {
-  return value === "true"; // Retorna true se o valor for a string "true", caso contrário retorna false.
-};
-
 /**
  * Função para listar todos os centros de custo de um cliente.
  *

@@ -34,23 +34,30 @@ async function listar(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+
 async function listarPaginado(request, response) {
+  // Função assíncrona para listar as plantas de forma paginada
   try {
+    // Inicia o bloco de código onde o erro será tratado
+
     const {
-      id_cliente,
-      first = 0,
-      rows = 10,
-      sortField = "id",
-      sortOrder = "ASC",
-      filters = {},
-    } = request.body;
+      // Desestruturação do objeto request.body, onde são extraídos os parâmetros para a consulta
+      id_cliente, // ID do cliente que está sendo enviado na requisição
+      first = 0, // Página inicial (padrão é 0, indicando o começo)
+      rows = 10, // Número de registros por página (padrão é 10)
+      sortField = "id", // Campo de ordenação (padrão é 'id')
+      sortOrder = "ASC", // Ordem de ordenação (padrão é 'ASC')
+      filters = {}, // Filtros adicionais que podem ser passados (padrão é um objeto vazio)
+    } = request.body; // Atribui os valores do corpo da requisição
 
     if (!id_cliente) {
-      response.status(401).json("ID do cliente não enviado");
-      return;
+      // Verifica se o 'id_cliente' foi enviado na requisição
+      response.status(401).json("ID do cliente não enviado"); // Retorna erro se o 'id_cliente' não for enviado
+      return; // Sai da função sem continuar
     }
 
-    const sqlRequest = new sql.Request();
+    const sqlRequest = new sql.Request(); // Cria um objeto sqlRequest para executar consultas SQL
+
     let query = `
           SELECT 
             COUNT(*) OVER() AS TotalRecords, 
@@ -74,28 +81,31 @@ if (filters.global && filters.global.value) {
    
 
     // Ordenação e Paginação
-    query += `
-          ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
-          OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;
-        `;
+    query += `  // Adiciona a cláusula ORDER BY para ordenar os resultados
+              ORDER BY ${sortField} ${
+      sortOrder === "DESC" ? "DESC" : "ASC"
+    }  // Define a ordenação conforme o campo e a ordem passados na requisição
+              OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;  // Aplica a paginação com base nos parâmetros 'first' e 'rows'
+            `;
 
-    sqlRequest.input("first", sql.Int, first);
-    sqlRequest.input("rows", sql.Int, rows);
+    sqlRequest.input("first", sql.Int, first); // Adiciona o parâmetro 'first' (página inicial) na consulta SQL
+    sqlRequest.input("rows", sql.Int, rows); // Adiciona o parâmetro 'rows' (quantidade de registros por página) na consulta SQL
 
     // Executa a consulta e obtém os resultados
-    const result = await sqlRequest.query(query);
+    const result = await sqlRequest.query(query); // Aguarda a execução da consulta e armazena o resultado
 
     // Extrai os dados paginados e o total de registros
-    const plantas = result.recordset;
-    const totalRecords = plantas.length > 0 ? plantas[0].TotalRecords : 0;
+    const plantas = result.recordset; // Obtém os registros da tabela 'plantas' retornados pela consulta
+    const totalRecords = plantas.length > 0 ? plantas[0].TotalRecords : 0; // Obtém o total de registros a partir do primeiro item dos resultados (TotalRecords) ou 0 se não houver resultados
 
     // Retorna os dados paginados e o total de registros
-    response.status(200).json({ plantas, totalRecords });
+    response.status(200).json({ plantas, totalRecords }); // Retorna os registros de plantas e o total de registros na resposta
   } catch (error) {
-    console.error("Erro ao executar consulta:", error.message);
-    response.status(500).send("Erro ao executar consulta");
+    // Captura qualquer erro durante a execução da consulta
+    console.error("Erro ao executar consulta:", error.message); // Exibe o erro no console
+    response.status(500).send("Erro ao executar consulta"); // Retorna um erro 500 (erro interno do servidor) se ocorrer um problema na execução da consulta
   }
-}
+} // Fim da função
 
 /**
  * Função assíncrona para listar plantas de forma simplificada (apenas ID e nome).
@@ -307,10 +317,10 @@ async function deletePlanta(request, response) {
  * Exporta as funções para que possam ser usadas em outros módulos.
  */
 module.exports = {
-  adicionar, // Função para adicionar uma nova planta.
-  listar, // Função para listar as plantas.
-  atualizar, // Função para atualizar uma planta.
-  listaSimlpes, // Função para listar plantas de forma simplificada.
-  deletePlanta,
-  listarPaginado,
+  adicionar, //Função para adicionar uma nova planta.
+  listar, //Função para listar as plantas.
+  atualizar, //Função para atualizar uma planta.
+  listaSimlpes, //Função para listar plantas de forma simplificada.
+  deletePlanta,//Função para deletar plantas
+  listarPaginado,//Função para listar de forma paginada
 };

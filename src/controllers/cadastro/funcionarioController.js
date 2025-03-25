@@ -60,12 +60,12 @@ const upload = multer({ storage: storage });
 const { DateTime } = require("luxon");
 
 /**
- * Função para converter valores de string ("true"/"false") para booleano.
+ *
  * @param {string} value - Valor a ser convertido.
  * @returns {boolean} Retorna `true` se o valor for "true", caso contrário `false`.
  */
 const convertToBoolean = (value) => {
-  return value === "true";
+  return value === "true"; //Função para converter valores de string ("true"/"false") para booleano.
 };
 
 /**
@@ -150,12 +150,14 @@ async function listarFuncionariosPagianda(request, response) {
       sortField = "id_funcionario",
       sortOrder = "ASC",
       filters = {},
-    } = request.body;
+    } = request.body; // Extrai os dados do corpo da requisição.
 
+    // Verifica se o ID da função foi enviado.
     if (!id_cliente) {
       return response.status(401).json({ error: "ID do cliente não enviado" });
     }
 
+    // Cria uma requisição SQL
     const sqlRequest = new sql.Request();
 
     // Query inicial com filtros básicos
@@ -202,6 +204,7 @@ if (filters.global && filters.global.value) {
     if (!funcionarios.length) {
       return response.status(200).json([]);
     }
+    // Consulta SQL
     const queryItensFuncionario = `
     SELECT *
     FROM Ret_Item_Funcionario 
@@ -281,12 +284,16 @@ async function listarFuncionariosSimples(request, response) {
 }
 async function listarFuncionarios(request, response) {
   try {
+    // Verifica se o ID do cliente foi enviado na requisição
     if (!request.body.id_cliente) {
       return response.status(401).json({ error: "ID do cliente não enviado" });
     }
 
+    // Extrai o ID do cliente da requisição
+
     const id_cliente = request.body.id_cliente;
 
+    // Consulta SQL para listar ID e nome dos funcionários do cliente
     const queryFuncionarios = `
             SELECT *
             FROM funcionarios 
@@ -294,18 +301,26 @@ async function listarFuncionarios(request, response) {
             AND deleted = 0
         `;
 
+    // Cria uma requisição SQL
     const sqlRequest = new sql.Request();
+    // Passa o parâmetro `id_cliente` para a consulta
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
 
+    // Executa a consulta no banco de dados
     const funcionariosResult = await sqlRequest.query(queryFuncionarios);
+    // Mapeia os resultados da consulta
     const funcionarios = funcionariosResult.recordset.map((funcionarios) => ({
       ...funcionarios,
       senha: "senhaAntiga", // Oculta a senha real
     }));
 
+    // Se não houver funcionários, retorna uma lista vazia
     if (!funcionarios.length) {
+      // Retorna os funcionários com seus IDs e nomes
       return response.status(200).json([]);
     }
+
+    // Consulta SQL para listar ID e nome dos funcionários do cliente
     const queryItensFuncionario = `
         SELECT *
         FROM Ret_Item_Funcionario 
@@ -326,18 +341,21 @@ async function listarFuncionarios(request, response) {
     }
     response.status(200).json(funcionarios);
   } catch (error) {
+    // Em caso de erro, registra no console e retorna erro 500
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");
   }
 }
 async function listarFuncionariosRelatorio(request, response) {
   try {
+    // Verifica se o ID do cliente foi enviado.
     if (!request.body.id_cliente) {
       return response.status(401).json({ error: "ID do cliente não enviado" });
     }
 
-    const id_cliente = request.body.id_cliente;
+    const id_cliente = request.body.id_cliente; // Extrai os dados do corpo da requisição.
 
+    // Consulta SQL para listar ID e nome dos funcionários do cliente
     const queryFuncionarios = `
             SELECT id_funcionario,nome,id_setor,id_funcao,id_planta,id_centro_custo,data_admissao,matricula
             FROM funcionarios 
@@ -369,6 +387,8 @@ async function adiconarFuncionarioExt(request, response) {
   const empresa = request.body["form_fields[Empresa]"];
   const cargo = request.body["form_fields[Cargo]"];
   const id_usuario = request.body.id_usuario;
+
+  // Consulta SQL 
   const query = `
           INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
           VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
@@ -1469,7 +1489,9 @@ async function deleteItem(request, response) {
   }
 }
 async function fetchdados(request, response) {
-  const { id_funcionario } = request.body;
+  const { id_funcionario } = request.body;//    // Extrai o ID funcionário da requisição
+
+  // Consulta SQL
   const query = `
   SELECT 
     f.nome, f.matricula, f.cpf, f.id_funcao, fn.nome as funcao_nome , elementos
@@ -1481,22 +1503,24 @@ async function fetchdados(request, response) {
     f.id_funcionario = @id_funcionario
 `;
 
-
   try {
+    // Verifica se o ID do produto foi enviado.
     if (!id_funcionario) {
       return response.status(401).json("ID da função não foi enviado");
     }
 
+    // Cria uma instância de consulta SQL
     const sqlRequest = new sql.Request();
     sqlRequest.input("id_funcionario", sql.Int, id_funcionario);
 
     const result = await sqlRequest.query(query);
     if (result.recordset.length === 0) {
-      return response.status(404).json({ message: "Funcionário não encontrado" });
+      return response
+        .status(404)
+        .json({ message: "Funcionário não encontrado" });
     }
     // Retorna apenas o primeiro objeto do array
     response.status(200).json(result.recordset[0]);
-
   } catch (error) {
     console.error("Erro ao executar consulta:", error.message);
     response.status(500).send("Erro ao executar consulta");

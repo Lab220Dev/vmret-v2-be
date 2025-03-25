@@ -43,6 +43,7 @@ async function listar(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+
 async function listarPaginada(request, response) {
   try {
     const {
@@ -52,12 +53,14 @@ async function listarPaginada(request, response) {
       sortField = "id_funcao",
       sortOrder = "ASC",
       filters = {},
-    } = request.body;
+    } = request.body;// Extrai dados do corpo da requisição.
 
+     // Verifica se o ID do cliente foi fornecido, se não foi, retorna erro.
     if (!id_cliente) {
       return response.status(401).json({ error: "ID do cliente não enviado" });
     }
 
+  // Cria uma nova requisição SQL
     const sqlRequest = new sql.Request();
 
     // Query inicial com filtros básicos

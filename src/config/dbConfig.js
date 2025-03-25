@@ -1,6 +1,23 @@
-const sql = require('mssql');
-require('dotenv').config();
+const sql = require('mssql');//Importa o módulo `mssql` para interagir com bancos de dados Microsoft SQL Server.
+require('dotenv').config();//Importa e configura as variáveis de ambiente a partir do arquivo `.env`, permitindo o acesso
 
+/**
+ * Configuração do banco de dados, utilizando as variáveis de ambiente carregadas do arquivo `.env`.
+ * A configuração inclui informações como usuário, senha, servidor e banco de dados, além de 
+ * configurações de pool de conexões e opções de criptografia.
+ * 
+ * @constant {Object} config
+ * @property {string} user - Nome de usuário para autenticação no banco de dados.
+ * @property {string} password - Senha do usuário para autenticação.
+ * @property {string} server - Endereço do servidor do banco de dados.
+ * @property {string} database - Nome do banco de dados a ser acessado.
+ * @property {Object} pool - Configurações do pool de conexões.
+ * @property {number} pool.max - Número máximo de conexões simultâneas permitidas.
+ * @property {number} pool.min - Número mínimo de conexões mantidas no pool.
+ * @property {number} pool.idleTimeoutMillis - Tempo máximo em milissegundos antes de liberar conexões ociosas.
+ * @property {Object} options - Opções adicionais de configuração.
+ * @property {boolean} options.encrypt - Define se a conexão deve ser criptografada.
+ */
 const config = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
