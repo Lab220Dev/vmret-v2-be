@@ -81,12 +81,8 @@ if (filters.global && filters.global.value) {
    
 
     // Ordenação e Paginação
-    query += `  // Adiciona a cláusula ORDER BY para ordenar os resultados
-              ORDER BY ${sortField} ${
-      sortOrder === "DESC" ? "DESC" : "ASC"
-    }  // Define a ordenação conforme o campo e a ordem passados na requisição
-              OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY;  // Aplica a paginação com base nos parâmetros 'first' e 'rows'
-            `;
+    query += `   ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}  
+    OFFSET @first ROWS FETCH NEXT @rows ROWS ONLY`;
 
     sqlRequest.input("first", sql.Int, first); // Adiciona o parâmetro 'first' (página inicial) na consulta SQL
     sqlRequest.input("rows", sql.Int, rows); // Adiciona o parâmetro 'rows' (quantidade de registros por página) na consulta SQL

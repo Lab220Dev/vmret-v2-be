@@ -107,16 +107,7 @@ async function adicionar(request, response) {
     response.status(400).send("Falha ao criar o usuário!");
   } catch (error) {
     // Registra o erro no log de falha
-    logQuery(
-      "error",
-      errorMessage,
-      "falha",
-      "INSERT",
-      id_cliente,
-      id_usuario,
-      query,
-      params
-    );
+
     console.error("Erro ao inserir o usuário:", error.message);
     response.status(500).send("Erro ao inserir o usuário");
   }

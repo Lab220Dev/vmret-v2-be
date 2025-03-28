@@ -195,7 +195,7 @@ async function adicionar(request, response) {
     // Cria uma nova requisição SQL e define os parâmetros.
     const sqlRequest = new sql.Request();
     sqlRequest.input("ID_Cliente", sql.Int, id_cliente);
-    sqlRequest.input("codigo", sql.Int, codigo);
+    sqlRequest.input("codigo", sql.NVarChar, codigo);
     sqlRequest.input("nome", sql.VarChar, nome);
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("Deleted", sql.Bit, false);

@@ -403,6 +403,59 @@ router.get('/updateSE24', async (req, res) => {
         //logQuery('error', `Erro ao inicializar SSE: ${error.message}`, 'falha', 'SSE', null, null, '/updateDados', { error: error.message });
     }
 });
+
+router.get('/updateNomad', async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    logQuery('info', `Início do SSE`, 'sucesso', 'SSE', null, null, '/updateNomad', {});
+
+    const sendSSE = (data, event = 'message', id = null) => {
+        let sseMessage = '';
+        sseMessage += `data: ${JSON.stringify(data)}\n\n`;
+        res.write(sseMessage);
+    };
+
+    const sendUpdates = async () => {
+        try {
+            const atualizacoes = await checkForUpdatesSE();
+            if (atualizacoes) {
+                sendSSE(atualizacoes, 'update');
+            }
+        } catch (error) {
+            console.error("Erro ao verificar atualizações:", error);
+            sendSSE({ error: "Erro ao verificar atualizações." }, 'error');
+        } finally {
+            // Programa a próxima verificação após o intervalo definido
+            timeoutId = setTimeout(sendUpdates, 60000);
+        }
+    };
+
+    try {
+        // Envia dados iniciais
+        const primeirosDados = await checkForUpdatesSE();
+        if (primeirosDados) {
+            sendSSE(primeirosDados, 'initial');
+        } else {
+            sendSSE({ message: "Nenhum dado inicial disponível." }, 'initial');
+        }
+        
+        // Inicia a verificação recursiva de atualizações
+        let timeoutId = setTimeout(sendUpdates, 60000);
+
+        // Encerra a conexão e limpa o timeout quando o cliente desconecta
+        req.on('close', () => {
+            clearTimeout(timeoutId);
+            res.end();
+            console.log("Conexão SSE fechada pelo cliente");
+        });
+    } catch (error) {
+        console.error("Erro ao inicializar SSE:", error);
+        res.status(500).send("Erro ao iniciar a conexão de dados.");
+    }
+});
+
 async function checkForUpdates() {
     const query = `SELECT * FROM EventoFrancis`;
 
@@ -442,6 +495,43 @@ async function checkForUpdates() {
 }
 async function checkForUpdatesSE() {
     const query = `SELECT * FROM SoulElite`;
+
+    try {
+        const request = new sql.Request();
+        const result = await request.query(query);
+        const atual = result.recordset.map(censurarDados);
+        if (ultimoSE.length === 0) {
+            ultimoSE = atual; 
+            return atual; 
+        }
+
+        const fullRecords = atual.map(record => {
+            const existingRecord = ultimoSE.find(r => r.ID === record.ID);
+
+            if (!existingRecord) {
+                return { ...record, isNew: true };
+            }
+
+             const updatedColumns = [];
+            if (existingRecord.Retirada !== record.Retirada) updatedColumns.push('Retirada');
+            if (existingRecord.hora_retirada !== record.hora_retirada) updatedColumns.push('hora_retirada');
+
+            return updatedColumns.length > 0 
+                ? { ...record, isNew: false, updatedColumns } 
+                : { ...record, isNew: false };
+        });
+
+        ultimoSE = atual;
+
+        return fullRecords;
+    } catch (error) {
+        console.error("Erro ao verificar atualizações:", error);
+        throw error; 
+    }
+}
+
+async function checkForUpdatesNomad() {
+    const query = `SELECT * FROM nomad_Transacao`;
 
     try {
         const request = new sql.Request();
