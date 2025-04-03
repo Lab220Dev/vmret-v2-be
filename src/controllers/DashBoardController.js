@@ -11,13 +11,16 @@ async function DadosClientes(req, res) {
     // Cria uma nova requisição SQL para buscar os DMs ativos.
     const sqlRequest = new sql.Request();
     const query = `
-          SELECT 
-              id_dm, Identificacao
-          FROM 
-              DMS
-          WHERE 
-              Deleted = 0 AND Ativo = 1
-          `;
+        SELECT 
+          d.id_dm, d.Identificacao
+        FROM 
+          DMS d
+        INNER JOIN 
+          Clientes c ON d.id_cliente = c.id_cliente
+        WHERE 
+          d.Deleted = 0 AND d.Ativo = 1
+          AND c.Deleted = 0 AND c.Ativo = 1;
+        `;
     const ListaDM = await sqlRequest.query(query); // Executa a consulta e aguarda o resultado.
 
     // Define o fuso horário como "America/Sao_Paulo" para trabalhar com data e hora locais.
@@ -32,21 +35,20 @@ async function DadosClientes(req, res) {
     for (const DM of ListaDM.recordset) {
       const sqlRequestStatus = new sql.Request();
       const statusQuery = `
-              SELECT 
-                  TOP 1 dataHora
-              FROM 
-                  DM_Status
-              WHERE 
-                  id_dm = @id_dm
-              ORDER BY 
-                  dataHora DESC
-              `;
+             SELECT TOP 1 CONVERT(NVARCHAR, dataHora, 120) AS dataHora, Status
+                FROM DM_Status s
+                INNER JOIN DMS d ON s.id_dm = d.id_dm
+                INNER JOIN Clientes c ON d.id_cliente = c.id_cliente
+                WHERE s.id_dm = @id_dm 
+                  AND d.Deleted = 0 AND d.Ativo = 1
+                  AND c.Deleted = 0 AND c.Ativo = 1
+                ORDER BY dataHora DESC`;
       sqlRequestStatus.input("id_dm", sql.Int, DM.id_dm); // Define o parâmetro 'id_dm' para a consulta de status.
       const statusResult = await sqlRequestStatus.query(statusQuery); // Executa a consulta para verificar o status do DM.
 
       // Verifica se foi encontrado o status do DM.
       if (statusResult.recordset.length > 0) {
-        const ultimaAtualizacao = new Date(statusResult.recordset[0].dataHora); // Recupera a última atualização.
+        const ultimaAtualizacao = DateTime.fromJSDate(new Date(statusResult.recordset[0].dataHora)).setZone("America/Sao_Paulo").toJSDate(); // Recupera a última atualização ajustada para o fuso horário.
         const diferencaEmMinutos = (agoraDate - ultimaAtualizacao) / 60000; // Calcula a diferença em minutos entre a hora atual e a última atualização.
         
         // Se a diferença for menor ou igual a 5 minutos, o DM está online.
@@ -84,9 +86,12 @@ async function DadosClientes(req, res) {
       COUNT(r.id_retirada) AS total_retiradas
     FROM dm_retiradas r
     INNER JOIN Clientes c ON c.id_cliente = r.id_cliente
+    INNER JOIN DMS d ON r.id_dm = d.id_dm
     WHERE r.Dia IS NOT NULL
+      AND d.Ativo = 1 AND d.Deleted = 0
+      AND c.Ativo = 1 AND c.Deleted = 0
     GROUP BY r.id_cliente, c.nome
-    ORDER BY total_retiradas DESC`;
+    ORDER BY COUNT(r.id_retirada) DESC;`
   const clientesResult = await sqlRequest.query(clientesQuery); // Executa a consulta de clientes.
 
   // Mapeia os resultados para o formato esperado.
@@ -320,10 +325,11 @@ async function UltimasNotificacoes(req, res) {
     const notificacaoQuery = `
       SELECT 
         TOP 5 
-        n.data_criacao, 
+        Convert(nvarchar,n.data_criacao,120) as data_criacao, 
         n.mensagem, 
         n.status, 
         n.id_cliente, 
+        n.Tipo,
         c.nome AS cliente_nome
       FROM 
         Notificacaos n
@@ -343,6 +349,7 @@ async function UltimasNotificacoes(req, res) {
             status: n.status, // Status da notificação.
             id_cliente: n.id_cliente, // ID do cliente associado à notificação.
             cliente_nome: n.cliente_nome, // Nome do cliente.
+            tipo: n.Tipo, // Tipo da notificação.
           }))
         : { mensagem: "Sem notificações" } // Caso não haja notificações, retorna "Sem notificações".
     );

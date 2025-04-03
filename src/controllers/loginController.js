@@ -91,7 +91,14 @@ async function login(request, response) {
       Usuario.mob = cliente && cliente.usar_api ? true : false;
       let queryMenu;
       let queryMenuItem;
-
+      const queryNotificacao=` Select COUNT(id_notificacao) AS [count] from Notificacaos where id_cliente = @id_cliente and Tipo = 'app' and status = 0`
+      const NotifResult = await new sql.Request()
+        .input("id_cliente", sql.Int, Usuario.id_cliente)
+        .query(queryNotificacao);
+        let qtdNotificacao = 0; // Valor padrão
+        if (NotifResult && NotifResult.recordset && NotifResult.recordset[0]) {
+          qtdNotificacao = NotifResult.recordset[0].count || 0; // Access the 'count' property
+        }
       if (isMobileDevice) {
         queryMenu = `
           SELECT * FROM Menu
@@ -143,7 +150,7 @@ async function login(request, response) {
       );
 
       // Retorna o token, dados do usuário e a estrutura do menu com sucesso (status 200).
-      response.status(200).json({ token, Usuario, items: menuTree });
+      response.status(200).json({ token, Usuario, items: menuTree ,Notificacoes: qtdNotificacao});
     } else {
       // Caso o usuário não seja encontrado, retorna erro 401 (E-mail ou senha inválidos).
       response.status(401).json("E-mail ou senha inválidos");

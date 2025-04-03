@@ -86,7 +86,7 @@ async function relatorio(request, response) {
 FROM
     DM_Retiradas r
 INNER JOIN
-    DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada
+    DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada  AND r.ID_DM = ri.ID_DM
 LEFT JOIN
     Produtos p ON ri.ProdutoID = p.ID_Produto
 LEFT JOIN
@@ -110,15 +110,25 @@ WHERE
           .status(400)
           .json("A data de início não pode ser posterior à data final"); // Retorna erro 400 se a data de início for posterior à data final.
       }
+      const startDate = new Date(data_inicio);
+      startDate.setHours(0, 0, 0, 0); // Define hora como 00:00:00
+
+      const endDate = new Date(data_final);
+      endDate.setHours(23, 59, 59, 999); // Define hora como 23:59:59.999
+
       query1 += " AND r.Dia BETWEEN @data_inicio AND @data_final"; // Filtro de intervalo de datas.
-      params.data_inicio = data_inicio; // Adiciona o valor de 'data_inicio' aos parâmetros.
-      params.data_final = data_final; // Adiciona o valor de 'data_final' aos parâmetros.
+      params.data_inicio = startDate.toISOString(); // Adiciona o valor de 'data_inicio' aos parâmetros.
+      params.data_final = endDate.toISOString(); // Adiciona o valor de 'data_final' aos parâmetros.
     } else if (data_inicio) {
+      const startDate = new Date(data_inicio);
+      startDate.setHours(0, 0, 0, 0);
       query1 += " AND r.Dia >= @data_inicio"; // Filtro para 'data_inicio'.
-      params.data_inicio = data_inicio; // Adiciona o valor de 'data_inicio' aos parâmetros.
+      params.data_inicio = startDate.toISOString(); // Adiciona o valor de 'data_inicio' aos parâmetros.
     } else if (data_final) {
+      const endDate = new Date(data_final);
+      endDate.setHours(23, 59, 59, 999);
       query1 += " AND r.Dia <= @data_final"; // Filtro para 'data_final'.
-      params.data_final = data_final; // Adiciona o valor de 'data_final' aos parâmetros.
+      params.data_final = endDate.toISOString(); // Adiciona o valor de 'data_final' aos parâmetros.
     }
 
     console.log("Query:", query1); // Log da consulta gerada para depuração.
@@ -144,7 +154,7 @@ WHERE
         data: [],
       });
     }
-     // Retorna os dados do relatório como resposta.
+    // Retorna os dados do relatório como resposta.
     return response.status(200).json(result.recordset); // Retorna os produtos formatados com status 200.
   } catch (error) {
     // Caso ocorra um erro durante a execução, imprime o erro e retorna erro 500.

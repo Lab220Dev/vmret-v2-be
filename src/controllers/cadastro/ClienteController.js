@@ -1254,7 +1254,6 @@ async function atualizarServico(request, response) {
   try {
     transaction = new sql.Transaction();
     await transaction.begin(); // Inicia a transação
-    await transaction.begin();
 
     // Recupera os serviços existentes para o cliente (já associados)
     const existingServices = await buscarServicosExistentes(transaction, id_cliente);
@@ -2028,7 +2027,44 @@ async function fetchdadosclient(request, response) {
     response.status(500).send("Erro ao buscar cliente"); // Status HTTP 500 - Internal Server Error
   }
 }
-
+async function fetchNotificacoesCliente(req,res){
+  const id_cliente = req.usuario.id_cliente;
+  const query = ` select
+  id_notificacao,
+  CONVERT(varchar, data_criacao, 120)  as data,
+  mensagem,
+  status
+  from Notificacaos where id_cliente = @id_cliente and Tipo = 'app'`;
+  const request = new sql.Request();
+  request.input('id_cliente',sql.Int,id_cliente);
+  const result = await request.query(query);
+  if (result.recordset.length === 0) {
+    return res.status(404).json({ message: "Nenhuma Notificação Encontrada." }); 
+  }
+  let dadosNotificacoes = [];
+  for (const notificacao of result.recordset) {
+    dadosNotificacoes.push({
+      id_notificacao: notificacao.id_notificacao,
+      titulo: `Notificação App - ${notificacao.data}`,
+      conteudo: notificacao.mensagem,
+      data: notificacao.data,
+      status: notificacao.status,
+    });
+  }
+  res.status(200).json(dadosNotificacoes);
+}
+async function NotificacaoLida(req,res) {
+  id_notificacao = req.body.id_notificacao;
+  const query = `UPDATE Notificacaos SET status = 1 WHERE id_notificacao = @id_notificacao`;
+  const request = new sql.Request();
+  request.input('id_notificacao',sql.Int,id_notificacao);
+  const result = await request.query(query);
+  if (result.rowsAffected[0] > 0) {
+    return res.status(200).json({ message: "Notificação lida com sucesso." });
+  } else {
+    return res.status(404).json({ message: "Notificação não encontrada." });
+  }
+}
 module.exports = {
   listar, // A função 'listar' é exportada, provavelmente ela vai buscar ou listar dados.
   listaSimples, // A função 'listaSimples' é exportada, e como o nome sugere, deve retornar uma lista simples de dados.
@@ -2043,4 +2079,6 @@ module.exports = {
   adicionarServico, // A função 'adicionarServico' é exportada, provavelmente é usada para adicionar serviços.
   atualizarServico, // A função 'atualizarServico' é exportada, provavelmente realiza a atualização de dados de um serviço.
   deletarServico, // A função 'deletarServico' é exportada, provavelmente deleta um serviço do banco de dados.
+  fetchNotificacoesCliente, // A função 'fetchNotificacoesCliente' é exportada, e deve buscar notificações do cliente.
+  NotificacaoLida, // A função 'NotificacaoLida' é exportada, e deve marcar uma notificação como lida.  
 };

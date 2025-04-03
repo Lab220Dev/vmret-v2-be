@@ -370,14 +370,11 @@ async function listarMaisRet(request, response) {
                 ri.ProdutoNome,
                 ri.ProdutoSKU,
                 COUNT(*) AS NumeroDeRetiradas
-            FROM 
-                DM_Retirada_Itens ri
-            JOIN 
-                DM_Retiradas r ON ri.id_retirada = r.id_retirada and  r.ID_DM = ri.ID_DM
-            WHERE 
-                r.Dia >= DATEADD(MONTH, -6, GETDATE())  
-                AND r.ID_Cliente = @id_cliente         
-            GROUP BY 
+            FROM  DM_Retirada_Itens ri
+            Inner JOIN  DM_Retiradas r on r.ID_DM_Retirada = ri.id_retirada  AND r.ID_DM = ri.ID_DM
+            WHERE  r.ID_Cliente = @id_cliente 
+            and r.Dia >= DATEADD(MONTH, -6, GETDATE())
+             GROUP BY 
                 ri.ProdutoNome, 
                 ri.ProdutoSKU
             ORDER BY 
