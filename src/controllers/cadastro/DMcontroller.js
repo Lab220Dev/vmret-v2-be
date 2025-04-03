@@ -710,7 +710,7 @@ async function atualizar(request, response) {
   const {
     id_usuario,
     ID_DM,
-    IDcliente,
+    ID_cliente,
     ClienteNome,
     Numero,
     Identificacao,
@@ -733,7 +733,7 @@ async function atualizar(request, response) {
   console.log("Dados recebidos para atualização:", {
     // Exibe no console os dados recebidos para atualização.
     ID_DM, // Mostra o valor de `ID_DM`, identificador do DM (controle de máquina).
-    IDcliente, // Mostra o valor de `IDcliente`, identificador do cliente.
+    ID_cliente, // Mostra o valor de `IDcliente`, identificador do cliente.
     ClienteNome, // Mostra o valor de `ClienteNome`, nome do cliente.
     Numero, // Mostra o valor de `Numero`, número associado ao cliente.
     Identificacao, // Mostra o valor de `Identificacao`, identificador do cliente.
@@ -757,7 +757,7 @@ async function atualizar(request, response) {
 
   try {
     // Inicia o bloco `try` para capturar erros durante a execução do código.
-    if (!ID_DM || !IDcliente) {
+    if (!ID_DM || !ID_cliente) {
       // Verifica se os parâmetros `ID_DM` ou `IDcliente` não foram fornecidos.
       return response // Se algum desses parâmetros estiver ausente, retorna um erro de status 400 (requisição inválida).
         .status(400)
@@ -792,7 +792,7 @@ async function atualizar(request, response) {
     const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
     const requestDM = new sql.Request(transaction);
     requestDM.input("ID_DM", sql.Int, ID_DM);
-    requestDM.input("ID_Cliente", sql.Int, IDcliente);
+    requestDM.input("ID_Cliente", sql.Int, ID_cliente);
     requestDM.input("Numero", sql.VarChar, Numero);
     requestDM.input("Identificacao", sql.NVarChar, Identificacao);
     requestDM.input("Ativo", sql.Bit, Ativo);
@@ -907,7 +907,7 @@ async function atualizar(request, response) {
             transaction, // Passa a transação atual para garantir que a operação seja realizada de forma atômica.
             controladora, // Passa a controladora que contém os dados a serem atualizados.
             ID_DM, // Passa o ID do DM (Dispositivo de Monitoramento).
-            IDcliente, // Passa o ID do cliente.
+            ID_cliente, // Passa o ID do cliente.
             existingControladora // Passa a controladora existente para ser atualizada.
           );
         } else if (controladora.tipo === "2023" && controladora.dados.dip > 0) {
@@ -915,7 +915,7 @@ async function atualizar(request, response) {
             transaction,
             controladora,
             ID_DM,
-            IDcliente,
+            ID_cliente,
             existingControladora
           );
         } else if (
@@ -926,7 +926,7 @@ async function atualizar(request, response) {
             transaction,
             controladora,
             ID_DM,
-            IDcliente,
+            ID_cliente,
             existingControladora
           );
         } else if (controladora.tipo === "2024" && controladora.dados.dip > 0) {
@@ -934,7 +934,7 @@ async function atualizar(request, response) {
             transaction,
             controladora,
             ID_DM,
-            IDcliente,
+            ID_cliente,
             existingControladora
           );
         }
@@ -945,14 +945,14 @@ async function atualizar(request, response) {
             transaction,
             controladora,
             ID_DM,
-            IDcliente
+            ID_cliente
           );
         } else if (controladora.tipo === "2023" && controladora.dados.dip > 0) {
           await adicionarControladora2023(
             transaction,
             controladora,
             ID_DM,
-            IDcliente
+            ID_cliente
           );
         } else if (
           controladora.tipo === "Locker-Padrao" ||
@@ -962,14 +962,14 @@ async function atualizar(request, response) {
             transaction,
             controladora,
             ID_DM,
-            IDcliente
+            ID_cliente
           );
         } else if (controladora.tipo === "2024" && controladora.dados.dip > 0) {
           await adicionarControladora2024(
             transaction,
             controladora,
             ID_DM,
-            IDcliente
+            ID_cliente
           );
         }
       }

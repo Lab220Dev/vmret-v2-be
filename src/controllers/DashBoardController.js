@@ -75,7 +75,7 @@ async function DadosClientes(req, res) {
     // Preenche os tipos de notificações com a contagem correspondente.
     notificacoesResult.recordset.forEach((notificacao) => {
       if (notificacao.Tipo === "email") notificacoes.email = notificacao.Total; // Contagem de notificações de tipo 'email'.
-      if (notificacao.Tipo === "push") notificacoes.push = notificacao.Total; // Contagem de notificações de tipo 'push'.
+      if (notificacao.Tipo === "app") notificacoes.push = notificacao.Total; // Contagem de notificações de tipo 'push'.
     });
 
     // Consulta para obter os 5 clientes com mais retiradas.
