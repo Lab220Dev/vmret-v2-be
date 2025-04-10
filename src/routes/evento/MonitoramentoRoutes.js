@@ -23,6 +23,7 @@ router.get('/updateNomad', async (req, res) => {
         });
     }catch (error) {
         console.error("Erro ao verificar atualizações:", error);
+        res.write(`data: ${JSON.stringify({ error: error.message || 'Erro interno do servidor' })}\n\n`); 
         res.status(500).send('Erro interno do servidor');
     }
 });

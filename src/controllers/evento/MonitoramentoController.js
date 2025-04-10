@@ -105,6 +105,9 @@ async function checkForUpdatesNomad() {
 
     try {
         const pool = await getPoolNomad();
+        if (!pool.connected) {
+            await pool.connect(); 
+        }
         const result = await pool.request().query(query);
         const atual = result.recordset.map(censurarDados);
         if (ultimoNomad.length === 0) {
