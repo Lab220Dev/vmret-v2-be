@@ -4,5 +4,6 @@ const LiberacaoAvulsaController = require('../../controllers/relatorios/Liberaca
 
 
 router.post('/relatorio', LiberacaoAvulsaController.relatorio);
-
+router.get('/lockerdisponiveis', LiberacaoAvulsaController.queryLocker);
+router.post('/lockerItens', LiberacaoAvulsaController.lockerItens);
 module.exports = router;
