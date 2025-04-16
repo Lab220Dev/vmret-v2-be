@@ -1,0 +1,1570 @@
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}
+Erro ao verificar atualizações: ConnectionError: Connection is closed.
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:497:37)
+    at Request._query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\tedious\request.js:363:11)
+    at h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:461:12
+    at new Promise (<anonymous>)
+    at Request.query (h:\root\home\userlab-001\www\dispensermachine\node_modules\mssql\lib\base\request.js:460:12)
+    at Object.checkForUpdatesNomad (h:\root\home\userlab-001\www\dispensermachine\src\controllers\evento\MonitoramentoController.js:108:45)
+    at async h:\root\home\userlab-001\www\dispensermachine\src\routes\evento\MonitoramentoRoutes.js:11:32 {
+  code: 'ECONNCLOSED'
+}

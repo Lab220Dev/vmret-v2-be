@@ -5,7 +5,7 @@ const { logQuery } = require("../../utils/logUtils"); // Importa a função `log
 // Função principal para gerar o relatório de retiradas avulsas
 /**
  * Função para gerar um relatório das retiradas avulsas realizadas por um cliente.
- * 
+ *
  * @param {Object} request - O objeto de requisição HTTP, contendo os parâmetros da consulta.
  * @param {Object} response - O objeto de resposta HTTP, utilizado para retornar os resultados ou erros.
  * @returns {Promise<void>} - Retorna a resposta com os dados da consulta ou um erro.
@@ -74,8 +74,10 @@ async function relatorio(request, response) {
     // Define os parâmetros de entrada para a consulta SQL.
     request.input("id_cliente", sql.Int, params.id_cliente); // Define o parâmetro ID_Cliente
     if (params.id_dm) request.input("id_dm", sql.VarChar, id_dm.toString()); // Define o parâmetro ID_DM se presente
-    if (params.data_inicio) request.input("data_inicio", sql.DateTime, params.data_inicio); // Define o parâmetro Data_Inicio
-    if (params.data_final) request.input("data_final", sql.DateTime, params.data_final); // Define o parâmetro Data_Final
+    if (params.data_inicio)
+      request.input("data_inicio", sql.DateTime, params.data_inicio); // Define o parâmetro Data_Inicio
+    if (params.data_final)
+      request.input("data_final", sql.DateTime, params.data_final); // Define o parâmetro Data_Final
 
     // Executa a consulta SQL e armazena o resultado.
     const result = await request.query(query);
@@ -124,8 +126,45 @@ async function relatorio(request, response) {
     response.status(500).send("Erro ao executar consulta");
   }
 }
+async function queryLocker(req, res) {
+  let id_cliente = req.usuario.id_cliente;
+  let query = ` SELECT DISTINCT c.id_dm ,d.Identificacao,COUNT(*) AS total_controladoras
+                  FROM Controladoras c
+                  JOIN DMs d ON d.id_dm = c.id_dm
+                  WHERE c.id_cliente = @id_cliente
+                    AND c.tipo_controladora LIKE '%locker%'
+                    AND c.deleted = 0
+                    AND d.Ativo = 1
+                    AND d.deleted = 0
+                    GROUP BY c.id_dm, d.Identificacao`;
+  try {
+    let request = new sql.Request();
+    request.input("id_cliente", sql.Int, id_cliente);
+    const result = await request.query(query);
+    return res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    res.status(500).send("Erro ao executar consulta");
+  }
+}
 
+async function lockerItens(req, res){
+  // let id_cliente = req.usuario.id_cliente;
+  let id_dm = req.body.id_dm;
+  let query =` select * from dm_itens where id_dm = @id_dm and deleted = 0`;
+  try {
+    let request = new sql.Request();
+    request.input("id_dm", sql.Int, id_dm);
+    const result = await request.query(query);
+    return res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao executar consulta:", error.message);
+    res.status(500).send("Erro ao executar consulta");
+  }
+}
 // Exporta a função relatorio para que ela possa ser utilizada em outras partes da aplicação.
 module.exports = {
   relatorio, // Exporta a função relatorio
+  queryLocker,
+  lockerItens
 };

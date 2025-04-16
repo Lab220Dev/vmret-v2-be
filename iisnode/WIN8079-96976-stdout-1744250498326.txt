@@ -1,0 +1,10 @@
+Dispositivo: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Thu Apr 10 2025 05:14:35 GMT-0700 (Pacific Daylight Time) [INFO]: Usuário undefined criou um novo Relatório de Estoque Baixo Query: 
+            SELECT sku, nome, quantidade, quantidademinima 
+            FROM DM_Itens 
+            WHERE id_cliente = 78 
+              AND quantidade >= quantidademinima
+              AND quantidade <= quantidademinima + 2
+              AND quantidademinima > 0
+              AND deleted = 0
+        

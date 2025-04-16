@@ -89,7 +89,7 @@ async function deleteUser(req, res) {
         const query = `
             UPDATE usuario_monitoramento
             SET deleted = 1
-            WHERE id_usuario = @id_usuario
+            WHERE id = @id_usuario
         `;
         await new sql.Request()
             .input("id_usuario", sql.Int, id)
@@ -105,6 +105,9 @@ async function checkForUpdatesNomad() {
 
     try {
         const pool = await getPoolNomad();
+        if (!pool.connected) {
+            await pool.connect(); 
+        }
         const result = await pool.request().query(query);
         const atual = result.recordset.map(censurarDados);
         if (ultimoNomad.length === 0) {

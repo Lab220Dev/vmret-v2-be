@@ -20,7 +20,7 @@ const configSecundario = {
 let poolSecundario;
 
 async function getPoolNomad() {
-    if (!poolSecundario) {
+    if (!poolSecundario || !poolSecundario.connected) {
         try {
             poolSecundario = new ConnectionPool(configSecundario);
             await poolSecundario.connect();
