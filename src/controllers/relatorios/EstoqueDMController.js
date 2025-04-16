@@ -78,7 +78,7 @@ async function relatorio(request, response) {
           posicao = `${row.Placa} / ${row.Motor1}`;
         } else if (row.Controladora === "2023") {
           posicao = `${row.Andar} / ${row.Posicao}`;
-        } else if (row.Controladora === "Locker") {
+        } else if (row.Controladora.includes("Locker")) {
           posicao = `${row.Placa} / ${row.Posicao}`;
         } else {
           posicao = "Posição desconhecida"; // Caso o modelo não seja reconhecido.

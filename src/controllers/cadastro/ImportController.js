@@ -3,7 +3,7 @@ const { logQuery } = require("../../utils/logUtils"); // Importa a função 'log
 const path = require("path"); // Importa o módulo 'path' para manipulação de caminhos de arquivos e diretórios
 const fs = require("fs").promises; // Importa o módulo 'fs' para manipulação de arquivos com promessas
 const axios = require('axios');
-
+const { DateTime } = require("luxon");
 /**
  * Sanitiza o nome do arquivo: remove acentos, espaços e caracteres especiais.
  * @param {string} filename Nome original do arquivo
@@ -246,6 +246,10 @@ async function insertProdutoBulk(dados, id_cliente) {
         url_info_adicional = await downloadImage(d.url_info_adicional, uploadPathInfoAdicional);
       }
 
+      const validadeDate = DateTime.fromFormat(d.validade, "yyyy-MM-dd", { zone: "America/Sao_Paulo" });
+      const today = DateTime.now().setZone("America/Sao_Paulo");
+      const diffInDays = Math.ceil(validadeDate.diff(today, "days").days);
+
       return {
         nome: d.Nome,
         codigo: codigo,
@@ -253,7 +257,7 @@ async function insertProdutoBulk(dados, id_cliente) {
         id_tipoProduto: d.tipo_produto,
         id_planta: d.id_planta,
         unidade_medida: d.unidade_medida,
-        validadedias: d.validade,
+        validadedias: diffInDays,
         quantidademinima: quantidade_minima,
         imagem1: url_foto_principal,
         imagem2: url_foto_secundaria,
@@ -262,7 +266,7 @@ async function insertProdutoBulk(dados, id_cliente) {
         Deleted: 0,
         Sincronizado: 0,
         capacidade: 0,
-        id_categoria:53,
+        id_categoria: 53,
       };
     })
   );
@@ -493,7 +497,7 @@ async function insertFuncionarioBulk(dados, id_cliente) {
       "Funcao",
       "id_funcao",
       "Nome",
-      d.Função,
+      d.Funcao,
       id_cliente
     );
 
@@ -606,7 +610,7 @@ async function insertCentroCustoBulk(dados, id_cliente) {
       error.message
     );
     // Aqui você pode registrar log de erro se necessário.
-    throw error;
+    throw new Error;
   }
 }
 
@@ -625,9 +629,9 @@ async function insertCentroCustoBulk(dados, id_cliente) {
  */
 async function obterIdOuFalhar(tabela, campoId, campoNome, valor, id_cliente) {
   const request = new sql.Request(); // Cria uma nova requisição SQL.
-
+  const isNumber = /^\d+$/.test(valor);
   let query, result;
-  if (isNaN(valor)) {
+  if (!isNumber) {
     // Se o valor não for número, assume-se que é um nome.
     query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoNome} = @valor and Deleted = 0 and id_cliente = @id_cliente`; // Consulta para buscar o ID pelo nome.
     result = await request
@@ -636,10 +640,10 @@ async function obterIdOuFalhar(tabela, campoId, campoNome, valor, id_cliente) {
       .query(query);
   } else {
     // Caso contrário, busca-se pelo ID diretamente.
-    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoNome} = @valor AND Deleted = 0 AND id_cliente = @id_cliente`;
+    query = `SELECT ${campoId} AS id FROM ${tabela} WHERE ${campoId} = @valor AND Deleted = 0 AND id_cliente = @id_cliente`;
     result = await request
-      .input("valor", sql.Int, parseInt(valor))
       .input("id_cliente", sql.Int, id_cliente)
+      .input("valor", sql.VarChar, valor)
       .query(query);
   }
 
