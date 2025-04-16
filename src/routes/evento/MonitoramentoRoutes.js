@@ -31,4 +31,6 @@ router.get('/updateNomad', async (req, res) => {
 router.post('/novoUsuario',monitoramentoController.register);
 router.post('/deleteUsuario', autenticarToken,monitoramentoController.deleteUser);
 router.post('/login', monitoramentoController.login);
+router.post('/relatorio', monitoramentoController.relatorio);
+router.post('/relatorioRetirada', monitoramentoController.relatorioRetirada);
 module.exports = router;
