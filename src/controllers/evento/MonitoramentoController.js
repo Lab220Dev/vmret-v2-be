@@ -250,10 +250,16 @@ async function relatorioRetirada(req,res){
         query += " AND id_dm = @id_dm";
         params.id_dm = id_dm;
       }
-    if (tipo_retorno) {
-        query += " AND Retorno_Placa = @tipo_retorno";
-        params.tipo_retorno = tipo_retorno;
-      }
+      if (tipo_retorno) {
+        if (tipo_retorno === 'OUTROS') {
+            query += ` AND Retorno_Placa IN (
+                'EXLINIV', 'EXCOLINV', 'EXTONF', 'EXLIMCORR', 'EXTOST00', 'EXSC00', 'EXSC01'
+            )`;
+        } else {
+            query += " AND Retorno_Placa = @tipo_retorno";
+            params.tipo_retorno = tipo_retorno;
+        }
+    }
      if(qrCode_valido != null) {
         query += " AND QR_Code_Valido = @qrCode_valido";
         params.qrCode_valido = qrCode_valido;
