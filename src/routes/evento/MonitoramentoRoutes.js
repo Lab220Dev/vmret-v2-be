@@ -28,9 +28,12 @@ router.get('/updateNomad', async (req, res) => {
     }
 });
 
-router.post('/novoUsuario',monitoramentoController.register);
+router.post('/register',monitoramentoController.register);
 router.post('/deleteUsuario', autenticarToken,monitoramentoController.deleteUser);
 router.post('/login', monitoramentoController.login);
+router.post('/listarUsuarios', monitoramentoController.listarUsuarios);
+router.post('/atualizarUsuario', monitoramentoController.atualizarUsuario);
 router.post('/relatorio', monitoramentoController.relatorio);
 router.post('/relatorioRetirada', monitoramentoController.relatorioRetirada);
+router.post('/relatorioAberturaPorta', monitoramentoController.relatorioAberturaPorta);
 module.exports = router;

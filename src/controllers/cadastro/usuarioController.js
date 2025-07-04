@@ -249,7 +249,7 @@ async function listarPaginado(request, response) {
   }
 async function listarSimples(request, response) {
 const id_cliente = request.body.id_cliente;
-let query = `SELECT nome,id_usuario,email FROM usuarios WHERE id_cliente = @id_cliente AND deleted = 0 and ativo = 1`;
+let query = `SELECT nome,id_usuario,email FROM usuarios WHERE id_cliente = @id_cliente AND deleted = 0 and ativo = 1 ORDER BY nome `;
 const sqlRequest = new sql.Request();
 sqlRequest.input('id_cliente', sql.Int, id_cliente);
 const result = await sqlRequest.query(query);

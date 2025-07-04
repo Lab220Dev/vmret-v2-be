@@ -51,7 +51,7 @@ async function relatorio(request, response) {
             FROM
                 db_a45fb2_dmretiradanew.dbo.DM_Retiradas r
             INNER JOIN
-               db_a45fb2_dmretiradanew.dbo. DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada AND r.ID_DM = ri.ID_DM
+               db_a45fb2_dmretiradanew.dbo.DM_Retirada_itens ri ON r.ID_DM_Retirada = ri.id_retirada AND r.ID_DM = ri.ID_DM
             LEFT JOIN
                 db_a45fb2_dmretiradanew.dbo.DMs dm ON r.ID_DM = dm.ID_DM
             WHERE

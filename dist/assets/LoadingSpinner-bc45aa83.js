@@ -1,1 +1,0 @@
-import{_ as e,o as n,c as o,d as s}from"./index-092cfd6f.js";const _={},c={class:"loading-overlay"},t=s("div",{class:"loading-spinner"},null,-1),a=[t];function i(r,d){return n(),o("div",c,a)}const p=e(_,[["render",i]]);export{p as L};

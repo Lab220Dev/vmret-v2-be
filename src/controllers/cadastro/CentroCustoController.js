@@ -124,7 +124,7 @@ async function listaSimples(request, response) {
     // Verifica se o ID do cliente foi fornecido. Se sim, executa a consulta.
     if (id_cliente) {
       const query =
-        "SELECT ID_CentroCusto,Nome  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0"; // Query simplificada (apenas ID e Nome).
+        "SELECT ID_CentroCusto,Nome  FROM Centro_Custos WHERE id_cliente = @id_cliente AND Deleted = 0 ORDER BY Nome"; // Query simplificada (apenas ID e Nome).
 
       request = new sql.Request(); // Cria uma nova requisição SQL.
       request.input("id_cliente", sql.Int, id_cliente); // Passa o ID do cliente como parâmetro para a consulta.

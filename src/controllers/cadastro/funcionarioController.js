@@ -172,16 +172,16 @@ async function listarFuncionariosPagianda(request, response) {
     `;
 
     sqlRequest.input("id_cliente", sql.Int, id_cliente);
-if (filters.global && filters.global.value) {
-                    const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
-                    queryFuncionarios += ` AND (
+    if (filters.global && filters.global.value) {
+      const globalValue = `%${filters.global.value}%`; // Adiciona o wildcard para LIKE
+      queryFuncionarios += ` AND (
                         funcionarios.nome LIKE @globalValue OR 
                         funcionarios.matricula LIKE @globalValue 
                     )`;
-                
-                    sqlRequest.input("globalValue", sql.NVarChar, globalValue);
-                }
-   
+
+      sqlRequest.input("globalValue", sql.NVarChar, globalValue);
+    }
+
     // Ordenação e Paginação
     queryFuncionarios += `
       ORDER BY ${sortField} ${sortOrder === "DESC" ? "DESC" : "ASC"}
@@ -388,7 +388,7 @@ async function adiconarFuncionarioExt(request, response) {
   const cargo = request.body["form_fields[Cargo]"];
   const id_usuario = request.body.id_usuario;
 
-  // Consulta SQL 
+  // Consulta SQL
   const query = `
           INSERT INTO funcionarios (id_cliente, nome, matricula, email, senha, empresa, cargo, sincronizado) 
           VALUES (@id_cliente, @nome, @matricula, @email, @senha, @empresa, @cargo, @sincronizado)
@@ -680,6 +680,12 @@ async function adicionarFuncionarios(request, response) {
     // Gerenciamento de arquivos enviados na requisição
     const files = request.files; // Obtém os arquivos enviados
 
+    // Validação para garantir que o 'id_cliente' foi enviado
+    if (!id_cliente) {
+      response.status(401).json("ID do cliente não enviado"); // Retorna erro se não houver id_cliente
+      return;
+    }
+
     // Função para sanitizar o nome do arquivo (retirar caracteres especiais e acentos)
     const sanitizeFileName = (filename) => {
       if (typeof filename === "string") {
@@ -737,8 +743,8 @@ async function adicionarFuncionarios(request, response) {
     ); // Adiciona o parâmetro id_planta
     sqlRequest.input("foto", sql.VarChar, nomeFuncionario); // Adiciona o parâmetro foto (nome do arquivo)
     sqlRequest.input("data_admissao", sql.DateTime, data_admissao); // Adiciona o parâmetro data_admissao
-    sqlRequest.input("hora_inicial", sql.Time, hora_inicial); // Adiciona o parâmetro hora_inicial
-    sqlRequest.input("hora_final", sql.Time, hora_final); // Adiciona o parâmetro hora_final
+    sqlRequest.input("hora_inicial", sql.Time, hora_inicial ? hora_inicial : null); // Adiciona o parâmetro hora_inicial
+    sqlRequest.input("hora_final", sql.Time, hora_final ? hora_final : null); // Adiciona o parâmetro hora_final
     sqlRequest.input("segunda", sql.Bit, convertToBoolean(segunda)); // Adiciona o parâmetro segunda
     sqlRequest.input("terca", sql.Bit, convertToBoolean(terca)); // Adiciona o parâmetro terca
     sqlRequest.input("quarta", sql.Bit, convertToBoolean(quarta)); // Adiciona o parâmetro quarta
@@ -750,7 +756,7 @@ async function adicionarFuncionarios(request, response) {
     sqlRequest.input("ordem", sql.Int, ordem); // Adiciona o parâmetro ordem
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo); // Adiciona o parâmetro id_centro_custo
     sqlRequest.input("status", sql.NVarChar, status); // Adiciona o parâmetro status
-    sqlRequest.input("senha", sql.NVarChar, hashMd5); // Adiciona a senha criptografada
+    sqlRequest.input("senha", sql.NVarChar, hashMd5  ? hashMd5 : null); // Adiciona a senha criptografada
     sqlRequest.input("biometria2", sql.NVarChar, biometria2); // Adiciona a segunda biometria
     sqlRequest.input("email", sql.VarChar, email); // Adiciona o e-mail
     sqlRequest.input("face", sql.VarChar, face); // Adiciona a foto do rosto
@@ -1016,20 +1022,6 @@ async function deleteFuncionario(request, response) {
  * @returns {void} Retorna uma mensagem de sucesso ou erro.
  */
 async function atualizarFuncionario(request, response) {
-  // Consulta SQL para atualizar os dados do funcionário no banco de dados
-  const query = `
-    UPDATE funcionarios
-    SET id_setor = @id_setor, id_funcao = @id_funcao,
-        nome = @nome, matricula = @matricula, biometria = @biometria,
-        RG = @RG, CPF = @CPF, CTPS = @CTPS, id_planta = @id_planta,
-        foto = @foto, data_admissao = @data_admissao, hora_inicial = @hora_inicial,
-        hora_final = @hora_final, segunda = @segunda, terca = @terca,
-        quarta = @quarta, quinta = @quinta, sexta = @sexta, sabado = @sabado,
-        domingo = @domingo, id_centro_custo = @id_centro_custo,
-        status = @status, senha = @senha, biometria2 = @biometria2,
-        email = @email, face = @face
-    WHERE id_funcionario = @id_funcionario`;
-
   // Desestrutura os dados enviados na requisição
   const {
     id_funcionario,
@@ -1059,9 +1051,25 @@ async function atualizarFuncionario(request, response) {
     email,
     face,
     foto,
-    id_usuario,
   } = request.body;
 
+  // Consulta SQL para atualizar os dados do funcionário no banco de dados
+  let query = `
+    UPDATE funcionarios
+    SET id_setor = @id_setor, id_funcao = @id_funcao,
+        nome = @nome, matricula = @matricula, biometria = @biometria,
+        RG = @RG, CPF = @CPF, CTPS = @CTPS, id_planta = @id_planta,
+        foto = @foto, data_admissao = @data_admissao, hora_inicial = @hora_inicial,
+        hora_final = @hora_final, segunda = @segunda, terca = @terca,
+        quarta = @quarta, quinta = @quinta, sexta = @sexta, sabado = @sabado,
+        domingo = @domingo, id_centro_custo = @id_centro_custo,
+        status = @status`;
+
+  const hashMD5 = senha ? CryptoJS.MD5(senha).toString() : null;
+  if (senha) {
+    query += `, senha = @senha, biometria2 = @biometria2, email = @email, face = @face`;
+  }
+  query += ` WHERE id_funcionario = @id_funcionario`;
   let itens = request.body.itens;
 
   // Se os itens forem passados como string, tenta convertê-los para objeto
@@ -1078,36 +1086,6 @@ async function atualizarFuncionario(request, response) {
   let nomeFuncionario = foto;
   const id_cliente = request.body.id_cliente;
   const files = request.files; // Arquivos enviados na requisição
-  const hashMd5 = CryptoJS.MD5(senha).toString(); // Criptografa a senha
-  const params = {
-    id_funcionario,
-    id_setor,
-    id_funcao,
-    nome,
-    matricula,
-    biometria,
-    RG,
-    CPF,
-    CTPS,
-    id_planta,
-    foto: nomeFuncionario,
-    data_admissao,
-    hora_inicial,
-    hora_final,
-    segunda,
-    terca,
-    quarta,
-    quinta,
-    sexta,
-    sabado,
-    domingo,
-    id_centro_custo,
-    status,
-    hashMd5,
-    biometria2,
-    email,
-    face,
-  };
 
   try {
     // Se arquivos foram enviados, realiza o upload da foto
@@ -1150,7 +1128,11 @@ async function atualizarFuncionario(request, response) {
     sqlRequest.input("domingo", sql.Bit, convertToBoolean(domingo));
     sqlRequest.input("id_centro_custo", sql.Int, id_centro_custo);
     sqlRequest.input("status", sql.NVarChar, status);
-    sqlRequest.input("senha", sql.NVarChar, hashMd5);
+
+    if (senha) {
+      sqlRequest.input("senha", sql.NVarChar, hashMD5); // Se senha foi fornecida, adiciona o parâmetro.
+    }
+
     sqlRequest.input("biometria2", sql.NVarChar, biometria2);
     sqlRequest.input("email", sql.VarChar, email);
     sqlRequest.input("face", sql.VarChar, face);
@@ -1489,7 +1471,7 @@ async function deleteItem(request, response) {
   }
 }
 async function fetchdados(request, response) {
-  const { id_funcionario } = request.body;//    // Extrai o ID funcionário da requisição
+  const { id_funcionario } = request.body; //    // Extrai o ID funcionário da requisição
 
   // Consulta SQL
   const query = `
