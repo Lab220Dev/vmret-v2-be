@@ -134,7 +134,7 @@ async function listarSimples(request, response) {
     if (id_cliente) {
       // Define a query para listar apenas o id e nome das funções de um cliente.
       const query =
-        "SELECT id_funcao, nome FROM Funcao WHERE id_cliente = @id_cliente AND Deleted = 0";
+        "SELECT id_funcao, nome FROM Funcao WHERE id_cliente = @id_cliente AND Deleted = 0 ORDER BY nome";
 
       // Cria uma nova requisição SQL e define o parâmetro 'id_cliente'.
       request = new sql.Request();

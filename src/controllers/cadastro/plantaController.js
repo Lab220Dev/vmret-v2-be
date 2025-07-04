@@ -10,7 +10,7 @@ const { logQuery } = require("../../utils/logUtils"); // Importa a função `log
 async function listar(request, response) {
   try {
     // Consulta inicial para selecionar todas as plantas que não estão marcadas como deletadas.
-    let query = "SELECT * FROM plantas WHERE deleted = 0";
+    let query = "SELECT * FROM plantas WHERE deleted = 0 ";
 
     // Verifica se o ID do cliente foi enviado na requisição.
     if (request.body.id_cliente) {
@@ -115,12 +115,13 @@ async function listaSimlpes(request, response) {
 
     // Verifica se o ID do cliente foi enviado na requisição.
     if (request.body.id_cliente) {
-      // Se o ID do cliente foi enviado, adiciona uma condição à consulta.
-      query += ` AND id_cliente = '${request.body.id_cliente}'`;
-      request = new sql.Request(); // Cria uma nova requisição SQL.
+      // Se o ID do cliente foi enviado, adiciona uma condição à consulta usando parâmetros.
+      query += " AND id_cliente = @id_cliente ORDER BY nome";
+      const sqlRequest = new sql.Request(); // Cria uma nova requisição SQL.
+      sqlRequest.input("id_cliente", sql.Int, request.body.id_cliente);
 
       // Executa a consulta no banco de dados e obtém o resultado.
-      const result = await request.query(query);
+      const result = await sqlRequest.query(query);
 
       // Retorna os dados das plantas simplificados (apenas ID e nome) como resposta no formato JSON.
       response.status(200).json(result.recordset); // Envia os resultados para o cliente.

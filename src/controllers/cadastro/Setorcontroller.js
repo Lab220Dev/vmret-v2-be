@@ -99,7 +99,7 @@ async function listaSimples(request, response) {
     const id_cliente = request.body.id_cliente; //Consulta os dados do corpo da requisição
     if (id_cliente) {
       const query =
-        "SELECT id_setor,nome,id_centro_custo  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0";
+        "SELECT id_setor,nome,id_centro_custo  FROM Setores WHERE id_cliente = @id_cliente AND Deleted = 0 ORDER BY nome ";
       request = new sql.Request(); // Cria uma nova requisição SQL.
       request.input("id_cliente", sql.Int, id_cliente); // Define os parâmetros que serão usados na consulta SQL.
       const result = await request.query(query);

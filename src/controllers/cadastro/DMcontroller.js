@@ -227,6 +227,7 @@ const listarDMResumido2 = async (request, response) => {
     // Criação de uma nova instância de 'sql.Request' para enviar a consulta ao banco de dados
     let sqlRequest = new sql.Request();
 
+
     // Definição da consulta SQL inicial para selecionar os campos 'id_dm', 'Identificacao', e 'id_cliente' da tabela 'DMS'
     let query = `
       SELECT 
@@ -236,9 +237,10 @@ const listarDMResumido2 = async (request, response) => {
       WHERE 
         Deleted = 0
     `;
-
+    
     // Executa a consulta no banco de dados
     const result = await sqlRequest.query(query);
+;
 
     // Envia os resultados da consulta de volta para o cliente com status 200 (OK)
     response.status(200).json(result.recordset);
@@ -729,6 +731,8 @@ async function atualizar(request, response) {
     Devolucao,
     Controladoras,
     ChaveAPI,
+    URL,
+    UserID,
   } = request.body;
   console.log("Dados recebidos para atualização:", {
     // Exibe no console os dados recebidos para atualização.
@@ -751,6 +755,8 @@ async function atualizar(request, response) {
     Chave, // Mostra o valor de `Chave`, chave associada ao cliente.
     ChaveAPI, // Mostra o valor de `ChaveAPI`, chave da API utilizada.
     Devolucao, // Mostra o valor de `Devolucao`, status de devolução.
+    URL, // Mostra o valor de `URL`, URL associada ao cliente.
+    UserID, // Mostra o valor de `UserID`, ID do usuário que está fazendo a atualização.
   });
 
   let transaction; // Declara uma variável `transaction` para armazenar a transação do banco de dados.
@@ -786,6 +792,8 @@ async function atualizar(request, response) {
           ClienteNome = @ClienteNome,
           Chave = @Chave,
           ChaveAPI = @ChaveAPI,
+          URL = @URL,
+          UserID = @UserID,
           Devolucao = @Devolucao,
           Sincronizado = 0
       WHERE ID_DM = @ID_DM AND ID_Cliente = @ID_Cliente`;
@@ -810,6 +818,8 @@ async function atualizar(request, response) {
     requestDM.input("Chave", sql.NVarChar, Chave);
     requestDM.input("ChaveAPI", sql.NVarChar, ChaveAPI);
     requestDM.input("Devolucao", sql.Bit, Devolucao);
+    requestDM.input("URL", sql.NVarChar, URL);
+    requestDM.input("UserID", sql.VarChar, UserID);
 
     await requestDM.query(updateDMQuery); // Executa a consulta SQL definida pela variável `updateDMQuery` para atualizar os dados no banco de dados com os parâmetros fornecidos.
 

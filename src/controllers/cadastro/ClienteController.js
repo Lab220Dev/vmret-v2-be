@@ -1026,7 +1026,7 @@ async function listar(request, response) {
 async function listaSimples(request, response) {
   try {
     // Consulta SQL para recuperar o id_cliente e nome dos clientes não deletados
-    const query = "SELECT id_cliente,nome FROM clientes WHERE deleted = 0";
+    const query = "SELECT id_cliente,nome FROM clientes WHERE deleted = 0 ORDER BY nome";
 
     // Executa a consulta SQL e obtém o resultado
     const result = await new sql.Request().query(query);
@@ -1572,7 +1572,7 @@ async function inserirNovoServico(transaction, id_cliente, servico, destinatario
  * @returns {void} Retorna uma resposta HTTP indicando se a atualização foi bem-sucedida ou se ocorreu um erro.
  */
 async function atualizar(request, response) {
-  const { id_cliente, nome, cnpj, ativo, usarapi, id_usuario } =
+  const { id_cliente, nome, cnpj, ativo, usar_api, id_usuario } =
     request.body;
     const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
   const params = {
@@ -1580,7 +1580,7 @@ async function atualizar(request, response) {
     cnpj: cnpj,
     ativo: convertToBoolean(ativo),
     updated: nowInBrazil,
-    usar_api: convertToBoolean(usarapi),
+    usar_api: convertToBoolean(usar_api),
     atualizado: true,
     id_cliente: id_cliente,
   };
@@ -1605,7 +1605,7 @@ async function atualizar(request, response) {
     sqlRequest.input("cnpj", sql.VarChar, cnpj);
     sqlRequest.input("ativo", sql.Bit, ativo);
     sqlRequest.input("updated", sql.DateTime, nowInBrazil);
-    sqlRequest.input("usar_api", sql.Bit, usarapi);
+    sqlRequest.input("usar_api", sql.Bit, usar_api);
     sqlRequest.input("atualizado", sql.Bit, true);
     const result = await sqlRequest.query(query);
 

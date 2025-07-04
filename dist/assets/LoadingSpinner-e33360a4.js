@@ -1,1 +1,0 @@
-import{_ as n,o,c as s,d as e}from"./index-2c4d9b34.js";const a={},c={class:"loading-overlay"},t=e("div",{class:"loading-container"},[e("div",{class:"loading-spinner"}),e("p",{style:{"margin-top":"15px",color:"#333"}},"Carregando... Aguarde")],-1),r=[t];function _(i,d){return o(),s("div",c,r)}const p=n(a,[["render",_]]);export{p as L};

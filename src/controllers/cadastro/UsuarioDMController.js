@@ -224,7 +224,7 @@ async function adicionar(request, response) {
     senha: hashMD5,
     ativo: ativo,
     deleted: false,
-    admin: false,
+    admin: admin,
     admin_cliente: false,
   };
 
@@ -237,7 +237,7 @@ async function adicionar(request, response) {
     request.input("senha", sql.NVarChar, hashMD5);
     request.input("ativo", sql.Bit, ativo);
     request.input("deleted", sql.Bit, false);
-    request.input("admin", sql.Bit, false);
+    request.input("admin", sql.Bit, admin);
     request.input("admin_cliente", sql.Bit, false);
 
     // Executa a consulta SQL para inserir o novo usuário.
