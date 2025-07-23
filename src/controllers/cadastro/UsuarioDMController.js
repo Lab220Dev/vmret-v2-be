@@ -211,7 +211,7 @@ async function adicionar(request, response) {
   const query = `INSERT INTO Usuarios_DM (id_cliente, nome, login,
          senha, ativo, admin, admin_cliente,deleted )
          VALUES (@id_cliente, @nome, @login, @senha, @ativo,
-          @admin, @admin_cliente,@deleted)`;
+          @admin, 1 ,@deleted)`;
 
   // Criptografa a senha utilizando MD5.
   const hashMD5 = CryptoJS.MD5(senha).toString();

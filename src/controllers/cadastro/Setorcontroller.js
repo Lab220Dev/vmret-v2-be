@@ -172,6 +172,7 @@ async function adicionarItem(request, response) {
       id_usuario, // ID do usuário que está realizando a ação
       ordem, // Ordem do item (não utilizada diretamente, mas pode ser útil para organização)
       quantidade, // Quantidade do produto a ser adicionada
+      dias // Prazo para devolução do produto (opcional, pode ser enviado no corpo da requisição)
     } = request.body; // Pega os dados enviados no corpo da requisição
 
     // Verifica se tanto o id_cliente quanto o id_produto foram enviados
@@ -233,8 +234,8 @@ async function adicionarItem(request, response) {
 
           // Query SQL para inserir um novo item no setor
           const insertQuery = `
-            INSERT INTO Ret_Itens_setor (id_item_setor, id_cliente, id_setor, id_produto, deleted, sku, nome, imagem1, qtd_limite)
-            VALUES (@novo_id_item_setor, @id_cliente, @id_setor, @id_produto, @deleted, @sku, @nome, @imagem1, @qtd_limite)
+            INSERT INTO Ret_Itens_setor (id_item_setor, id_cliente, id_setor, id_produto, deleted, sku, nome, imagem1, qtd_limite, dias)
+            VALUES (@novo_id_item_setor, @id_cliente, @id_setor, @id_produto, @deleted, @sku, @nome, @imagem1, @qtd_limite, @dias)
           `;
           const insertRequest = new sql.Request(); // Cria uma nova requisição SQL para inserir o novo item
           insertRequest.input("novo_id_item_setor", sql.Int, novoIdItemSetor); // Define o parâmetro novo_id_item_setor
@@ -246,6 +247,7 @@ async function adicionarItem(request, response) {
           insertRequest.input("nome", sql.NVarChar, nomeProduto); // Define o parâmetro nome
           insertRequest.input("imagem1", sql.NVarChar, imagem1); // Define o parâmetro imagem1
           insertRequest.input("qtd_limite", sql.Int, quantidade); // Define o parâmetro qtd_limite
+          insertRequest.input("dias", sql.Int, dias); // Define o parâmetro dias (prazo para retirar outro item)
 
           await insertRequest.query(insertQuery); // Executa a consulta de inserção do novo item
 
@@ -345,9 +347,9 @@ async function atualizarproduto(request, response) {
   try {
     // Inicia o bloco de código onde erros serão tratados
 
-    const { id_cliente, id_produto, id_setor, qtd_limite } = request.body; // Extrai os parâmetros do corpo da requisição.
+    const { id_cliente, id_produto, id_setor, qtd_limite, dias } = request.body; // Extrai os parâmetros do corpo da requisição.
 
-    if (id_cliente && id_produto && id_setor && qtd_limite !== undefined) {
+    if (id_cliente && id_produto && id_setor && qtd_limite && dias !== undefined) {
       // Verifica se todos os dados necessários foram fornecidos (cliente, produto, setor e quantidade limite)
 
       const requestDb = new sql.Request(); // Cria uma nova requisição SQL para executar a consulta no banco de dados.
@@ -380,12 +382,13 @@ async function atualizarproduto(request, response) {
 
       const updateQuery = `
         UPDATE Ret_Itens_setor
-        SET qtd_limite = @qtd_limite
+        SET qtd_limite = @qtd_limite, dias = @dias
         WHERE id_item_setor = @id_item_setor
       `;
 
       // Adiciona os parâmetros para a consulta SQL
       requestDb.input("qtd_limite", sql.Int, qtd_limite);
+      requestDb.input("dias", sql.Int, dias); // Adiciona o parâmetro dias para a consulta SQL
       requestDb.input("id_item_setor", sql.Int, id_item_setor);
 
       // Executa a consulta SQL de atualização
@@ -395,12 +398,12 @@ async function atualizarproduto(request, response) {
         // Se alguma linha foi afetada pela atualização (significa que houve sucesso)
         return response
           .status(200) // Retorna status 200 (OK)
-          .json({ message: "Quantidade atualizada com sucesso" }); // Retorna uma mensagem de sucesso
+          .json({ message: "Dados atualizados com sucesso" }); // Retorna uma mensagem de sucesso
       } else {
         // Se nenhuma linha foi afetada (não houve atualização)
         return response
           .status(404) // Retorna status 404 (não encontrado)
-          .json({ message: "Erro ao atualizar a quantidade" }); // Retorna uma mensagem informando que houve um erro ao atualizar a quantidade
+          .json({ message: "Erro ao atualizar a dados" }); // Retorna uma mensagem informando que houve um erro ao atualizar 
       }
     } else {
       // Caso algum dos dados essenciais não tenha sido fornecido
