@@ -1116,8 +1116,11 @@ async function atualizarControladoraLocker(
     const sqlRequestDelete = new sql.Request(transaction);
 
     // Define a consulta SQL que será executada, para marcar a posição como deletada (Deleted = 1).
-    const query = `
+    const query1 = `
     UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
+
+    const query2 = ` 
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestDelete.input(
@@ -1136,7 +1139,9 @@ async function atualizarControladoraLocker(
     sqlRequestDelete.input("DIP", sql.Int, controladora.dados.dip);
 
     // Executa a consulta SQL, que irá atualizar a tabela "Controladoras", marcando a posição como deletada (Deleted = 1).
-    await sqlRequestDelete.query(query);
+    await sqlRequestDelete.query(query1);
+
+    await sqlRequestDelete.query(query2);
 
     // Exibe no console uma mensagem informando que a posição foi excluída, incluindo a posição e o DIP.
     console.log(
@@ -1280,8 +1285,12 @@ async function atualizarControladora2023(
     const sqlRequestUpdate = new sql.Request(transaction);
 
     // Define a consulta SQL que será executada, para marcar o andar como excluído, ou seja, definir o campo "Deleted" como 1.
-    const updateQuery = `
-    UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`;
+    const query1 = `
+  UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`
+    ;
+
+    const query2 = `
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestUpdate.input(
@@ -1299,7 +1308,8 @@ async function atualizarControladora2023(
     sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
 
     // Executa a consulta SQL para atualizar a tabela "Controladoras", marcando o andar como deletado.
-    await sqlRequestUpdate.query(updateQuery);
+    await sqlRequestUpdate.query(query1);
+    await sqlRequestUpdate.query(query2);
 
     // Exibe no console uma mensagem informando que o andar foi excluído com sucesso, incluindo o número do andar e o DIP.
     console.log(
@@ -1324,8 +1334,11 @@ async function atualizarControladora2023(
     const sqlRequestUpdate = new sql.Request(transaction);
 
     // Define a consulta SQL para atualizar a tabela "Controladoras" e marcar a posição como excluída (Deleted = 1).
-    const updateQuery = `
+    const query1 = `
     UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
+
+    const query2 = `
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestUpdate.input(
@@ -1344,7 +1357,8 @@ async function atualizarControladora2023(
     sqlRequestUpdate.input("DIP", sql.Int, controladora.dados.dip);
 
     // Executa a consulta SQL para atualizar a tabela, marcando a posição como deletada.
-    await sqlRequestUpdate.query(updateQuery);
+    await sqlRequestUpdate.query(query1);
+    await sqlRequestUpdate.query(query2);
 
     // Exibe no console uma mensagem informando que a posição foi excluída com sucesso, incluindo o número da posição e o DIP.
     console.log(
@@ -1477,8 +1491,10 @@ async function atualizarControladora2018(
       const sqlRequest = new sql.Request(transaction);
 
       // Define a consulta SQL para marcar a mola como excluída (Deleted = 1) na tabela Controladoras.
-      const query = `
+      const query1 = `
         UPDATE Controladoras SET Deleted = 1 WHERE ID_DM = @ID_DM AND Mola1 = @Mola1 AND Placa = @Placa`;
+      const query2 = `
+        UPDATE DM_Itens SET deleted = 1 where ID_DM = @ID_DM and Placa = @Placa and Controladora = @Controladora and Motor1 = @Mola1`;
 
       // Define o valor de entrada para o ID do dispositivo de medição (DM).
       sqlRequest.input("ID_DM", sql.Int, dmId);
@@ -1489,8 +1505,11 @@ async function atualizarControladora2018(
       // Define o valor de entrada para a placa da controladora.
       sqlRequest.input("Placa", sql.Int, controladora.dados.placa);
 
+      sqlRequest.input("Controladora", sql.NVarChar, controladora.tipo);
+
       // Executa a consulta SQL para marcar a mola como excluída no banco de dados.
-      await sqlRequest.query(query);
+      await sqlRequest.query(query1);
+      await sqlRequest.query(query2);
 
       // Exibe uma mensagem no console informando que a mola foi excluída.
       console.log(

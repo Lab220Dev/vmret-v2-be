@@ -1,6 +1,7 @@
 const sql = require('mssql'); // Importa o módulo mssql para trabalhar com SQL Server
 const { format } = require('date-fns'); // Importa a função de formatação de data da biblioteca date-fns
 const { logQuery } = require("../../utils/logUtils"); // Importa o utilitário logQuery para registrar logs da execução da consulta
+const { DateTime } = require('luxon');
 
 /**
  * Função responsável por gerar o relatório de retiradas.
@@ -75,33 +76,20 @@ async function relatorio(request, response) {
         
         // Verifica se as datas de início e fim foram fornecidas
         if (data_inicio && data_final) {
-            // Ajusta a hora para o início e o fim do dia
-            const startDate = new Date(data_inicio);
-            startDate.setHours(0, 0, 0, 0); // Define hora como 00:00:00
-        
-            const endDate = new Date(data_final);
-            endDate.setHours(23, 59, 59, 999); // Define hora como 23:59:59.999
-        
-            // Adiciona condição para filtrar entre as duas datas
-            query += ' AND r.Dia BETWEEN @data_inicio AND @data_final';
-            params.data_inicio = startDate.toISOString(); // Converte para ISO
-            params.data_final = endDate.toISOString(); // Converte para ISO
+            const startDate = new Date(data_inicio).toISOString().slice(0, 10); // 'YYYY-MM-DD'
+            const endDate = new Date(data_final).toISOString().slice(0, 10);   // 'YYYY-MM-DD'
+
+            query += ' AND CAST(r.Dia AS DATE) BETWEEN @data_inicio AND @data_final';
+            params.data_inicio = startDate;
+            params.data_final = endDate;
         } else if (data_inicio) {
-            // Ajusta a hora para o início do dia
-            const startDate = new Date(data_inicio);
-            startDate.setHours(0, 0, 0, 0); // Define hora como 00:00:00
-        
-            // Adiciona condição para filtrar a partir da data de início
-            query += ' AND r.Dia >= @data_inicio';
-            params.data_inicio = startDate.toISOString();
+            const startDate = new Date(data_inicio).toISOString().slice(0, 10);
+            query += ' AND CAST(r.Dia AS DATE) >= @data_inicio';
+            params.data_inicio = startDate;
         } else if (data_final) {
-            // Ajusta a hora para o fim do dia
-            const endDate = new Date(data_final);
-            endDate.setHours(23, 59, 59, 999); // Define hora como 23:59:59.999
-        
-            // Adiciona condição para filtrar até a data final
-            query += ' AND r.Dia <= @data_final';
-            params.data_final = endDate.toISOString();
+            const endDate = new Date(data_final).toISOString().slice(0, 10);
+            query += ' AND CAST(r.Dia AS DATE) <= @data_final';
+            params.data_final = endDate;
         }
 
         // Cria um objeto de requisição SQL
@@ -111,8 +99,8 @@ async function relatorio(request, response) {
         request.input('id_cliente', sql.Int, params.id_cliente);
         if (params.id_dm) request.input('id_dm', sql.Int, id_dm.toString()); // Define o ID do DM se fornecido
         if (params.id_funcionario) request.input('id_funcionario', sql.Int, params.id_funcionario); // Define o ID do funcionário
-        if (params.data_inicio) request.input('data_inicio', sql.DateTime, params.data_inicio); // Define a data de início
-        if (params.data_final) request.input('data_final', sql.DateTime, params.data_final); // Define a data final
+        if (params.data_inicio) request.input('data_inicio', sql.Date, params.data_inicio); // Define a data de início
+        if (params.data_final) request.input('data_final', sql.Date, params.data_final); // Define a data final
         
         // Executa a consulta SQL
         const result = await request.query(query);
