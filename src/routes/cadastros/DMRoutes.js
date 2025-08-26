@@ -16,5 +16,7 @@ router.post('/atualizarItens', DMController.atualizarItemDM);
 router.post('/deleteItem', DMController.deletarItensDM);
 router.post('/delete', DMController.deletarDM);
 router.post('/validar', DMController.validar);
+router.post('/seforlocker', DMController.seforlocker);
+router.post('/getLocker', DMController.getLocker);
 
 module.exports = router;

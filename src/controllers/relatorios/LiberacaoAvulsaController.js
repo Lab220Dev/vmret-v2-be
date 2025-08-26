@@ -128,15 +128,18 @@ async function relatorio(request, response) {
 }
 async function queryLocker(req, res) {
   let id_cliente = req.usuario.id_cliente;
-  let query = ` SELECT DISTINCT c.id_dm ,d.Identificacao,COUNT(*) AS total_controladoras
-                  FROM Controladoras c
-                  JOIN DMs d ON d.id_dm = c.id_dm
-                  WHERE c.id_cliente = @id_cliente
-                    AND c.tipo_controladora LIKE '%locker%'
-                    AND c.deleted = 0
-                    AND d.Ativo = 1
-                    AND d.deleted = 0
-                    GROUP BY c.id_dm, d.Identificacao`;
+  let query = `
+    SELECT DISTINCT c.id_dm, d.Identificacao, COUNT(*) AS total_controladoras
+    FROM Controladoras c
+    JOIN DMs d ON d.id_dm = c.id_dm
+    JOIN cad_locker l ON l.id_dm = c.id_dm
+    WHERE c.id_cliente = @id_cliente
+      AND c.deleted = 0
+      AND d.Ativo = 1
+      AND d.deleted = 0
+      AND l.deleted = 0
+    GROUP BY c.id_dm, d.Identificacao
+  `;
   try {
     let request = new sql.Request();
     request.input("id_cliente", sql.Int, id_cliente);
@@ -148,10 +151,33 @@ async function queryLocker(req, res) {
   }
 }
 
-async function lockerItens(req, res){
+async function queryDIPs(req, res) {
+  let id_dm = req.query.id_dm;
+  let query = `
+SELECT DISTINCT c.Tipo_Controladora, c.DIP 
+    FROM Controladoras c
+    JOIN cad_locker l ON l.id_dm = c.ID_DM
+    WHERE c.ID_DM = @id_dm
+      AND c.deleted = 0
+      AND l.deleted = 0
+    ORDER BY c.DIP
+  `;
+
+  try {
+    let request = new sql.Request();
+    request.input("id_dm", sql.Int, id_dm);
+    const result = await request.query(query);
+    return res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao buscar DIPs:", error.message);
+    res.status(500).send("Erro ao buscar DIPs");
+  }
+}
+
+async function lockerItens(req, res) {
   // let id_cliente = req.usuario.id_cliente;
   let id_dm = req.body.id_dm;
-  let query =` select * from dm_itens where id_dm = @id_dm and deleted = 0`;
+  let query = ` select * from dm_itens where id_dm = @id_dm and deleted = 0`;
   try {
     let request = new sql.Request();
     request.input("id_dm", sql.Int, id_dm);
@@ -162,9 +188,82 @@ async function lockerItens(req, res){
     res.status(500).send("Erro ao executar consulta");
   }
 }
+
+async function adicionar(req, res) {
+  const { id_dm, posicao, requisicao } = req.body;
+  try {
+    const request = new sql.Request();
+    request.input("id_cliente", sql.Int, req.usuario.id_cliente);
+    request.input("posicao", sql.VarChar, posicao);
+    request.input("requisicao", sql.VarChar, requisicao);
+
+    const query = `
+      INSERT INTO Itens_Retirada_Avulsa (id_cliente, posicao, modulo, Codigo_Retirada ) VALUES (
+        @id_cliente, @posicao, @modulo , @requisicao)
+    `;
+
+    await request.query(query);
+    return res.status(201).json({ message: "Item adicionado com sucesso" });
+  } catch (error) {
+    console.error("Erro ao adicionar item:", error.message);
+    return res.status(500).json({ error: "Erro ao adicionar item" });
+  }
+}
+
+async function listarPosicoes(req, res) {
+  const { id_dm, dips } = req.body;
+
+  if (!id_dm || !dips || dips.length === null) {
+    return res.status(400).send("Parâmetros inválidos");
+  }
+
+  try {
+    const request = new sql.Request();
+    request.input("id_dm", sql.Int, id_dm);
+
+    let filtros = dips
+      .map((d, i) => {
+        if (d.tipo === "2018") {
+          request.input(`tipo${i}`, sql.VarChar, d.tipo);
+          return `(c.Tipo_Controladora = @tipo${i})`; // sem DIP
+        } else {
+          request.input(`tipo${i}`, sql.VarChar, d.tipo);
+          request.input(`dip${i}`, sql.Int, d.dip);
+          return `(c.Tipo_Controladora = @tipo${i} AND c.DIP = @dip${i})`;
+        }
+      })
+      .join(" OR ");
+
+    const query = `
+      SELECT c.Andar, c.Posicao, c.Placa, c.Mola1
+      FROM Controladoras c
+      JOIN cad_locker l ON l.id_dm = c.id_dm
+      WHERE c.Deleted = 0
+        AND l.deleted = 0
+        AND c.id_dm = @id_dm
+        AND (${filtros})
+      ORDER BY 
+        CASE 
+          WHEN c.Tipo_Controladora = '2023' THEN CAST(c.Andar AS INT) 
+          ELSE 0 
+        END,
+        CAST(c.Posicao AS INT)
+    `;
+
+    const result = await request.query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao listar posições:", error.message);
+    res.status(500).send("Erro ao listar posições");
+  }
+}
+
 // Exporta a função relatorio para que ela possa ser utilizada em outras partes da aplicação.
 module.exports = {
   relatorio, // Exporta a função relatorio
   queryLocker,
-  lockerItens
+  queryDIPs,
+  lockerItens,
+  adicionar, // Exporta a função para adicionar
+  listarPosicoes, // Exporta a função para listar posições
 };

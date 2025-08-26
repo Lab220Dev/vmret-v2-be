@@ -227,7 +227,6 @@ const listarDMResumido2 = async (request, response) => {
     // Criação de uma nova instância de 'sql.Request' para enviar a consulta ao banco de dados
     let sqlRequest = new sql.Request();
 
-
     // Definição da consulta SQL inicial para selecionar os campos 'id_dm', 'Identificacao', e 'id_cliente' da tabela 'DMS'
     let query = `
       SELECT 
@@ -237,11 +236,9 @@ const listarDMResumido2 = async (request, response) => {
       WHERE 
         Deleted = 0
     `;
-    
+
     // Executa a consulta no banco de dados
     const result = await sqlRequest.query(query);
-;
-
     // Envia os resultados da consulta de volta para o cliente com status 200 (OK)
     response.status(200).json(result.recordset);
   } catch (error) {
@@ -700,7 +697,11 @@ async function adicionar(request, response) {
     await sqlRequest2.query(queryPermissions); // Executa a consulta `queryPermissions` para inserir os dados de permissão no banco de dados
     await transaction.commit(); // Confirma a transação, aplicando todas as operações executadas nela ao banco de dados.
 
-    response.status(201).send("DM e Controladoras criadas com sucesso!"); // Retorna uma resposta de sucesso com o status 201 (criado) e a mensagem indicando que o DM e as controladoras foram criadas com sucesso!
+    response.status(201).json({
+      message: "DM e Controladoras criadas com sucesso!",
+      ID_DM: dmId, // formato igual ao banco
+      id_dm: dmId,
+    });
   } catch (error) {
     // Inicia o bloco de captura de erro caso alguma exceção ocorra no bloco `try`.
     if (transaction) await transaction.rollback(); // Se a transação foi iniciada, realiza o rollback (desfazendo as operações) para garantir que não haja alterações parciais no banco de dados.
@@ -900,11 +901,13 @@ async function atualizar(request, response) {
           // Busca a controladora no Map utilizando o `dip` como chave.
           controladora.dados.dip
         );
-      } else if (controladora.tipo === "Locker-Padrao" || controladora.tipo === "Locker-Ker" ) {
+      } else if (
+        controladora.tipo === "Locker-Padrao" ||
+        controladora.tipo === "Locker-Ker"
+      ) {
         existingControladora = existingControladorasMap.get(
-          
           `${controladora.tipo}_${controladora.dados.dip}`
-        )
+        );
       }
 
       if (existingControladora) {
@@ -929,8 +932,8 @@ async function atualizar(request, response) {
             existingControladora
           );
         } else if (
-          (controladora.tipo === "Locker-Padrao" ) ||
-          (controladora.tipo === "Locker-Ker" )
+          controladora.tipo === "Locker-Padrao" ||
+          controladora.tipo === "Locker-Ker"
         ) {
           await atualizarControladoraLocker(
             transaction,
@@ -1120,7 +1123,7 @@ async function atualizarControladoraLocker(
     UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
     const query2 = ` 
-    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestDelete.input(
@@ -1149,7 +1152,8 @@ async function atualizarControladoraLocker(
       posicao,
       " do dip",
       controladora.dados.dip,
-      " excluída para a controladora ", controladora.tipo
+      " excluída para a controladora ",
+      controladora.tipo
     );
   }
 
@@ -1192,7 +1196,8 @@ async function atualizarControladoraLocker(
         posicao,
         " do dip",
         controladora.dados.dip,
-        " atualizada para a controladora ", controladora.tipo
+        " atualizada para a controladora ",
+        controladora.tipo
       );
 
       // Caso a posição não exista na lista de posições antigas, entra no bloco "else" para inserção de uma nova posição.
@@ -1233,7 +1238,8 @@ async function atualizarControladoraLocker(
         posicao,
         " do dip",
         controladora.dados.dip,
-        " inserido para a controladora ", controladora.tipo
+        " inserido para a controladora ",
+        controladora.tipo
       );
     }
   }
@@ -1286,11 +1292,9 @@ async function atualizarControladora2023(
 
     // Define a consulta SQL que será executada, para marcar o andar como excluído, ou seja, definir o campo "Deleted" como 1.
     const query1 = `
-  UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`
-    ;
-
+  UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`;
     const query2 = `
-    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Andar = @Andar AND DIP = @DIP`;
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestUpdate.input(
@@ -1317,7 +1321,8 @@ async function atualizarControladora2023(
       andar,
       " do dip",
       controladora.dados.dip,
-      " excluído para a controladora ", controladora.tipo
+      " excluído para a controladora ",
+      controladora.tipo
     );
   }
 
@@ -1338,7 +1343,7 @@ async function atualizarControladora2023(
     UPDATE Controladoras SET Deleted = 1 WHERE Tipo_Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
     const query2 = `
-    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`
+    UPDATE DM_Itens SET deleted = 1 WHERE Controladora = @Tipo_Controladora AND ID_DM = @ID_DM AND Posicao = @Posicao AND DIP = @DIP`;
 
     // Define o valor de entrada "Tipo_Controladora" como uma string (NVarChar) e o associa ao tipo da controladora.
     sqlRequestUpdate.input(
@@ -1366,7 +1371,8 @@ async function atualizarControladora2023(
       posicao,
       " do dip",
       controladora.dados.dip,
-      " excluída para a controladora ", controladora.tipo
+      " excluída para a controladora ",
+      controladora.tipo
     );
   }
 
@@ -1377,14 +1383,23 @@ async function atualizarControladora2023(
       // Verifica se a combinação de posição e andar já existe nas controladoras existentes no banco de dados.
       // A combinação é considerada existente se a posição está na lista de posições existentes e o andar está na lista de andares existentes.
 
-      const combinacaoExistente = novasAndaresArr.some(andar => 
-        andaresExistentesArr.includes(andar) && 
-        novasPosicoesArr.some(posicao => posicoesExistentesArr.includes(posicao))
+      const combinacaoExistente = novasAndaresArr.some(
+        (andar) =>
+          andaresExistentesArr.includes(andar) &&
+          novasPosicoesArr.some((posicao) =>
+            posicoesExistentesArr.includes(posicao)
+          )
       );
 
       if (combinacaoExistente) {
-
-        console.log("A combinação de andar", andar, "e posição ", posicao, "já existe na controladora", controladora.tipo);
+        console.log(
+          "A combinação de andar",
+          andar,
+          "e posição ",
+          posicao,
+          "já existe na controladora",
+          controladora.tipo
+        );
         // Se a combinação de andar e posição já existe, o código cria uma nova requisição SQL associada à transação.
         const sqlRequestUpdate = new sql.Request(transaction);
 
@@ -1406,7 +1421,6 @@ async function atualizarControladora2023(
 
         // Executa a consulta SQL para atualizar a tabela, definindo o campo "Deleted" como 0 (não deletado) para a combinação de posição e andar.
         await sqlRequestUpdate.query(updateQuery);
-
       } else {
         // Se não existir, insere
         // Se a combinação de andar e posição não existir na tabela, o código entra no bloco "else" e insere a combinação no banco de dados.
@@ -1452,7 +1466,8 @@ async function atualizarControladora2023(
           posicao,
           " do dip",
           controladora.dados.dip,
-          " inserido para a controladora ", controladora.tipo
+          " inserido para a controladora ",
+          controladora.tipo
         );
       }
     }
@@ -1517,7 +1532,8 @@ async function atualizarControladora2018(
         mola,
         " da placa ",
         controladora.dados.placa,
-        " excluída para a controladora ", controladora.tipo
+        " excluída para a controladora ",
+        controladora.tipo
       );
     }
   }
@@ -1558,7 +1574,8 @@ async function atualizarControladora2018(
         mola,
         " da placa ",
         controladora.dados.placa,
-        " atualizada para a controladora ", controladora.tipo
+        " atualizada para a controladora ",
+        controladora.tipo
       );
     } else {
       // Cria uma nova instância de um objeto `sql.Request` associado a uma transação (`transaction`)
@@ -1593,7 +1610,8 @@ async function atualizarControladora2018(
         mola,
         " da placa ",
         controladora.dados.placa,
-        "inserida para a controladora ", controladora.tipo
+        "inserida para a controladora ",
+        controladora.tipo
       );
     }
   }
@@ -2176,6 +2194,7 @@ async function deletarDM(request, response) {
     UPDATE DMs SET deleted = 1 WHERE ID_DM = @ID_DM;
     UPDATE DM_Itens SET deleted = 1 WHERE ID_DM = @ID_DM;
     UPDATE Controladoras SET deleted = 1 WHERE ID_DM = @ID_DM;
+    UPDATE cad_locker SET deleted = 1 WHERE ID_DM = @ID_DM;
   `;
   const params = {
     ID_DM: ID_DM,
@@ -2287,7 +2306,7 @@ async function updateClienteInfo(request, response) {
   }
 }
 async function validar(request, response) {
-  const { UserID, Chaveapi,ClienteID,URL } = request.body; // Desestrutura os dados de id_cliente e id_usuario do corpo da requisição.
+  const { UserID, Chaveapi, ClienteID, URL } = request.body; // Desestrutura os dados de id_cliente e id_usuario do corpo da requisição.
   try {
     console.log(`${URL}/api/Login`); // Loga a URL de login da API externa.
     const apiResponse = await axios.post(`${URL}/api/Login`, {
@@ -2298,20 +2317,112 @@ async function validar(request, response) {
       tpReadFtp: 0,
     });
 
-    const {authenticated , message} = apiResponse.data;
-    if(!authenticated){
-      return response.status(200).json({ success: false, message: message || 'Falha na autenticação.', });
+    const { authenticated, message } = apiResponse.data;
+    if (!authenticated) {
+      return response
+        .status(200)
+        .json({ success: false, message: message || "Falha na autenticação." });
     }
-    return response.status(200).json({ success: true, message:'Autenticação bem-sucedida.', });
-
+    return response
+      .status(200)
+      .json({ success: true, message: "Autenticação bem-sucedida." });
   } catch (error) {
     return response.status(500).json({
       success: false,
-      message: 'Erro ao validar o usuário.',
+      message: "Erro ao validar o usuário.",
       error: error.message, // Retorna detalhes do erro
     });
   }
 }
+async function seforlocker(request, response) {
+  const { id_dm, id_cliente, is_locker } = request.body;
+
+  try {
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    sqlRequest.input("id_dm", sql.Int, id_dm);
+
+    let action = "Nenhuma ação realizada."; // default
+
+    //se for false
+    if (!is_locker) {
+      // Sempre desativa
+      const updateQuery = `
+        UPDATE cad_locker
+        SET deleted = 1
+        WHERE id_cliente = @id_cliente AND id_dm = @id_dm AND deleted = 0
+      `;
+      const result = await sqlRequest.query(updateQuery);
+      action = result.rowsAffected[0] > 0
+        ? "Locker desativado (deleted=1)."
+        : "Locker já estava desativado ou não existia.";
+    } else {
+      // Verifica se existe
+      const selectQuery = `
+        SELECT TOP 1 deleted
+        FROM cad_locker
+        WHERE id_cliente = @id_cliente AND id_dm = @id_dm
+      `;
+      const selectResult = await sqlRequest.query(selectQuery);
+
+      if (selectResult.recordset.length === 0) {
+        // Não existe → insere
+        const insertQuery = `
+          INSERT INTO cad_locker (id_cliente, id_dm, deleted, sincronizado)
+          VALUES (@id_cliente, @id_dm, 0, 0)
+        `;
+        await sqlRequest.query(insertQuery);
+        action = "Locker inserido com sucesso.";
+      } else {
+        
+          // Existe mas estava desativado → ativa
+          const updateQuery = `
+            UPDATE cad_locker
+            SET deleted = 0
+            WHERE id_cliente = @id_cliente AND id_dm = @id_dm
+          `;
+          await sqlRequest.query(updateQuery);
+          action = "Locker reativado (deleted=0).";
+        
+      }
+    }
+
+    return response.status(200).json({ message: action });
+
+  } catch (error) {
+    console.error("Erro ao processar locker:", error);
+    return response.status(500).send("Erro ao processar locker");
+  }
+}
+
+
+async function getLocker(request, response) {
+  const { id_dm, id_cliente } = request.body;
+
+  try {
+    const sqlRequest = new sql.Request();
+    sqlRequest.input("id_cliente", sql.Int, id_cliente);
+    sqlRequest.input("id_dm", sql.Int, id_dm);
+
+    const selectQuery = `
+      SELECT 1
+      FROM cad_locker
+      WHERE id_cliente = @id_cliente
+        AND id_dm = @id_dm
+        AND deleted = 0
+    `;
+    const result = await sqlRequest.query(selectQuery);
+
+    // Retorna se existe ou não
+    return response.status(200).json({
+      exists: result.recordset.length > 0
+    });
+  } catch (error) {
+    console.error("Erro ao buscar locker:", error);
+    return response.status(500).send("Erro ao buscar locker");
+  }
+}
+
 module.exports = {
   adicionar,
   listarDM,
@@ -2327,4 +2438,6 @@ module.exports = {
   listarDMResumido,
   recuperarClienteInfo,
   updateClienteInfo,
+  seforlocker,
+  getLocker,
 };

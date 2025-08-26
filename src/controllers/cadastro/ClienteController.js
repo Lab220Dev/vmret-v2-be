@@ -1676,6 +1676,7 @@ async function deletar(request, response) {
     "Funcao",
     "Plantas",
     "Produtos",
+    "cad_locker"
   ];
   // Declaração de variável para a transação
   let transaction;
