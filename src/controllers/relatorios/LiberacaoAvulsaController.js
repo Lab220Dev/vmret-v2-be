@@ -189,20 +189,51 @@ async function lockerItens(req, res) {
   }
 }
 
+async function requisicoesAvulsas(req, res) {
+  const id_cliente = req.usuario.id_cliente;
+  const id_dm = req.body.id_dm;
+
+  const query = `
+    SELECT * 
+    FROM Retirada_Avulsa
+    WHERE 
+        id_cliente = @id_cliente AND 
+        deleted = 0 AND 
+        id_dm = @id_dm
+  `;
+
+  try {
+    let request = new sql.Request();
+    request.input("id_cliente", sql.Int, id_cliente);
+    request.input("id_dm", sql.Int, id_dm);
+
+    const result = await request.query(query);
+    return res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Erro ao buscar requisições avulsas:", error.message);
+    res.status(500).send("Erro ao buscar requisições avulsas");
+  }
+}
+
 async function adicionar(req, res) {
-  const { id_dm, posicao, requisicao } = req.body;
+  const { id_dm, modulo, posicao, andar, requisicao } = req.body;
+
   try {
     const request = new sql.Request();
+    request.input("id_dm", sql.Int, id_dm)
     request.input("id_cliente", sql.Int, req.usuario.id_cliente);
-    request.input("posicao", sql.VarChar, posicao);
+    request.input("modulo", sql.Int, modulo);
+    request.input("posicao", sql.Int, posicao);
+    request.input("andar", sql.Int, andar);
     request.input("requisicao", sql.VarChar, requisicao);
 
     const query = `
-      INSERT INTO Itens_Retirada_Avulsa (id_cliente, posicao, modulo, Codigo_Retirada ) VALUES (
-        @id_cliente, @posicao, @modulo , @requisicao)
+      INSERT INTO Retirada_Avulsa (id_dm, id_cliente, modulo, posicao, andar, codigo_requisicao)
+      VALUES (@id_dm, @id_cliente, @modulo, @posicao, @andar, @requisicao)
     `;
 
     await request.query(query);
+
     return res.status(201).json({ message: "Item adicionado com sucesso" });
   } catch (error) {
     console.error("Erro ao adicionar item:", error.message);
@@ -257,13 +288,49 @@ async function listarPosicoes(req, res) {
     res.status(500).send("Erro ao listar posições");
   }
 }
+async function excluirRequisicao(req, res) {
+  const { requisicao, id_dm } = req.body;
+  const id_cliente = req.usuario.id_cliente;
 
+  if (!requisicao || !id_dm || !id_cliente) {
+    return res.status(400).json({ error: "Parâmetros obrigatórios ausentes" });
+  }
+
+  try {
+    const request = new sql.Request();
+    request.input("requisicao", sql.VarChar, requisicao);
+    request.input("id_dm", sql.Int, id_dm);
+    request.input("id_cliente", sql.Int, id_cliente);
+
+    const query = `
+      UPDATE Retirada_Avulsa
+      SET deleted = 1
+      WHERE 
+        codigo_requisicao = @requisicao AND 
+        id_dm = @id_dm AND 
+        id_cliente = @id_cliente
+    `;
+
+    const result = await request.query(query);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Requisição não encontrada" });
+    }
+
+    return res.status(200).json({ message: "Requisição excluída com sucesso" });
+  } catch (error) {
+    console.error("Erro ao excluir requisição:", error.message);
+    return res.status(500).json({ error: "Erro ao excluir requisição" });
+  }
+}
 // Exporta a função relatorio para que ela possa ser utilizada em outras partes da aplicação.
 module.exports = {
   relatorio, // Exporta a função relatorio
   queryLocker,
   queryDIPs,
   lockerItens,
+  requisicoesAvulsas,
   adicionar, // Exporta a função para adicionar
   listarPosicoes, // Exporta a função para listar posições
+  excluirRequisicao
 };
