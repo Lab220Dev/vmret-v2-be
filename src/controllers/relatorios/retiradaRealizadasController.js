@@ -159,7 +159,7 @@ async function listarDM(request, response) {
 
       // Query para buscar os DM não deletados do cliente
       const query =
-        "SELECT  *  FROM DMS WHERE ID_Cliente = @id_cliente AND Deleted = 0";
+        "SELECT  *  FROM DMS WHERE ID_Cliente = @id_cliente AND Deleted = 0 ORDER BY Identificacao";
   
       // Cria o objeto de requisição SQL
       request = new sql.Request();

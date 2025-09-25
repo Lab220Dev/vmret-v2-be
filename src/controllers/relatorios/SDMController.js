@@ -20,21 +20,15 @@ async function relatorio(request, response) {
       return response.status(400).json("Parâmetro 'dia' é inválido ou não foi enviado");
     }
 
-    const currentDate = new Date(dia);
-
-    const startOfDay = new Date(currentDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(currentDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Garantir que a data está no formato YYYY-MM-DD
+    const dataFiltrada = new Date(dia).toISOString().slice(0, 10);
 
     const dbRequest = new sql.Request();
     dbRequest.input("id_cliente", sql.Int, id_cliente);
-    dbRequest.input("startOfDay", sql.DateTime, startOfDay);
-    dbRequest.input("endOfDay", sql.DateTime, endOfDay);
+    dbRequest.input("dataFiltrada", sql.Date, dataFiltrada); // refatorei para buiscar somente pela data
 
     let query;
-    const params = { id_cliente, startOfDay: startOfDay.toISOString(), endOfDay: endOfDay.toISOString() };
+    const params = { id_cliente, dia: dataFiltrada };
 
     if (id_dm === null || id_dm === undefined) {
       query = `
@@ -48,28 +42,30 @@ async function relatorio(request, response) {
           dms.Identificacao 
         FROM 
           DM_status ds
-        Join 
-          DMs
-        ON
-          ds.ID_DM = dms.ID_DM
+        JOIN 
+          DMs dms ON ds.ID_DM = dms.ID_DM
         WHERE 
-          id_cliente = @id_cliente 
-          AND dataHora BETWEEN @startOfDay AND @endOfDay
-        ORDER BY ID DESC
+          ds.id_cliente = @id_cliente 
+          AND CAST(ds.dataHora AS DATE) = @dataFiltrada
+        ORDER BY ds.ID DESC
       `;
     } else {
       query = `
-      SELECT 
-        ds.ID_DM, 
-        ds.ID, 
-        d.Identificacao, 
-       CONVERT(NVARCHAR, ds.dataHora, 120) AS dataHora,  
-        ds.status
-      FROM DM_Status ds
-      INNER JOIN DMs d ON ds.id_dm = d.ID_DM
-      WHERE ds.id_cliente = @id_cliente 
-        AND ds.dataHora BETWEEN @startOfDay AND @endOfDay
-      ORDER BY ds.ID DESC
+        SELECT 
+          ds.ID_DM, 
+          ds.ID, 
+          d.Identificacao, 
+          CONVERT(NVARCHAR, ds.dataHora, 120) AS dataHora,  
+          ds.status
+        FROM 
+          DM_Status ds
+        INNER JOIN 
+          DMs d ON ds.id_dm = d.ID_DM
+        WHERE 
+          ds.id_cliente = @id_cliente 
+          AND CAST(ds.dataHora AS DATE) = @dataFiltrada
+          AND ds.ID_DM = @ID_DM
+        ORDER BY ds.ID DESC
       `;
       dbRequest.input("ID_DM", sql.Int, id_dm);
       params.id_dm = id_dm;
@@ -89,12 +85,13 @@ async function relatorio(request, response) {
       params
     );
 
-    response.status(200).json(result.recordset);
+    return response.status(200).json(result.recordset);
   } catch (error) {
     console.error("Erro ao executar consulta:", error);
-    response.status(500).json({ error: "Erro ao processar a solicitação." });
+    return response.status(500).json({ error: "Erro ao processar a solicitação." });
   }
 }
+
 
 
 /**

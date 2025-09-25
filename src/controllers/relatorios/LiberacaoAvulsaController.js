@@ -195,11 +195,11 @@ async function requisicoesAvulsas(req, res) {
 
   const query = `
     SELECT * 
-    FROM Retirada_Avulsa
+    FROM Retiradas_Avulsas
     WHERE 
         id_cliente = @id_cliente AND 
         deleted = 0 AND 
-        id_dm = @id_dm
+        id_dm = @id_dm AND retirado = 0
   `;
 
   try {
@@ -216,20 +216,56 @@ async function requisicoesAvulsas(req, res) {
 }
 
 async function adicionar(req, res) {
-  const { id_dm, modulo, posicao, andar, requisicao } = req.body;
+  const { id_dm, modulo, posicao, andar, controladora, requisicao } = req.body;
+
+  // verificar se a requisição já existe e está deleted = 1 para alterar somente o id_dm, modulo, posição, andar e colocar deleted = 0
+  const checkQuery = `
+  SELECT * FROM Retiradas_Avulsas 
+  WHERE codigo_requisicao = @requisicao 
+    AND id_cliente = @id_cliente 
+    AND deleted = 1
+  `;
+
+  const checkRequest = new sql.Request();
+  checkRequest.input("requisicao", sql.VarChar, requisicao);
+  checkRequest.input("id_cliente", sql.Int, req.usuario.id_cliente);
+
+  const checkResult = await checkRequest.query(checkQuery);
+  if (checkResult.recordset.length > 0) {
+    const updateQuery = `
+    UPDATE Retiradas_Avulsas 
+    SET id_dm = @id_dm, modulo = @modulo, posicao = @posicao, andar = @andar, controladora = @controladora, deleted = 0
+    WHERE codigo_requisicao = @requisicao 
+      AND id_cliente = @id_cliente 
+      AND deleted = 1
+    `;
+    const updateRequest = new sql.Request();
+    updateRequest.input("id_dm", sql.Int, id_dm);
+    updateRequest.input("id_cliente", sql.Int, req.usuario.id_cliente);
+    updateRequest.input("modulo", sql.Int, modulo);
+    updateRequest.input("posicao", sql.Int, posicao);
+    updateRequest.input("andar", sql.Int, andar);
+    updateRequest.input("controladora", sql.VarChar, controladora);
+    updateRequest.input("requisicao", sql.VarChar, requisicao);
+
+    await updateRequest.query(updateQuery);
+
+    return res.status(200).json({ message: "Item atualizado com sucesso" });
+  }
 
   try {
     const request = new sql.Request();
-    request.input("id_dm", sql.Int, id_dm)
+    request.input("id_dm", sql.Int, id_dm);
     request.input("id_cliente", sql.Int, req.usuario.id_cliente);
     request.input("modulo", sql.Int, modulo);
     request.input("posicao", sql.Int, posicao);
     request.input("andar", sql.Int, andar);
+    request.input("controladora", sql.VarChar, controladora);
     request.input("requisicao", sql.VarChar, requisicao);
 
     const query = `
-      INSERT INTO Retirada_Avulsa (id_dm, id_cliente, modulo, posicao, andar, codigo_requisicao)
-      VALUES (@id_dm, @id_cliente, @modulo, @posicao, @andar, @requisicao)
+      INSERT INTO Retiradas_Avulsas (id_dm, id_cliente, modulo, posicao, andar, controladora, codigo_requisicao)
+      VALUES (@id_dm, @id_cliente, @modulo, @posicao, @andar, @controladora, @requisicao)
     `;
 
     await request.query(query);
@@ -303,7 +339,7 @@ async function excluirRequisicao(req, res) {
     request.input("id_cliente", sql.Int, id_cliente);
 
     const query = `
-      UPDATE Retirada_Avulsa
+      UPDATE Retiradas_Avulsas
       SET deleted = 1
       WHERE 
         codigo_requisicao = @requisicao AND 
@@ -332,5 +368,5 @@ module.exports = {
   requisicoesAvulsas,
   adicionar, // Exporta a função para adicionar
   listarPosicoes, // Exporta a função para listar posições
-  excluirRequisicao
+  excluirRequisicao,
 };

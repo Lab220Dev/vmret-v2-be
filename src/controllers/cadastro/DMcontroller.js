@@ -49,7 +49,8 @@ const listarDM = async (request, response) => {
         ON 
           DMS.ID_DM = Controladoras.ID_DM
         WHERE 
-          DMS.Deleted = 0`;
+          DMS.Deleted = 0
+          ORDER BY DMS.Identificacao`;
     } else {
       query = `
         SELECT 
@@ -71,7 +72,8 @@ const listarDM = async (request, response) => {
           DMS.ID_DM = Controladoras.ID_DM
         WHERE 
           DMS.ID_Cliente = @id_cliente 
-          AND DMS.Deleted = 0`;
+          AND DMS.Deleted = 0
+          ORDER BY DMS.Identificacao`;
 
       // Define o parâmetro 'id_cliente' como um valor de tipo inteiro na consulta SQL
       sqlRequest.input("id_cliente", sql.Int, id_cliente);
@@ -204,8 +206,8 @@ const listarDMResumido = async (request, response) => {
       sqlRequest.input("id_cliente", sql.Int, id_cliente);
     }
 
-    // Adiciona a cláusula ORDER BY para ordenar os resultados por 'id_dm'
-    query += ` ORDER BY id_dm`;
+    // Adiciona a cláusula ORDER BY para ordenar os resultados por 'Identificacao'
+    query += ` ORDER BY Identificacao`;
 
     // Executa a consulta no banco de dados
     const result = await sqlRequest.query(query);
@@ -235,6 +237,7 @@ const listarDMResumido2 = async (request, response) => {
         DMS
       WHERE 
         Deleted = 0
+        ORDER BY Identificacao
     `;
 
     // Executa a consulta no banco de dados

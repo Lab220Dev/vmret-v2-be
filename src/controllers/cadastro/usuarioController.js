@@ -132,6 +132,7 @@ async function listar(request, response) {
                 FROM usuarios 
                 LEFT JOIN clientes ON usuarios.id_cliente = clientes.id_cliente
                 WHERE usuarios.deleted != 1
+                ORDER BY nome
             `;
     }
 

@@ -89,6 +89,7 @@ async function listarFuncionarios(request, response) {
             FROM funcionarios 
             WHERE id_cliente = @id_cliente 
             AND deleted = 0
+            ORDER BY nome
         `;
 
     // Cria uma requisição SQL
@@ -257,6 +258,7 @@ async function listarFuncionariosSimples(request, response) {
             FROM funcionarios 
             WHERE id_cliente = @id_cliente 
             AND deleted = 0
+            ORDER BY nome
         `;
 
     // Cria uma requisição SQL
@@ -299,6 +301,7 @@ async function listarFuncionarios(request, response) {
             FROM funcionarios 
             WHERE id_cliente = @id_cliente 
             AND deleted = 0
+            ORDER BY nome
         `;
 
     // Cria uma requisição SQL

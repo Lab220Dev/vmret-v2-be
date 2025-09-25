@@ -1001,7 +1001,7 @@ function cleanItems(menu) {
 async function listar(request, response) {
   try {
     // Consulta SQL para recuperar todos os clientes não deletados
-    const query = "SELECT * FROM clientes WHERE deleted = 0";
+    const query = "SELECT * FROM clientes WHERE deleted = 0 ORDER BY nome";
 
     // Executa a consulta SQL e obtém o resultado
     const result = await new sql.Request().query(query);
@@ -1070,6 +1070,7 @@ async function listarClienteComServicos(request, response) {
                 WHERE 
                     c.deleted = 0
                     AND (ns.deleted = 0 OR ns.deleted IS NULL)
+                    ORDER BY c.nome
             `;
     } else {
       // Se o usuário não for administrador, retorna apenas os serviços do cliente específico
