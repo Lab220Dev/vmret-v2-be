@@ -103,19 +103,22 @@ async function login(request, response) {
         queryMenu = `
           SELECT * FROM Menu
           WHERE Cod_cli = @id_cliente
-            AND perfil = @perfil AND Nome IN ('Dashboard', 'Relatórios')`; // Consulta os menus relacionados ao cliente e perfil do usuário.
+            AND perfil = @perfil AND Nome IN ('Dashboard', 'Relatórios')
+            AND deleted = 0`; // Consulta os menus relacionados ao cliente e perfil do usuário.
 
         // Consulta os itens de menu relacionados ao cliente e perfil do usuário.
         queryMenuItem = `
           SELECT * FROM menu_itens
           WHERE Cod_cli = @id_cliente
-            AND perfil = @perfil AND Nome IN ('Retiradas e Devoluções', 'Retiradas Realizadas', 'Fichas de Retiradas', 'Operacional', 'Status DM')`;
+            AND perfil = @perfil AND Nome IN ('Retiradas e Devoluções', 'Retiradas Realizadas', 'Fichas de Retiradas', 'Operacional', 'Status DM')
+            AND deleted = 0`;
 
       } else {
                 queryMenu = `
         SELECT * FROM Menu
         WHERE Cod_cli = @id_cliente
-          AND perfil = @perfil`;
+          AND perfil = @perfil
+          AND deleted = 0`;
 
                 // Consulta os itens de menu relacionados ao cliente e perfil do usuário.
                 queryMenuItem = `

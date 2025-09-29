@@ -1,6 +1,6 @@
 // Importa o módulo 'mssql', utilizado para interagir com o banco de dados SQL Server.
 const sql = require("mssql");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const { DateTime } = require("luxon");
 
@@ -153,6 +153,7 @@ async function salvarMenus(request, response) {
       );
 
       if (!existsDashboard) {
+        // Insere o menu caso ele não exista
         await inserirMenuPrincipal(
           transaction,
           id_cliente,
@@ -162,22 +163,67 @@ async function salvarMenus(request, response) {
         );
         console.log("Dashboard inserido com sucesso!");
       } else {
-        console.log("Dashboard já existe. Pulando inserção.");
+        // Se já existe, verifica se está marcado como deletado
+        const requestCheckDeleted = new sql.Request(transaction);
+        const result = await requestCheckDeleted
+          .input("id_cliente", sql.Int, id_cliente)
+          .input("perfil", sql.Int, perfil)
+          .input("Nome", sql.VarChar, "Dashboard").query(`
+      SELECT deleted FROM Menu 
+      WHERE Cod_Cli = @id_cliente AND Perfil = @perfil AND Nome = @Nome
+    `);
+
+        const deletedValue = result.recordset[0]?.deleted;
+
+        if (deletedValue === true || deletedValue === 1) {
+          // Atualiza deleted = 0
+          const requestUpdate = new sql.Request(transaction);
+
+          const updateParams = {
+            id_cliente,
+            perfil,
+            Nome: "Dashboard",
+          };
+
+          console.log("🔍 Parâmetros do UPDATE:", updateParams);
+
+          requestUpdate
+            .input("id_cliente", sql.Int, updateParams.id_cliente)
+            .input("perfil", sql.Int, updateParams.perfil)
+            .input("Nome", sql.VarChar, updateParams.Nome);
+
+          const updateQuery = `
+  UPDATE Menu 
+  SET deleted = 0 
+  WHERE Cod_Cli = @id_cliente AND Perfil = @perfil AND Nome = @Nome AND deleted = 1
+`;
+
+          console.log("🔄 Executando UPDATE:\n", updateQuery);
+
+          const result = await requestUpdate.query(updateQuery);
+          console.log("🔁 Linhas afetadas:", result.rowsAffected);
+
+          console.log("Dashboard reativado (deleted = 0).");
+        } else {
+          console.log("Dashboard já existe e está ativo. Pulando inserção.");
+        }
       }
-    } else {
-      console.error("Erro: Menu 'Dashboard' não encontrado no menuOrder.");
-      throw new Error('Menu "Dashboard" não encontrado no menuOrder.');
     }
 
     console.log("Preparando dados para inserção...");
     //*********************MENU  **************************/
     // Obter menus existentes no banco
-    const existingMenus = await obterMenusExistentes(transaction, id_cliente,perfil);
+    const existingMenus = await obterMenusExistentes(
+      transaction,
+      id_cliente,
+      perfil
+    );
     const existingMenuNames = new Set(existingMenus.map((m) => m.Nome));
     // Obter submenus existentes no banco
     const existingSubMenus = await obterSubMenusExistentes(
       transaction,
-      id_cliente, perfil
+      id_cliente,
+      perfil
     );
     const existingSubMenuNames = new Set(existingSubMenus.map((m) => m.Nome));
 
@@ -306,7 +352,8 @@ async function salvarMenus(request, response) {
     const bulkSubsubmenus = [];
     const existingSubsubMenus = await obterSubsubMenusExistentes(
       transaction,
-      id_cliente, perfil
+      id_cliente,
+      perfil
     );
     const existingSubsubMenuNames = new Set(
       existingSubsubMenus.map((m) => m.Nome)
@@ -421,29 +468,44 @@ async function obterSubsubMenusExistentes(transaction, id_cliente, perfil) {
 // marcar menus como deletados
 async function marcarDeletados(transaction, id_cliente, newMenus, perfil) {
   const newMenuNames = new Set(newMenus.map((m) => m.name)); // Conjunto de novos menus
-  const existingMenus = await obterMenusExistentes(transaction, id_cliente, perfil); // Obter menus existentes do banco
+  const existingMenus = await obterMenusExistentes(
+    transaction,
+    id_cliente,
+    perfil
+  ); // Obter menus existentes do banco
 
   // Verificar e marcar os menus que não estão mais na nova lista como deletados
   for (let menu of existingMenus) {
-    if (!newMenuNames.has(menu.Nome)) {
-      console.log(`Marcando como deletado: ${menu.Nome}`);
-
-      const request = new sql.Request(transaction);
-      request.input("id_cliente", sql.Int, id_cliente);
-      request.input("menu_name", sql.VarChar, menu.Nome);
-      request.input("perfil", sql.Int, perfil);
-
-      await request.query(`
-        UPDATE Menu SET deleted = 1 
-        WHERE Cod_Cli = @id_cliente AND Nome = @menu_name AND Perfil = @perfil AND deleted = 0
-      `);
-    }
+  // Ignora o Dashboard
+  if (menu.Nome === "Dashboard") {
+    console.log("⏭️ Ignorando 'Dashboard' ao marcar como deletado.");
+    continue;
   }
+
+  if (!newMenuNames.has(menu.Nome)) {
+    console.log(`Marcando como deletado: ${menu.Nome}`);
+
+    const request = new sql.Request(transaction);
+    request.input("id_cliente", sql.Int, id_cliente);
+    request.input("menu_name", sql.VarChar, menu.Nome);
+    request.input("perfil", sql.Int, perfil);
+
+    await request.query(`
+      UPDATE Menu SET deleted = 1 
+      WHERE Cod_Cli = @id_cliente AND Nome = @menu_name AND Perfil = @perfil AND deleted = 0
+    `);
+  }
+}
+
 
   // Verificar e marcar submenus como deletados
   const newSubmenus = newMenus ? newMenus.flatMap((m) => m.submenus) : [];
   const newSubmenuNames = new Set(newSubmenus.map((s) => s.name)); // Nomes dos novos submenus
-  const existingSubmenus = await obterSubMenusExistentes(transaction, id_cliente, perfil); // Submenus existentes no banco
+  const existingSubmenus = await obterSubMenusExistentes(
+    transaction,
+    id_cliente,
+    perfil
+  ); // Submenus existentes no banco
 
   for (let submenu of existingSubmenus) {
     if (!newSubmenuNames.has(submenu.Nome)) {
@@ -466,7 +528,11 @@ async function marcarDeletados(transaction, id_cliente, newMenus, perfil) {
     ? newMenus.flatMap((m) => m.submenus.flatMap((s) => s.subsubmenus || []))
     : [];
   const newSubsubmenuNames = new Set(newSubsubmenus.map((s) => s.name)); // Nomes dos novos subsubmenus
-  const existingSubsubmenus = await obterSubsubMenusExistentes(transaction, id_cliente, perfil); // Subsubmenus existentes no banco
+  const existingSubsubmenus = await obterSubsubMenusExistentes(
+    transaction,
+    id_cliente,
+    perfil
+  ); // Subsubmenus existentes no banco
 
   for (let subsubmenu of existingSubsubmenus) {
     if (!newSubsubmenuNames.has(subsubmenu.Nome)) {
@@ -879,7 +945,7 @@ async function listarComMenuPaginado(request, response) {
       const menus = menuResult.recordset;
       const menuItens = menuItemResult.recordset;
 
-      // Agrupar menus por perfil 
+      // Agrupar menus por perfil
       const menusPorPerfil = {};
 
       // Itera sobre os menus para agrupar por perfil
@@ -1026,7 +1092,8 @@ async function listar(request, response) {
 async function listaSimples(request, response) {
   try {
     // Consulta SQL para recuperar o id_cliente e nome dos clientes não deletados
-    const query = "SELECT id_cliente,nome FROM clientes WHERE deleted = 0 ORDER BY nome";
+    const query =
+      "SELECT id_cliente,nome FROM clientes WHERE deleted = 0 ORDER BY nome";
 
     // Executa a consulta SQL e obtém o resultado
     const result = await new sql.Request().query(query);
@@ -1115,9 +1182,9 @@ async function listarClienteComServicos(request, response) {
  * @returns {void} Retorna um status HTTP 201 em caso de sucesso ou um erro HTTP 500 em caso de falha.
  */
 async function adicionar(request, response) {
-  const { nome, cnpj, ativo, usar_api, id_usuario } = request.body;  // Dados do cliente
-  const apiKey = generateApiKey();  // Geração da chave de API
-  const hash = await bcrypt.hash('123456', saltRounds);
+  const { nome, cnpj, ativo, usar_api, id_usuario } = request.body; // Dados do cliente
+  const apiKey = generateApiKey(); // Geração da chave de API
+  const hash = await bcrypt.hash("123456", saltRounds);
   const queryCliente = `
         INSERT INTO clientes 
         (id_cliente, nome, cpfcnpj, ativo, deleted, created, updated, last_login, usar_api, atualizado)
@@ -1128,11 +1195,11 @@ async function adicionar(request, response) {
         INSERT INTO API_KEY (id_cliente, api_key, Nome_cliente)
         VALUES (@id_cliente, @api_key, @nome_cliente)
     `;
-    const queryDash = `
+  const queryDash = `
     INSERT INTO Usuario_Dash (id_cliente, login, senha)
     VALUES (@id_cliente, @login, @senha)
 `;
-  const transaction = new sql.Transaction();  // Inicia uma transação
+  const transaction = new sql.Transaction(); // Inicia uma transação
   try {
     await transaction.begin(); // Começa a transação
 
@@ -1176,15 +1243,15 @@ async function adicionar(request, response) {
     // Executa a query para inserir a chave de API
     await sqlRequest.query(queryApiKey);
 
-// Instancia um novo sql.Request para a query de inserção de Usuario_Dash
-sqlRequest = new sql.Request(transaction);
-const login = nome.trim().toLowerCase() + '@lab220.com.br';
-// Prepara as variáveis para a query de inserção de API Key
-sqlRequest.input("id_cliente", sql.Int, newIdCliente);
-sqlRequest.input("login", sql.NVarChar, login);
-sqlRequest.input("senha", sql.NVarChar, hash);
+    // Instancia um novo sql.Request para a query de inserção de Usuario_Dash
+    sqlRequest = new sql.Request(transaction);
+    const login = nome.trim().toLowerCase() + "@lab220.com.br";
+    // Prepara as variáveis para a query de inserção de API Key
+    sqlRequest.input("id_cliente", sql.Int, newIdCliente);
+    sqlRequest.input("login", sql.NVarChar, login);
+    sqlRequest.input("senha", sql.NVarChar, hash);
 
-await sqlRequest.query(queryDash);
+    await sqlRequest.query(queryDash);
 
     // Commit da transação
     await transaction.commit();
@@ -1212,24 +1279,32 @@ async function adicionarServico(request, response) {
     let transaction = new sql.Transaction();
     await transaction.begin(); // Inicia a transação
     for (const servico of servicos) {
-      for (const metodo of servico.metodos_notificacao){
+      for (const metodo of servico.metodos_notificacao) {
         let dest = [];
-        if(metodo === 'email'){
+        if (metodo === "email") {
           dest = servico.destinatarios;
-        }else if(metodo ==='notif'){
+        } else if (metodo === "notif") {
           dest = servico.destinatariosweb;
-        }else{
+        } else {
           continue;
         }
         for (const destinatario of dest) {
-          const servicoComMetodo = { ...servico, metodos_notificacao: [metodo] };
-          await inserirNovoServico(transaction, id_cliente, servicoComMetodo, destinatario);
+          const servicoComMetodo = {
+            ...servico,
+            metodos_notificacao: [metodo],
+          };
+          await inserirNovoServico(
+            transaction,
+            id_cliente,
+            servicoComMetodo,
+            destinatario
+          );
         }
       }
     }
-    
-    await transaction.commit();  // Commit da transação se tudo estiver bem
-    response.status(200).json({ message: "Serviços adicionados com sucesso" });  // Resposta de sucesso
+
+    await transaction.commit(); // Commit da transação se tudo estiver bem
+    response.status(200).json({ message: "Serviços adicionados com sucesso" }); // Resposta de sucesso
   } catch (error) {
     console.error("Erro ao salvar configurações", error);
     if (transaction) {
@@ -1257,14 +1332,24 @@ async function atualizarServico(request, response) {
     await transaction.begin(); // Inicia a transação
 
     // Recupera os serviços existentes para o cliente (já associados)
-    const existingServices = await buscarServicosExistentes(transaction, id_cliente);
+    const existingServices = await buscarServicosExistentes(
+      transaction,
+      id_cliente
+    );
     // Cria um Set para facilitar a verificação: "id_servico-id_funcionario"
     const existingAssociations = new Set(
-      existingServices.map((reg) => `${reg.id_servico}-${reg.id_funcionario_responsavel}`)
+      existingServices.map(
+        (reg) => `${reg.id_servico}-${reg.id_funcionario_responsavel}`
+      )
     );
 
     // Marca como deletados os registros que não estão no payload
-    await marcarServicosDeletados(transaction, id_cliente, existingServices, servicos);
+    await marcarServicosDeletados(
+      transaction,
+      id_cliente,
+      existingServices,
+      servicos
+    );
 
     for (const servico of servicos) {
       const processados = new Set();
@@ -1287,12 +1372,15 @@ async function atualizarServico(request, response) {
           if (processados.has(chave)) continue;
           processados.add(chave);
 
-         if (existingAssociations.has(chave)) {
+          if (existingAssociations.has(chave)) {
             continue;
           }
 
           // Cria uma cópia do serviço definindo somente o método atual para manter a consistência
-          const servicoComMetodo = { ...servico, metodos_notificacao: [metodo] };
+          const servicoComMetodo = {
+            ...servico,
+            metodos_notificacao: [metodo],
+          };
 
           // Verifica se a associação já existe (no banco) considerando o método (caso a lógica permita alteração de tipo)
           const serviceExists = await verificarServicoExistente(
@@ -1305,12 +1393,27 @@ async function atualizarServico(request, response) {
 
           if (serviceExists) {
             if (serviceExists.deleted) {
-              await reativarServico(transaction, id_cliente, servicoComMetodo, destinatario);
+              await reativarServico(
+                transaction,
+                id_cliente,
+                servicoComMetodo,
+                destinatario
+              );
             } else {
-              await atualizarServicoExistente(transaction, id_cliente, servicoComMetodo, destinatario);
+              await atualizarServicoExistente(
+                transaction,
+                id_cliente,
+                servicoComMetodo,
+                destinatario
+              );
             }
           } else {
-            await inserirNovoServico(transaction, id_cliente, servicoComMetodo, destinatario);
+            await inserirNovoServico(
+              transaction,
+              id_cliente,
+              servicoComMetodo,
+              destinatario
+            );
           }
         }
       }
@@ -1364,13 +1467,20 @@ async function buscarServicosExistentes(transaction, id_cliente) {
  *
  * @returns {void} Não retorna nada, mas marca os serviços deletados no banco de dados.
  */
-async function marcarServicosDeletados(transaction, id_cliente, existingServices, servicos) {
+async function marcarServicosDeletados(
+  transaction,
+  id_cliente,
+  existingServices,
+  servicos
+) {
   for (const existing of existingServices) {
     // Verifica se a associação já existe em algum dos arrays do payload
-    const found = servicos.some(servico => {
+    const found = servicos.some((servico) => {
       if (servico.id_servico !== existing.id_servico) return false;
-      return servico.destinatarios.includes(existing.id_funcionario_responsavel) ||
-             servico.destinatariosweb.includes(existing.id_funcionario_responsavel);
+      return (
+        servico.destinatarios.includes(existing.id_funcionario_responsavel) ||
+        servico.destinatariosweb.includes(existing.id_funcionario_responsavel)
+      );
     });
 
     // Se o serviço não foi encontrado nos novos serviços, ele precisa ser marcado como deletado
@@ -1409,13 +1519,23 @@ async function marcarServicosDeletados(transaction, id_cliente, existingServices
  *
  * @returns {Object|null} Retorna o status de deletado (deleted) do serviço ou null caso o serviço não seja encontrado.
  */
-async function verificarServicoExistente(transaction, id_cliente, id_servico, id_funcionario_responsavel, tipo_notificacao) {
+async function verificarServicoExistente(
+  transaction,
+  id_cliente,
+  id_servico,
+  id_funcionario_responsavel,
+  tipo_notificacao
+) {
   const sqlRequest = new sql.Request(transaction);
 
   // Adiciona os parâmetros necessários à requisição SQL para proteger contra injeção de SQL
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, id_servico);
-  sqlRequest.input("id_funcionario_responsavel", sql.Int, id_funcionario_responsavel);
+  sqlRequest.input(
+    "id_funcionario_responsavel",
+    sql.Int,
+    id_funcionario_responsavel
+  );
   sqlRequest.input("tipo_notificacao", sql.VarChar, tipo_notificacao);
 
   // Executa a consulta SQL para verificar a existência do serviço atribuído ao funcionário responsável
@@ -1449,8 +1569,16 @@ async function reativarServico(transaction, id_cliente, servico, destinatario) {
 
   // Adiciona os parâmetros necessários à requisição SQL para proteger contra injeção de SQL
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
-  sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
+  sqlRequest.input(
+    "tipo_notificacao",
+    sql.VarChar,
+    servico.metodos_notificacao[0]
+  );
+  sqlRequest.input(
+    "hora_notificacao",
+    sql.VarChar,
+    servico.horario_notificacao
+  );
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);
@@ -1509,7 +1637,12 @@ function validarHoraNotificacao(hora) {
  *
  * @returns {void} Não retorna nada, mas atualiza o serviço na base de dados.
  */
-async function atualizarServicoExistente(transaction, id_cliente, servico, destinatario) {
+async function atualizarServicoExistente(
+  transaction,
+  id_cliente,
+  servico,
+  destinatario
+) {
   const sqlRequest = new sql.Request(transaction);
 
   // Valida o horário de notificação usando uma função externa
@@ -1517,7 +1650,11 @@ async function atualizarServicoExistente(transaction, id_cliente, servico, desti
 
   // Adiciona os parâmetros à requisição SQL, garantindo segurança e proteção contra injeções SQL
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
+  sqlRequest.input(
+    "tipo_notificacao",
+    sql.VarChar,
+    servico.metodos_notificacao[0]
+  );
   sqlRequest.input("hora_notificacao", sql.VarChar, horaNotificacao);
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
@@ -1544,12 +1681,25 @@ async function atualizarServicoExistente(transaction, id_cliente, servico, desti
  *
  * @returns {void} Não retorna nada, mas insere o serviço na base de dados.
  */
-async function inserirNovoServico(transaction, id_cliente, servico, destinatario) {
+async function inserirNovoServico(
+  transaction,
+  id_cliente,
+  servico,
+  destinatario
+) {
   const sqlRequest = new sql.Request(transaction);
   sqlRequest.input("nome", sql.VarChar, servico.nome_servico);
   sqlRequest.input("frequencia", sql.VarChar, servico.frequencia_notificacao);
-  sqlRequest.input("tipo_notificacao", sql.VarChar, servico.metodos_notificacao[0]);
-  sqlRequest.input("hora_notificacao", sql.VarChar, servico.horario_notificacao);
+  sqlRequest.input(
+    "tipo_notificacao",
+    sql.VarChar,
+    servico.metodos_notificacao[0]
+  );
+  sqlRequest.input(
+    "hora_notificacao",
+    sql.VarChar,
+    servico.horario_notificacao
+  );
   sqlRequest.input("id_cliente", sql.Int, id_cliente);
   sqlRequest.input("id_servico", sql.Int, servico.id_servico);
   sqlRequest.input("id_funcionario_responsavel", sql.Int, destinatario);
@@ -1573,9 +1723,8 @@ async function inserirNovoServico(transaction, id_cliente, servico, destinatario
  * @returns {void} Retorna uma resposta HTTP indicando se a atualização foi bem-sucedida ou se ocorreu um erro.
  */
 async function atualizar(request, response) {
-  const { id_cliente, nome, cnpj, ativo, usar_api, id_usuario } =
-    request.body;
-    const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
+  const { id_cliente, nome, cnpj, ativo, usar_api, id_usuario } = request.body;
+  const nowInBrazil = DateTime.now().setZone("America/Sao_Paulo").toJSDate();
   const params = {
     nome: nome,
     cnpj: cnpj,
@@ -1677,7 +1826,7 @@ async function deletar(request, response) {
     "Funcao",
     "Plantas",
     "Produtos",
-    "cad_locker"
+    "cad_locker",
   ];
   // Declaração de variável para a transação
   let transaction;
@@ -1711,7 +1860,8 @@ async function deletar(request, response) {
     // Inicia o progresso para esse cliente específico
     progressClients[id_cliente] = 0;
 
-    for (let i = 0; i < tables.length; i++) {// Loop sobre as tabelas para excluir registros
+    for (let i = 0; i < tables.length; i++) {
+      // Loop sobre as tabelas para excluir registros
       const table = tables[i];
       let query = `UPDATE ${table} SET deleted = 1 WHERE id_cliente = @id_cliente`;
 
@@ -2029,7 +2179,7 @@ async function fetchdadosclient(request, response) {
     response.status(500).send("Erro ao buscar cliente"); // Status HTTP 500 - Internal Server Error
   }
 }
-async function fetchNotificacoesCliente(req,res){
+async function fetchNotificacoesCliente(req, res) {
   const id_cliente = req.usuario.id_cliente;
   const query = ` select
   id_notificacao,
@@ -2038,10 +2188,10 @@ async function fetchNotificacoesCliente(req,res){
   status
   from Notificacaos where id_cliente = @id_cliente and Tipo = 'app'`;
   const request = new sql.Request();
-  request.input('id_cliente',sql.Int,id_cliente);
+  request.input("id_cliente", sql.Int, id_cliente);
   const result = await request.query(query);
   if (result.recordset.length === 0) {
-    return res.status(404).json({ message: "Nenhuma Notificação Encontrada." }); 
+    return res.status(404).json({ message: "Nenhuma Notificação Encontrada." });
   }
   let dadosNotificacoes = [];
   for (const notificacao of result.recordset) {
@@ -2055,11 +2205,11 @@ async function fetchNotificacoesCliente(req,res){
   }
   res.status(200).json(dadosNotificacoes);
 }
-async function NotificacaoLida(req,res) {
+async function NotificacaoLida(req, res) {
   id_notificacao = req.body.id_notificacao;
   const query = `UPDATE Notificacaos SET status = 1 WHERE id_notificacao = @id_notificacao`;
   const request = new sql.Request();
-  request.input('id_notificacao',sql.Int,id_notificacao);
+  request.input("id_notificacao", sql.Int, id_notificacao);
   const result = await request.query(query);
   if (result.rowsAffected[0] > 0) {
     return res.status(200).json({ message: "Notificação lida com sucesso." });
@@ -2082,5 +2232,5 @@ module.exports = {
   atualizarServico, // A função 'atualizarServico' é exportada, provavelmente realiza a atualização de dados de um serviço.
   deletarServico, // A função 'deletarServico' é exportada, provavelmente deleta um serviço do banco de dados.
   fetchNotificacoesCliente, // A função 'fetchNotificacoesCliente' é exportada, e deve buscar notificações do cliente.
-  NotificacaoLida, // A função 'NotificacaoLida' é exportada, e deve marcar uma notificação como lida.  
+  NotificacaoLida, // A função 'NotificacaoLida' é exportada, e deve marcar uma notificação como lida.
 };
